@@ -1,27 +1,25 @@
-// src/services/WebSocketService.ts
-export interface WebSocketMessage {
-  agent: string;
-  level: string;
-  message: string;
-  message_type: string;
-  is_truncated?: boolean;
-  timestamp?: string;
-  log_id?: string;
-  type?: string;
-}
+import { LogLevel, MsgType, TaskEvent } from "../types";
+
+const API_HOST = import.meta.env.VITE_API_HOST ?? "127.0.0.1:8000";
+const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL ?? `ws://${API_HOST}`;
+
+type Listener = (event: TaskEvent) => void;
+type StatusListener = (status: WebSocket["readyState"] | null) => void;
 
 class WebSocketService {
   private static instance: WebSocketService;
   private ws: WebSocket | null = null;
   private url: string | null = null;
-  private listeners: Array<(data: WebSocketMessage) => void> = [];
+  private listeners: Listener[] = [];
+  private statusListeners: StatusListener[] = [];
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 10;
-  private reconnectTimeout: ReturnType<typeof setTimeout>| null = null;
+  private readonly maxReconnectAttempts = 10;
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private isReconnecting = false;
-  private callbacks: Map<string, (data: any) => void> = new Map();
-  private messageHistory: WebSocketMessage[] = []; // 存储当前任务的历史记录
-
+  private shouldReconnect = true;
+  private terminalEventReceived = false;
+  private eventHistory: TaskEvent[] = [];
+  private readonly maxHistorySize = 5000;
 
   public static getInstance(): WebSocketService {
     if (!WebSocketService.instance) {
@@ -31,18 +29,28 @@ class WebSocketService {
   }
 
   public connect(taskId: string, onConnect?: () => void, onError?: (error: string) => void): void {
-    if (this.ws && this.url === `ws://127.0.0.1:8000/ws/${taskId}`) {
-      // 如果已经连接到相同的taskId，则直接返回
-      return;
+    const targetUrl = `${WS_BASE_URL}/ws/${taskId}`;
+
+    if (this.ws && this.url === targetUrl) {
+      if (this.ws.readyState === WebSocket.OPEN) {
+        onConnect?.();
+      }
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        return;
+      }
     }
 
-    // 清理之前的连接
-    if (this.ws) {
+    if (this.ws && this.url !== targetUrl) {
       this.disconnect();
     }
 
-    this.clearHistory(); // 切换任务时清空历史记录
-    this.url = `ws://127.0.0.1:8000/ws/${taskId}`;
+    if (this.url !== targetUrl) {
+      this.clearHistory();
+    }
+
+    this.url = targetUrl;
+    this.shouldReconnect = true;
+    this.terminalEventReceived = false;
     this.connectWebSocket(onConnect, onError);
   }
 
@@ -51,119 +59,190 @@ class WebSocketService {
       return;
     }
 
+    if (!this.url) {
+      onError?.("WebSocket URL not initialized");
+      return;
+    }
+
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      onError && onError('Max reconnection attempts reached. Please refresh the page.');
+      onError?.("Max reconnection attempts reached. Please refresh the page.");
       return;
     }
 
     this.isReconnecting = true;
 
     try {
-      this.ws = new WebSocket(this.url!);
+      this.ws = new WebSocket(this.url);
+      this.emitStatus();
 
       this.ws.onopen = () => {
-        console.log('✅ WebSocket connected');
         this.reconnectAttempts = 0;
         this.isReconnecting = false;
-        onConnect && onConnect();
+        this.emitStatus();
+        onConnect?.();
       };
 
       this.ws.onmessage = (event) => {
-        console.log('Received message:', event.data); // 添加调试信息
-
         try {
-          const data = JSON.parse(event.data);
-          console.log('Parsed data:', data); // 添加调试信息
- 
-          // 忽略系统消息
-          if (data.type === 'CONNECTED' || data.type === 'PING') {
-            return;
-          }
-          
-          // 这是日志消息，必须包含 agent 和 message_type
-          if (data.agent && data.message_type && data.level && data.message) {
-            const logMsg: WebSocketMessage = {
-              agent: data.agent,
-              level: data.level,
-              message: data.message,
-              message_type: data.message_type,
-              is_truncated: data.is_truncated || false,
-              timestamp: data.timestamp || new Date().toISOString(),
-              log_id: data.log_id
-            };
-            // 将消息添加到历史记录中
-            this.messageHistory.push(logMsg);
-            // 通知所有监听器
-            this.listeners.forEach(callback => callback(logMsg));
+          const parsed = JSON.parse(event.data);
+          const normalized = this.normalizeEvent(parsed);
+          if (!normalized) return;
 
+          if (this.isTerminalEvent(normalized)) {
+            this.terminalEventReceived = true;
+            this.shouldReconnect = false;
           }
-        } catch (e) {
-          console.error('Parse error:', e);
+
+          if (normalized.type === "PING") {
+            this.send({ type: "PONG", timestamp: new Date().toISOString() });
+          }
+
+          this.pushHistory(normalized);
+          this.listeners.forEach((callback) => callback(normalized));
+        } catch (error) {
+          console.error("WebSocket parse error:", error);
         }
       };
 
-      this.ws.onerror = (error) => {
-        console.error('❌ WebSocket error:', error);
+      this.ws.onerror = () => {
         this.isReconnecting = false;
-        onError && onError('WebSocket connection error');
+        this.emitStatus();
+        onError?.("WebSocket connection error");
       };
 
-      this.ws.onclose = (event) => {
-        console.log('❌ WebSocket closed, code:', event.code, 'reason:', event.reason);
+      this.ws.onclose = () => {
         this.isReconnecting = false;
-        
-        // 指数退避重连，初始延迟 2 秒
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
-          this.reconnectAttempts++;
-          const delay = Math.min(2000 * Math.pow(1.5, this.reconnectAttempts - 1), 30000); // 最大 30 秒
-          console.log(`🔄 Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-          
+        this.ws = null;
+        this.emitStatus();
+
+        if (this.shouldReconnect && !this.terminalEventReceived && this.reconnectAttempts < this.maxReconnectAttempts) {
+          this.reconnectAttempts += 1;
+          const delay = Math.min(2000 * Math.pow(1.5, this.reconnectAttempts - 1), 30000);
           this.reconnectTimeout = setTimeout(() => {
             this.connectWebSocket(onConnect, onError);
           }, delay);
         }
       };
     } catch (error) {
-      console.error('Failed to connect:', error);
-      onError && onError(`Connection failed: ${error}`);
       this.isReconnecting = false;
+      this.emitStatus();
+      onError?.(`Connection failed: ${String(error)}`);
     }
   }
 
+  private isTerminalEvent(event: TaskEvent): boolean {
+    if (event.type === "TASK_FINAL") return true;
+    if (event.type !== "TASK_STATUS") return false;
+    return event.status === "completed" || event.status === "failed";
+  }
+
+  private normalizeEvent(data: unknown): TaskEvent | null {
+    if (typeof data !== "object" || data === null) return null;
+    const payload = data as Record<string, unknown>;
+    const type = payload.type ?? (payload.agent ? "LOG" : undefined);
+    if (!type) return null;
+
+    if (type === "LOG") {
+      return {
+        type: "LOG",
+        task_id: typeof payload.task_id === "string" ? payload.task_id : undefined,
+        agent: typeof payload.agent === "string" ? payload.agent : "Unknown",
+        level: this.normalizeLevel(payload.level),
+        message: typeof payload.message === "string" ? payload.message : "",
+        message_type: this.normalizeMessageType(payload.message_type),
+        is_truncated: Boolean(payload.is_truncated),
+        timestamp: typeof payload.timestamp === "string" ? payload.timestamp : new Date().toISOString(),
+        log_id: typeof payload.log_id === "string" ? payload.log_id : undefined,
+      };
+    }
+
+    return payload as unknown as TaskEvent;
+  }
+
+  private normalizeLevel(level: unknown): LogLevel {
+    const value = String(level || "").toLowerCase();
+    if (value === LogLevel.ERROR) return LogLevel.ERROR;
+    if (value === LogLevel.WARNING) return LogLevel.WARNING;
+    if (value === LogLevel.DEBUG) return LogLevel.DEBUG;
+    return LogLevel.INFO;
+  }
+
+  private normalizeMessageType(messageType: unknown): MsgType {
+    const value = String(messageType || "").toLowerCase();
+    if (value === MsgType.MARKDOWN) return MsgType.MARKDOWN;
+    if (value === MsgType.TOOL_CALL || value === "tool_call") return MsgType.TOOL_CALL;
+    if (value === MsgType.RESULT) return MsgType.RESULT;
+    return MsgType.TEXT;
+  }
+
+  private pushHistory(event: TaskEvent): void {
+    this.eventHistory.push(event);
+    if (this.eventHistory.length > this.maxHistorySize) {
+      this.eventHistory = this.eventHistory.slice(this.eventHistory.length - this.maxHistorySize);
+    }
+  }
+
+  private send(payload: unknown): void {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(payload));
+    }
+  }
+
+  private emitStatus(): void {
+    const state = this.getConnectionState();
+    this.statusListeners.forEach((callback) => callback(state));
+  }
+
   public disconnect(): void {
+    this.shouldReconnect = false;
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
-    
+
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
-    
+
     this.url = null;
     this.isReconnecting = false;
+    this.emitStatus();
   }
 
-  public subscribe(callback: (data: WebSocketMessage) => void): void {
-    this.listeners.push(callback);
+  public subscribe(callback: Listener): void {
+    if (!this.listeners.includes(callback)) {
+      this.listeners.push(callback);
+    }
   }
 
-  public unsubscribe(callback: (data: WebSocketMessage) => void): void {
-    this.listeners = this.listeners.filter(listener => listener !== callback);
+  public unsubscribe(callback: Listener): void {
+    this.listeners = this.listeners.filter((listener) => listener !== callback);
+  }
+
+  public subscribeStatus(callback: StatusListener): void {
+    if (!this.statusListeners.includes(callback)) {
+      this.statusListeners.push(callback);
+    }
+  }
+
+  public unsubscribeStatus(callback: StatusListener): void {
+    this.statusListeners = this.statusListeners.filter((listener) => listener !== callback);
   }
 
   public isConnected(): boolean {
     return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
   }
 
-  public getHistory(): WebSocketMessage[] {
-    return this.messageHistory; // 提供历史记录
+  public getHistory(): TaskEvent[] {
+    return [...this.eventHistory];
   }
+
   public clearHistory(): void {
-    this.messageHistory = []; // 清空历史记录
+    this.eventHistory = [];
   }
-  public getConnectionState(): WebSocket['readyState'] | null {
+
+  public getConnectionState(): WebSocket["readyState"] | null {
     return this.ws ? this.ws.readyState : null;
   }
 }
