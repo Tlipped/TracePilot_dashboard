@@ -117,3 +117,25 @@ export interface FullLogResponse {
   content: string;
   source: "cache" | "database";
 }
+
+export interface AgentLogFileMeta {
+  id: string;
+  name: string;
+  agent: string;
+  size: number;
+  modified_at: string;
+}
+
+export interface AgentLogFilesResponse {
+  task_id: string;
+  dapp_name: string;
+  log_dir: string | null;
+  files: AgentLogFileMeta[];
+}
+
+export interface AgentLogFileResponse extends AgentLogFileMeta {
+  task_id: string;
+  dapp_name: string;
+  content: string;
+  truncated: boolean;
+}

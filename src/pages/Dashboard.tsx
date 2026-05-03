@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, Layout, Space, Spin, Tabs, Tag, Typography } from "antd";
-import { ArrowLeft, FileText, RefreshCcw, Wifi, WifiOff } from "lucide-react";
+import { ArrowLeft, FileText, FolderOpen, RefreshCcw, Wifi, WifiOff } from "lucide-react";
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
 import { AGENT_NAMES } from "../constants/agents";
+import AgentFileLogs from "../components/AgentFileLogs";
 import LogDetailDrawer from "../components/LogDetailDrawer";
 import LogStream from "../components/LogStream";
 import MarkdownRenderer from "../components/MarkdownRenderer";
@@ -242,6 +243,16 @@ const Dashboard: React.FC = () => {
                         </Typography.Text>
                       </div>
                     ),
+                  },
+                  {
+                    key: "agent-files",
+                    label: (
+                      <Space size={6}>
+                        <FolderOpen size={14} />
+                        File Logs
+                      </Space>
+                    ),
+                    children: <AgentFileLogs taskId={taskId ?? ""} />,
                   },
                   {
                     key: "summary",

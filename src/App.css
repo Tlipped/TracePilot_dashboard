@@ -22,9 +22,35 @@
   z-index: 20;
 }
 
+.topbar-brand {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-kicker {
+  color: var(--accent) !important;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.topbar-title {
+  margin: 0 !important;
+  color: var(--text-primary) !important;
+  line-height: 1.12 !important;
+}
+
+.topbar-subtitle {
+  max-width: 620px;
+  font-size: 13px;
+}
+
 .dashboard-layout,
 .task-list-page {
-  height: calc(100vh - 76px);
+  height: calc(100vh - 86px);
   overflow: hidden;
   padding: 18px;
 }
@@ -35,6 +61,57 @@
 
 .stat-row {
   margin-bottom: 16px;
+}
+
+.metric-card {
+  border-color: rgba(71, 85, 105, 0.76);
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.88)),
+    var(--bg-surface);
+  overflow: hidden;
+}
+
+.metric-card .ant-card-body {
+  padding: 18px;
+}
+
+.metric-card-inner {
+  min-height: 74px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.metric-icon {
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+
+.metric-card-total .metric-icon {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.12);
+}
+
+.metric-card-running .metric-icon {
+  color: var(--accent);
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.metric-card-completed .metric-icon {
+  color: var(--green);
+  background: rgba(34, 197, 94, 0.11);
+}
+
+.metric-card-failed .metric-icon {
+  color: var(--red);
+  background: rgba(239, 68, 68, 0.11);
 }
 
 .table-card .ant-card-body {
@@ -363,6 +440,125 @@
   text-transform: uppercase;
 }
 
+.file-log-panel {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.file-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.file-log-header>div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.file-log-header .text-mono {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-log-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+}
+
+.file-log-row {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.62);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.file-log-row:hover {
+  border-color: var(--border-active);
+  background: rgba(22, 32, 51, 0.92);
+}
+
+.file-log-row.selected {
+  color: var(--text-primary);
+  border-color: rgba(56, 189, 248, 0.36);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.file-log-row span {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-log-row small {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.file-log-main {
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-deep);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-log-meta {
+  min-height: 42px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.file-log-viewer {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.file-log-viewer pre {
+  margin: 0;
+  padding: 12px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
 .log-detail-drawer .ant-drawer-content {
   background: var(--bg-surface);
 }
@@ -550,7 +746,7 @@
   .dashboard-layout,
   .task-list-page {
     height: auto;
-    min-height: calc(100vh - 76px);
+    min-height: calc(100vh - 86px);
     overflow-y: auto;
   }
 

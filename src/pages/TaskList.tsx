@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { App as AntdApp, Button, Card, Col, Layout, Modal, Row, Select, Space, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { Eye, Play, RefreshCcw, Square, Trash2 } from "lucide-react";
-import { cancelTask, createTask, listTasks } from "../services/api";
+import { Activity, CheckCircle2, Eye, ListChecks, Play, RefreshCcw, Square, Trash2, XCircle } from "lucide-react";
+import { cancelTask, createTask, deleteTask, listTasks } from "../services/api";
 import { Task, TaskCreateRequest, TaskStatus } from "../types";
 
 const { Header, Content } = Layout;
@@ -35,8 +35,12 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function isRunnableTask(status: TaskStatus) {
+  return status === TaskStatus.PENDING || status === TaskStatus.RUNNING;
+}
+
 const TaskList: React.FC = () => {
-  const { message } = AntdApp.useApp();
+  const { message, modal } = AntdApp.useApp();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedDapps, setSelectedDapps] = useState<string[]>([]);
@@ -98,6 +102,24 @@ const TaskList: React.FC = () => {
     }
   };
 
+  const handleDelete = (task: Task) => {
+    modal.confirm({
+      title: "Delete analysis record?",
+      content: `This will remove the saved task record for ${task.dapp_name}.`,
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await deleteTask(task.task_id);
+          message.success("Task record deleted");
+          await fetchTasks();
+        } catch (error: unknown) {
+          message.error(getErrorMessage(error, "Failed to delete task"));
+        }
+      },
+    });
+  };
+
   const filteredTasks = useMemo(() => {
     if (statusFilter === "all") return tasks;
     return tasks.filter((task) => task.status === statusFilter);
@@ -140,21 +162,21 @@ const TaskList: React.FC = () => {
     {
       title: "Action",
       key: "action",
-      width: 210,
+      width: 220,
       render: (_, record) => (
         <Space>
           <Button size="small" icon={<Eye size={14} />} onClick={() => navigate(`/tasks/${record.task_id}`)}>
             View
           </Button>
-          <Button
-            size="small"
-            icon={record.status === TaskStatus.RUNNING ? <Square size={14} /> : <Trash2 size={14} />}
-            danger={record.status === TaskStatus.RUNNING}
-            disabled={record.status === TaskStatus.COMPLETED || record.status === TaskStatus.FAILED}
-            onClick={() => handleCancel(record)}
-          >
-            Cancel
-          </Button>
+          {isRunnableTask(record.status) ? (
+            <Button size="small" icon={<Square size={14} />} danger onClick={() => handleCancel(record)}>
+              Cancel
+            </Button>
+          ) : (
+            <Button size="small" icon={<Trash2 size={14} />} danger onClick={() => handleDelete(record)}>
+              Delete
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -163,11 +185,14 @@ const TaskList: React.FC = () => {
   return (
     <Layout className="app-shell">
       <Header className="topbar">
-        <div>
-          <Typography.Title level={4} style={{ margin: 0 }}>
-            TracePilot
+        <div className="topbar-brand">
+          <Typography.Text className="brand-kicker">Multi-Agent Security Analysis</Typography.Text>
+          <Typography.Title level={3} className="topbar-title">
+            TracePilot Dashboard
           </Typography.Title>
-          <Typography.Text type="secondary">Agent observability dashboard</Typography.Text>
+          <Typography.Text type="secondary" className="topbar-subtitle">
+            Live trace debugging, persisted evidence, and reproducible audit runs.
+          </Typography.Text>
         </div>
         <Space>
           <Button icon={<RefreshCcw size={15} />} onClick={fetchTasks}>
@@ -182,27 +207,55 @@ const TaskList: React.FC = () => {
       <Content className="task-list-page">
         <Row gutter={[16, 16]} className="stat-row">
           <Col xs={12} lg={6}>
-            <Card>
-              <span className="metric-label">Total Tasks</span>
-              <span className="metric-value large">{stats.total}</span>
+            <Card className="metric-card metric-card-total">
+              <div className="metric-card-inner">
+                <span className="metric-icon">
+                  <ListChecks size={22} />
+                </span>
+                <div>
+                  <span className="metric-label">Total Tasks</span>
+                  <span className="metric-value large">{stats.total}</span>
+                </div>
+              </div>
             </Card>
           </Col>
           <Col xs={12} lg={6}>
-            <Card>
-              <span className="metric-label">Running</span>
-              <span className="metric-value large text-blue">{stats.running}</span>
+            <Card className="metric-card metric-card-running">
+              <div className="metric-card-inner">
+                <span className="metric-icon">
+                  <Activity size={22} />
+                </span>
+                <div>
+                  <span className="metric-label">Running</span>
+                  <span className="metric-value large text-blue">{stats.running}</span>
+                </div>
+              </div>
             </Card>
           </Col>
           <Col xs={12} lg={6}>
-            <Card>
-              <span className="metric-label">Completed</span>
-              <span className="metric-value large text-green">{stats.completed}</span>
+            <Card className="metric-card metric-card-completed">
+              <div className="metric-card-inner">
+                <span className="metric-icon">
+                  <CheckCircle2 size={22} />
+                </span>
+                <div>
+                  <span className="metric-label">Completed</span>
+                  <span className="metric-value large text-green">{stats.completed}</span>
+                </div>
+              </div>
             </Card>
           </Col>
           <Col xs={12} lg={6}>
-            <Card>
-              <span className="metric-label">Failed</span>
-              <span className="metric-value large text-red">{stats.failed}</span>
+            <Card className="metric-card metric-card-failed">
+              <div className="metric-card-inner">
+                <span className="metric-icon">
+                  <XCircle size={22} />
+                </span>
+                <div>
+                  <span className="metric-label">Failed</span>
+                  <span className="metric-value large text-red">{stats.failed}</span>
+                </div>
+              </div>
             </Card>
           </Col>
         </Row>
