@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, Layout, Space, Spin, Tabs, Tag, Typography } from "antd";
-import { ArrowLeft, FileText, FolderOpen, RefreshCcw, Wifi, WifiOff } from "lucide-react";
+import { Activity, ArrowLeft, Bot, FileText, FolderOpen, ListTree, RefreshCcw, Wifi, WifiOff } from "lucide-react";
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
 import { AGENT_NAMES } from "../constants/agents";
 import AgentFileLogs from "../components/AgentFileLogs";
+import AgentInsights from "../components/AgentInsights";
+import AgentTimeline from "../components/AgentTimeline";
 import LogDetailDrawer from "../components/LogDetailDrawer";
 import LogStream from "../components/LogStream";
-import MarkdownRenderer from "../components/MarkdownRenderer";
+import StructuredReport from "../components/StructuredReport";
 import { getTask } from "../services/api";
 import WebSocketService from "../services/WebSocketService";
 import { LogLevel, LogMessage, Task, TaskEvent, TaskStatus } from "../types";
@@ -218,12 +220,55 @@ const Dashboard: React.FC = () => {
           <div className="workbench-grid">
             <AgentNavigator stats={agentStats} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} />
 
-            <LogStream events={events} selectedAgent={selectedAgent} onSelectLog={openLog} />
+            <div className="analysis-center">
+              <Tabs
+                defaultActiveKey="stream"
+                items={[
+                  {
+                    key: "stream",
+                    label: (
+                      <Space size={6}>
+                        <Activity size={14} />
+                        Log Stream
+                      </Space>
+                    ),
+                    children: <LogStream events={events} selectedAgent={selectedAgent} onSelectLog={openLog} />,
+                  },
+                  {
+                    key: "timeline",
+                    label: (
+                      <Space size={6}>
+                        <ListTree size={14} />
+                        Timeline
+                      </Space>
+                    ),
+                    children: <AgentTimeline events={events} selectedAgent={selectedAgent} onSelectLog={openLog} />,
+                  },
+                ]}
+              />
+            </div>
 
             <aside className="inspector-panel">
               <Tabs
-                defaultActiveKey="report"
+                defaultActiveKey="agents"
                 items={[
+                  {
+                    key: "agents",
+                    label: (
+                      <Space size={6}>
+                        <Bot size={14} />
+                        Agent Brief
+                      </Space>
+                    ),
+                    children: (
+                      <AgentInsights
+                        events={events}
+                        selectedAgent={selectedAgent}
+                        onSelectAgent={setSelectedAgent}
+                        onSelectLog={openLog}
+                      />
+                    ),
+                  },
                   {
                     key: "report",
                     label: (
@@ -232,17 +277,7 @@ const Dashboard: React.FC = () => {
                         Final Report
                       </Space>
                     ),
-                    children: task?.final_report ? (
-                      <div className="report-view">
-                        <MarkdownRenderer content={task.final_report} />
-                      </div>
-                    ) : (
-                      <div className="empty-report">
-                        <Typography.Text type="secondary">
-                          Final report will appear here when the task completes.
-                        </Typography.Text>
-                      </div>
-                    ),
+                    children: <StructuredReport task={task} events={events} />,
                   },
                   {
                     key: "agent-files",

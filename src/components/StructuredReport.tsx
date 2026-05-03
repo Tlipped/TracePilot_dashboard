@@ -1,0 +1,336 @@
+import React, { useMemo } from "react";
+import { App as AntdApp, Button, Empty, Space, Tag, Typography } from "antd";
+import { Bug, CheckCircle2, Download, FileJson, KeyRound, Route, ShieldCheck, Wrench } from "lucide-react";
+import { LogLevel, LogMessage, MsgType, Task, TaskEvent } from "../types";
+import MarkdownRenderer from "./MarkdownRenderer";
+
+interface StructuredReportProps {
+  task: Task | null;
+  events: TaskEvent[];
+}
+
+interface ReportSection {
+  key: string;
+  title: string;
+  description: string;
+  content: string;
+  icon: React.ReactNode;
+}
+
+interface AgentExportSummary {
+  agent: string;
+  total: number;
+  errors: number;
+  warnings: number;
+  tool_calls: number;
+  results: number;
+  latest_message?: string;
+  latest_timestamp?: string;
+}
+
+const SECTION_DEFS = [
+  {
+    key: "root_cause",
+    title: "漏洞根因",
+    description: "定位到的根因函数、状态变量或权限/逻辑缺陷。",
+    icon: <Bug size={16} />,
+    patterns: ["漏洞根因", "根因", "Root Cause", "Vulnerability Root Cause", "Fault Cause"],
+    keywords: ["root cause", "漏洞", "根因", "vulnerab", "fault", "缺陷"],
+  },
+  {
+    key: "attack_path",
+    title: "攻击路径",
+    description: "攻击者如何通过交易序列、调用链和状态变化触发漏洞。",
+    icon: <Route size={16} />,
+    patterns: ["攻击路径", "攻击流程", "Attack Path", "Exploit Path", "Attack Flow"],
+    keywords: ["attack", "exploit", "攻击", "调用", "路径", "flow"],
+  },
+  {
+    key: "key_transactions",
+    title: "关键交易",
+    description: "与漏洞触发、收益转移或验证闭环直接相关的交易证据。",
+    icon: <KeyRound size={16} />,
+    patterns: ["关键交易", "核心交易", "Key Transactions", "Critical Transactions", "Transactions"],
+    keywords: ["transaction", "tx", "交易", "hash", "0x"],
+  },
+  {
+    key: "patch_suggestions",
+    title: "补丁建议",
+    description: "可落地的 Solidity 修复方案、约束条件和防护策略。",
+    icon: <Wrench size={16} />,
+    patterns: ["补丁建议", "修复建议", "Patch", "Patch Suggestions", "Mitigation", "Fix"],
+    keywords: ["patch", "fix", "mitigation", "修复", "补丁", "require", "check"],
+  },
+  {
+    key: "verification_results",
+    title: "验证结果",
+    description: "补丁回放、攻击抵抗结果、失败原因或剩余风险。",
+    icon: <ShieldCheck size={16} />,
+    patterns: ["验证结果", "补丁验证", "Verification", "Validation", "Replay Result"],
+    keywords: ["verify", "validation", "replay", "验证", "抵挡", "success", "failure"],
+  },
+];
+
+function isLogEvent(event: TaskEvent): event is LogMessage {
+  return event.type === "LOG";
+}
+
+function compactText(value: string, limit = 260) {
+  const cleaned = value.replace(/\s+/g, " ").trim();
+  return cleaned.length > limit ? `${cleaned.slice(0, limit)}...` : cleaned;
+}
+
+function normalizeHeading(value: string) {
+  return value
+    .replace(/^#+\s*/, "")
+    .replace(/^\d+[.)、]\s*/, "")
+    .replace(/[:：]\s*$/, "")
+    .trim()
+    .toLowerCase();
+}
+
+function extractHeadingSections(report: string) {
+  const lines = report.split(/\r?\n/);
+  const sections: Array<{ heading: string; content: string }> = [];
+  let currentHeading = "";
+  let currentLines: string[] = [];
+
+  for (const line of lines) {
+    const headingMatch = line.match(/^\s{0,3}(#{1,4}\s+.+|\d+[.)、]\s+.+)$/);
+    if (headingMatch) {
+      if (currentHeading) sections.push({ heading: currentHeading, content: currentLines.join("\n").trim() });
+      currentHeading = normalizeHeading(headingMatch[1]);
+      currentLines = [];
+      continue;
+    }
+
+    if (currentHeading) currentLines.push(line);
+  }
+
+  if (currentHeading) sections.push({ heading: currentHeading, content: currentLines.join("\n").trim() });
+  return sections;
+}
+
+function findSectionByHeading(report: string, patterns: string[]) {
+  const headingSections = extractHeadingSections(report);
+  const normalizedPatterns = patterns.map((pattern) => pattern.toLowerCase());
+  const match = headingSections.find((section) =>
+    normalizedPatterns.some((pattern) => section.heading.includes(pattern)),
+  );
+  return match?.content ?? "";
+}
+
+function findParagraphByKeyword(report: string, keywords: string[]) {
+  const paragraphs = report
+    .split(/\n\s*\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const normalizedKeywords = keywords.map((keyword) => keyword.toLowerCase());
+  const match = paragraphs.find((paragraph) => {
+    const normalized = paragraph.toLowerCase();
+    return normalizedKeywords.some((keyword) => normalized.includes(keyword));
+  });
+  return match ? compactText(match, 900) : "";
+}
+
+function extractTransactions(report: string, events: TaskEvent[]) {
+  const joinedLogs = events
+    .filter(isLogEvent)
+    .slice(-300)
+    .map((event) => event.message)
+    .join("\n");
+  const matches = Array.from(`${report}\n${joinedLogs}`.matchAll(/0x[a-fA-F0-9]{64}/g)).map((item) => item[0]);
+  return Array.from(new Set(matches)).slice(0, 12);
+}
+
+function parseReportSections(report: string, events: TaskEvent[]): ReportSection[] {
+  const transactions = extractTransactions(report, events);
+  return SECTION_DEFS.map((definition) => {
+    const byHeading = findSectionByHeading(report, definition.patterns);
+    const fallback =
+      definition.key === "key_transactions" && transactions.length > 0
+        ? transactions.map((hash) => `- \`${hash}\``).join("\n")
+        : findParagraphByKeyword(report, definition.keywords);
+
+    return {
+      key: definition.key,
+      title: definition.title,
+      description: definition.description,
+      icon: definition.icon,
+      content: byHeading || fallback || "暂未从最终报告中提取到该区块，可查看 Raw Report 获取完整上下文。",
+    };
+  });
+}
+
+function buildAgentSummaries(events: TaskEvent[]): AgentExportSummary[] {
+  const map = new Map<string, AgentExportSummary>();
+
+  events.forEach((event) => {
+    if (!isLogEvent(event)) return;
+    const current =
+      map.get(event.agent) ??
+      ({
+        agent: event.agent,
+        total: 0,
+        errors: 0,
+        warnings: 0,
+        tool_calls: 0,
+        results: 0,
+      } satisfies AgentExportSummary);
+
+    current.total += 1;
+    if (event.level === LogLevel.ERROR) current.errors += 1;
+    if (event.level === LogLevel.WARNING) current.warnings += 1;
+    if (event.message_type === MsgType.TOOL_CALL) current.tool_calls += 1;
+    if (event.message_type === MsgType.RESULT) current.results += 1;
+    current.latest_message = compactText(event.message);
+    current.latest_timestamp = event.timestamp;
+    map.set(event.agent, current);
+  });
+
+  return Array.from(map.values()).sort((a, b) => b.total - a.total || a.agent.localeCompare(b.agent));
+}
+
+function downloadText(filename: string, content: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function safeName(value?: string) {
+  return (value || "tracepilot").replace(/[\\/:*?"<>|\s]+/g, "_");
+}
+
+function buildMarkdownExport(task: Task, sections: ReportSection[], agentSummaries: AgentExportSummary[]) {
+  const lines = [
+    `# TracePilot Audit Report - ${task.dapp_name}`,
+    "",
+    "## Task Metadata",
+    "",
+    `- Task ID: \`${task.task_id}\``,
+    `- Status: \`${task.status}\``,
+    `- Created: ${task.created_at}`,
+    `- Completed: ${task.completed_at ?? "N/A"}`,
+    `- Duration: ${task.duration ?? "N/A"}`,
+    "",
+    ...sections.flatMap((section) => [`## ${section.title}`, "", section.content, ""]),
+    "## Agent Evidence Summary",
+    "",
+    "| Agent | Events | Tool Calls | Results | Errors | Warnings |",
+    "| --- | ---: | ---: | ---: | ---: | ---: |",
+    ...agentSummaries.map(
+      (agent) =>
+        `| ${agent.agent} | ${agent.total} | ${agent.tool_calls} | ${agent.results} | ${agent.errors} | ${agent.warnings} |`,
+    ),
+    "",
+    "## Raw Final Report",
+    "",
+    task.final_report || "N/A",
+  ];
+  return lines.join("\n");
+}
+
+const StructuredReport: React.FC<StructuredReportProps> = ({ task, events }) => {
+  const { message } = AntdApp.useApp();
+  const finalReport = task?.final_report ?? "";
+  const sections = useMemo(() => parseReportSections(finalReport, events), [events, finalReport]);
+  const agentSummaries = useMemo(() => buildAgentSummaries(events), [events]);
+  const logEvents = useMemo(() => events.filter(isLogEvent), [events]);
+
+  const exportMarkdown = () => {
+    if (!task) return;
+    downloadText(
+      `${safeName(task.dapp_name)}_${task.task_id.slice(0, 8)}_audit_report.md`,
+      buildMarkdownExport(task, sections, agentSummaries),
+      "text/markdown;charset=utf-8",
+    );
+    message.success("Markdown audit report exported");
+  };
+
+  const exportJson = () => {
+    if (!task) return;
+    const payload = {
+      exported_at: new Date().toISOString(),
+      task,
+      report_sections: sections.map((section) => ({
+        key: section.key,
+        title: section.title,
+        description: section.description,
+        content: section.content,
+      })),
+      agent_summaries: agentSummaries,
+      log_event_count: logEvents.length,
+      events,
+    };
+    downloadText(
+      `${safeName(task.dapp_name)}_${task.task_id.slice(0, 8)}_evidence_package.json`,
+      JSON.stringify(payload, null, 2),
+      "application/json;charset=utf-8",
+    );
+    message.success("JSON evidence package exported");
+  };
+
+  if (!task?.final_report) {
+    return (
+      <div className="empty-report">
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Final report will appear here when the task completes." />
+      </div>
+    );
+  }
+
+  return (
+    <div className="structured-report-panel">
+      <div className="report-actions">
+        <div>
+          <Typography.Text strong>Structured Audit Report</Typography.Text>
+          <Typography.Text type="secondary">{sections.length} sections extracted from final report.</Typography.Text>
+        </div>
+        <Space size={8} wrap>
+          <Button size="small" icon={<Download size={14} />} onClick={exportMarkdown}>
+            Export MD
+          </Button>
+          <Button size="small" icon={<FileJson size={14} />} onClick={exportJson}>
+            Export JSON
+          </Button>
+        </Space>
+      </div>
+
+      <div className="report-section-list">
+        {sections.map((section) => (
+          <section className="report-section-card" key={section.key}>
+            <div className="report-section-head">
+              <span className="report-section-icon">{section.icon}</span>
+              <div>
+                <Typography.Text strong>{section.title}</Typography.Text>
+                <Typography.Text type="secondary">{section.description}</Typography.Text>
+              </div>
+              {section.content.startsWith("暂未") ? <Tag>fallback</Tag> : <Tag color="success">parsed</Tag>}
+            </div>
+            <MarkdownRenderer content={section.content} compact />
+          </section>
+        ))}
+
+        <section className="report-section-card raw-report-card">
+          <div className="report-section-head">
+            <span className="report-section-icon">
+              <CheckCircle2 size={16} />
+            </span>
+            <div>
+              <Typography.Text strong>Raw Report</Typography.Text>
+              <Typography.Text type="secondary">完整原始报告，保留模型输出上下文。</Typography.Text>
+            </div>
+          </div>
+          <MarkdownRenderer content={finalReport} compact />
+        </section>
+      </div>
+    </div>
+  );
+};
+
+export default StructuredReport;
