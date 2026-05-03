@@ -43,6 +43,7 @@ TracePilot-dashboard/
 │   │   ├── LogStream.tsx           # 实时日志流
 │   │   ├── MarkdownRenderer.tsx    # Markdown 渲染
 │   │   └── StructuredReport.tsx    # 结构化报告与导出
+│   ├── config/                     # 后端地址等运行配置
 │   ├── constants/                  # Agent 名称等常量
 │   ├── data/                       # DApp 样例数据，用于创建任务下拉列表
 │   ├── pages/
@@ -103,11 +104,22 @@ npm install
 http://localhost:8000
 ```
 
-如需修改，创建 `.env.local`：
+后端地址统一由 `src/config/appConfig.ts` 管理。日常开发可以直接改这个文件里的默认值；部署或多人协作时，推荐创建 `.env.local` 覆盖：
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000
+VITE_BACKEND_HTTP_URL=http://localhost:8000
+
+# 可选；不填时会根据 HTTP 地址自动推导为 ws:// 或 wss://
+VITE_BACKEND_WS_URL=ws://localhost:8000
 ```
+
+如果后端上线到 HTTPS 域名，例如：
+
+```env
+VITE_BACKEND_HTTP_URL=https://tracepilot-api.example.com
+```
+
+前端会自动把 WebSocket 地址推导为 `wss://tracepilot-api.example.com`。旧变量 `VITE_API_BASE_URL` 和 `VITE_WS_BASE_URL` 仍然兼容，但新项目建议使用 `VITE_BACKEND_HTTP_URL` 和 `VITE_BACKEND_WS_URL`。
 
 ### 4. 启动开发服务
 
@@ -168,7 +180,7 @@ http://localhost:5173
 
 ## API 对接
 
-前端 API 封装位于 `src/services/api.ts`。
+后端服务地址统一配置在 `src/config/appConfig.ts`，REST API 封装位于 `src/services/api.ts`。
 
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
@@ -205,6 +217,7 @@ npm run preview
 
 - 页面级组件放在 `src/pages`。
 - 可复用组件放在 `src/components`。
+- 后端地址统一写在 `src/config/appConfig.ts`，避免在业务组件里硬编码 localhost。
 - 后端接口统一写在 `src/services/api.ts`。
 - WebSocket 状态和历史事件统一由 `WebSocketService` 管理。
 - 后端返回结构变化时，同步更新 `src/types/index.ts`。
@@ -215,7 +228,7 @@ npm run preview
 
 ### 1. 页面提示 `Failed to fetch tasks`
 
-通常是后端没有启动，或 `VITE_API_BASE_URL` 配置错误。先确认：
+通常是后端没有启动，或 `VITE_BACKEND_HTTP_URL` 配置错误。先确认：
 
 ```text
 http://localhost:8000/docs

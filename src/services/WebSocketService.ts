@@ -1,7 +1,5 @@
+import { BACKEND_WS_URL } from "../config/appConfig";
 import { LogLevel, MsgType, TaskEvent } from "../types";
-
-const API_HOST = import.meta.env.VITE_API_HOST ?? "127.0.0.1:8000";
-const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL ?? `ws://${API_HOST}`;
 
 type Listener = (event: TaskEvent) => void;
 type StatusListener = (status: WebSocket["readyState"] | null) => void;
@@ -29,7 +27,7 @@ class WebSocketService {
   }
 
   public connect(taskId: string, onConnect?: () => void, onError?: (error: string) => void): void {
-    const targetUrl = `${WS_BASE_URL}/ws/${taskId}`;
+    const targetUrl = `${BACKEND_WS_URL}/ws/${taskId}`;
 
     if (this.ws && this.url === targetUrl) {
       if (this.ws.readyState === WebSocket.OPEN) {

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { BACKEND_HTTP_URL } from "../config/appConfig";
 import {
   AgentLogFileResponse,
   AgentLogFilesResponse,
@@ -8,7 +9,7 @@ import {
 } from "../types";
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000",
+  baseURL: BACKEND_HTTP_URL,
 });
 
 export async function listTasks(includeArchived = false): Promise<Task[]> {
