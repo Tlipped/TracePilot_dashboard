@@ -45,6 +45,7 @@ export interface Task {
   final_report?: string | null;
   result?: unknown;
   error?: string | null;
+  archived?: boolean;
 }
 
 export interface ConnectedEvent {
@@ -75,6 +76,7 @@ export interface TaskStatusEvent {
   completed_at?: string | null;
   duration?: number | null;
   error?: string | null;
+  archived?: boolean;
 }
 
 export interface TaskFinalEvent {
@@ -86,6 +88,7 @@ export interface TaskFinalEvent {
   duration?: number | null;
   final_report?: string | null;
   error?: string | null;
+  archived?: boolean;
 }
 
 export interface LogDroppedEvent {

@@ -2,8 +2,20 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { App as AntdApp, Button, Card, Col, Layout, Modal, Row, Select, Space, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { Activity, CheckCircle2, Eye, ListChecks, Play, RefreshCcw, Square, Trash2, XCircle } from "lucide-react";
-import { cancelTask, createTask, deleteTask, listTasks } from "../services/api";
+import {
+  Activity,
+  Archive,
+  CheckCircle2,
+  Eye,
+  ListChecks,
+  Play,
+  RefreshCcw,
+  Square,
+  Trash2,
+  Undo2,
+  XCircle,
+} from "lucide-react";
+import { archiveTask, cancelTask, createTask, deleteTask, listTasks, unarchiveTask } from "../services/api";
 import { Task, TaskCreateRequest, TaskStatus } from "../types";
 
 const { Header, Content } = Layout;
@@ -46,18 +58,19 @@ const TaskList: React.FC = () => {
   const [selectedDapps, setSelectedDapps] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | TaskStatus>("all");
+  const [archiveFilter, setArchiveFilter] = useState<"active" | "archived" | "all">("active");
   const navigate = useNavigate();
 
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
-      setTasks(await listTasks());
+      setTasks(await listTasks(archiveFilter !== "active"));
     } catch {
       message.error("Failed to fetch tasks");
     } finally {
       setLoading(false);
     }
-  }, [message]);
+  }, [archiveFilter, message]);
 
   useEffect(() => {
     fetchTasks();
@@ -120,16 +133,40 @@ const TaskList: React.FC = () => {
     });
   };
 
+  const handleArchive = async (task: Task) => {
+    try {
+      await archiveTask(task.task_id);
+      message.success("Task archived");
+      await fetchTasks();
+    } catch (error: unknown) {
+      message.error(getErrorMessage(error, "Failed to archive task"));
+    }
+  };
+
+  const handleRestore = async (task: Task) => {
+    try {
+      await unarchiveTask(task.task_id);
+      message.success("Task restored");
+      await fetchTasks();
+    } catch (error: unknown) {
+      message.error(getErrorMessage(error, "Failed to restore task"));
+    }
+  };
+
   const filteredTasks = useMemo(() => {
-    if (statusFilter === "all") return tasks;
-    return tasks.filter((task) => task.status === statusFilter);
-  }, [statusFilter, tasks]);
+    return tasks.filter((task) => {
+      if (archiveFilter === "active" && task.archived) return false;
+      if (archiveFilter === "archived" && !task.archived) return false;
+      if (statusFilter !== "all" && task.status !== statusFilter) return false;
+      return true;
+    });
+  }, [archiveFilter, statusFilter, tasks]);
 
   const stats = {
-    total: tasks.length,
-    running: tasks.filter((task) => task.status === TaskStatus.RUNNING).length,
-    completed: tasks.filter((task) => task.status === TaskStatus.COMPLETED).length,
-    failed: tasks.filter((task) => task.status === TaskStatus.FAILED).length,
+    total: filteredTasks.length,
+    running: filteredTasks.filter((task) => task.status === TaskStatus.RUNNING).length,
+    completed: filteredTasks.filter((task) => task.status === TaskStatus.COMPLETED).length,
+    failed: filteredTasks.filter((task) => task.status === TaskStatus.FAILED).length,
   };
 
   const columns: ColumnsType<Task> = [
@@ -143,7 +180,12 @@ const TaskList: React.FC = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status: TaskStatus) => <Tag color={getStatusColor(status)}>{status.toUpperCase()}</Tag>,
+      render: (status: TaskStatus, record) => (
+        <Space size={6}>
+          <Tag color={getStatusColor(status)}>{status.toUpperCase()}</Tag>
+          {record.archived ? <Tag>ARCHIVED</Tag> : null}
+        </Space>
+      ),
       filters: Object.values(TaskStatus).map((value) => ({ text: value, value })),
       onFilter: (value, record) => record.status === value,
     },
@@ -162,7 +204,7 @@ const TaskList: React.FC = () => {
     {
       title: "Action",
       key: "action",
-      width: 220,
+      width: 330,
       render: (_, record) => (
         <Space>
           <Button size="small" icon={<Eye size={14} />} onClick={() => navigate(`/tasks/${record.task_id}`)}>
@@ -172,11 +214,20 @@ const TaskList: React.FC = () => {
             <Button size="small" icon={<Square size={14} />} danger onClick={() => handleCancel(record)}>
               Cancel
             </Button>
+          ) : record.archived ? (
+            <Button size="small" icon={<Undo2 size={14} />} onClick={() => handleRestore(record)}>
+              Restore
+            </Button>
           ) : (
+            <Button size="small" icon={<Archive size={14} />} onClick={() => handleArchive(record)}>
+              Archive
+            </Button>
+          )}
+          {!isRunnableTask(record.status) ? (
             <Button size="small" icon={<Trash2 size={14} />} danger onClick={() => handleDelete(record)}>
               Delete
             </Button>
-          )}
+          ) : null}
         </Space>
       ),
     },
@@ -266,6 +317,15 @@ const TaskList: React.FC = () => {
               <Typography.Title level={5}>Tasks</Typography.Title>
               <Typography.Text type="secondary">Create, resume, and inspect analysis runs.</Typography.Text>
             </div>
+            <Select
+              value={archiveFilter}
+              onChange={setArchiveFilter}
+              options={[
+                { label: "Active tasks", value: "active" },
+                { label: "Archived", value: "archived" },
+                { label: "All records", value: "all" },
+              ]}
+            />
             <Select
               value={statusFilter}
               onChange={setStatusFilter}

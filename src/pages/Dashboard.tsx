@@ -102,6 +102,7 @@ const Dashboard: React.FC = () => {
           final_report: prev?.final_report,
           result: prev?.result,
           error: event.error,
+          archived: event.archived ?? prev?.archived ?? false,
         }));
       }
 
@@ -116,6 +117,7 @@ const Dashboard: React.FC = () => {
           final_report: event.final_report,
           result: prev?.result,
           error: event.error,
+          archived: event.archived ?? prev?.archived ?? false,
         }));
       }
     };
@@ -177,6 +179,7 @@ const Dashboard: React.FC = () => {
         </Space>
         <Space size={10}>
           <Tag color={getStatusColor(task?.status)}>{task?.status ?? "loading"}</Tag>
+          {task?.archived ? <Tag>archived</Tag> : null}
           <Tag>{task?.dapp_name ?? "Unknown DApp"}</Tag>
           <Tag>{formatDuration(task?.duration)}</Tag>
           <Tag icon={wsOpen ? <Wifi size={13} /> : <WifiOff size={13} />} color={connectionColor}>
@@ -302,7 +305,10 @@ const Dashboard: React.FC = () => {
                         </div>
                         <div>
                           <span>Status</span>
-                          <Tag color={getStatusColor(task?.status)}>{task?.status}</Tag>
+                          <Space size={6}>
+                            <Tag color={getStatusColor(task?.status)}>{task?.status}</Tag>
+                            {task?.archived ? <Tag>archived</Tag> : null}
+                          </Space>
                         </div>
                         <div>
                           <span>Created</span>
