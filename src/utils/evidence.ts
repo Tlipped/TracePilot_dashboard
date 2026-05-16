@@ -13,11 +13,51 @@ export function isLogEvent(event: TaskEvent): event is LogMessage {
 
 export function compactEvidenceText(value: string, limit = 520) {
   const cleaned = value
-    .replace(/```[\s\S]*?```/g, " code block ")
+    .replace(/```(?:json|python|solidity|text|markdown)?/gi, "")
+    .replace(/```/g, "")
+    .replace(/📊\s*统计\s*:?.*?(?:Token\s+\d+)?/gi, " ")
+    .replace(/耗时\s*\d+(?:\.\d+)?s\s*\|\s*Token\s*\d+/gi, " ")
     .replace(/[#*_>`{}[\]]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   return cleaned.length > limit ? `${cleaned.slice(0, limit)}...` : cleaned;
+}
+
+function isLowValueOperationalLog(log: LogMessage) {
+  const cleaned = compactEvidenceText(log.message, 1200).toLowerCase();
+  if (!cleaned) return true;
+
+  const operationalOnlyPatterns = [
+    /^任务输出\s*$/i,
+    /^task output\s*$/i,
+    /^interaction:\s*(query|response)\s*$/i,
+    /^snapshot snippet:/i,
+    /^model determines invocation of tools\s*\(\d+\):?\s*$/i,
+  ];
+  if (operationalOnlyPatterns.some((pattern) => pattern.test(cleaned))) return true;
+
+  const hasSubstantiveSignal = [
+    "root cause",
+    "attack",
+    "exploit",
+    "transaction",
+    "trace",
+    "storage",
+    "event",
+    "patch",
+    "verify",
+    "validation",
+    "根因",
+    "攻击",
+    "交易",
+    "调用",
+    "状态",
+    "补丁",
+    "验证",
+    "0x",
+  ].some((keyword) => cleaned.includes(keyword));
+
+  return !hasSubstantiveSignal && cleaned.length < 80;
 }
 
 export function extractTransactionHashes(content: string) {
@@ -36,6 +76,8 @@ function getSectionKeywords(sectionKey: ReportSectionKey) {
 }
 
 function scoreLogForSection(log: LogMessage, sectionKey: ReportSectionKey) {
+  if (isLowValueOperationalLog(log)) return 0;
+
   const haystack = `${log.agent} ${log.level} ${log.message_type} ${log.message}`.toLowerCase();
   const keywords = getSectionKeywords(sectionKey);
   let score = 0;
@@ -44,7 +86,7 @@ function scoreLogForSection(log: LogMessage, sectionKey: ReportSectionKey) {
     if (haystack.includes(keyword.toLowerCase())) score += 2;
   });
   if (log.message_type === MsgType.TOOL_CALL && ["attack_path", "key_transactions"].includes(sectionKey)) score += 2;
-  if (log.message_type === MsgType.RESULT) score += 1;
+  if (log.message_type === MsgType.RESULT && !isLowValueOperationalLog(log)) score += 1;
   if (log.level === LogLevel.ERROR || log.level === LogLevel.WARNING) score += 1;
 
   return score;
@@ -76,6 +118,7 @@ export function buildEvidenceForSection(
 
   const rankedLogs = events
     .filter(isLogEvent)
+    .filter((log) => !isLowValueOperationalLog(log))
     .map((log, index) => ({ log, index, score: scoreLogForSection(log, sectionKey) }))
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score || b.index - a.index)
@@ -116,6 +159,7 @@ export function buildAttackPhaseEvidence(events: TaskEvent[], keywords: string[]
   const normalized = keywords.map((keyword) => keyword.toLowerCase());
   return events
     .filter(isLogEvent)
+    .filter((log) => !isLowValueOperationalLog(log))
     .filter((log) => {
       const haystack = `${log.agent} ${log.message}`.toLowerCase();
       return normalized.some((keyword) => haystack.includes(keyword));
