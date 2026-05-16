@@ -4,8 +4,10 @@ import {
   AgentLogFileResponse,
   AgentLogFilesResponse,
   FullLogResponse,
+  MacroAnalysisResponse,
   Task,
   TaskCreateRequest,
+  TaskLogPageResponse,
 } from "../types";
 
 export const api = axios.create({
@@ -21,6 +23,11 @@ export async function listTasks(includeArchived = false): Promise<Task[]> {
 
 export async function getTask(taskId: string): Promise<Task> {
   const response = await api.get<Task>(`/api/tasks/${taskId}`);
+  return response.data;
+}
+
+export async function getMacroAnalysis(taskId: string): Promise<MacroAnalysisResponse> {
+  const response = await api.get<MacroAnalysisResponse>(`/api/tasks/${taskId}/macro-analysis`);
   return response.data;
 }
 
@@ -47,6 +54,14 @@ export async function unarchiveTask(taskId: string): Promise<void> {
 
 export async function getFullLog(taskId: string, logId: string): Promise<FullLogResponse> {
   const response = await api.get<FullLogResponse>(`/api/task/${taskId}/log/${logId}`);
+  return response.data;
+}
+
+export async function getTaskLogs(
+  taskId: string,
+  params: { limit?: number; before_id?: number | null } = {},
+): Promise<TaskLogPageResponse> {
+  const response = await api.get<TaskLogPageResponse>(`/api/tasks/${taskId}/logs`, { params });
   return response.data;
 }
 

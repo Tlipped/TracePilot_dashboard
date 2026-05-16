@@ -1,7 +1,18 @@
 import React, { useMemo, useState } from "react";
 import { App as AntdApp, Button, Empty, Space, Tag, Typography } from "antd";
 import { Bug, CheckCircle2, Download, FileJson, KeyRound, Route, SearchCheck, ShieldCheck, Wrench } from "lucide-react";
-import { EvidenceItem, LogLevel, LogMessage, MsgType, ProductViewMode, ReportSectionKey, Task, TaskEvent } from "../types";
+import {
+  EvidenceItem,
+  LanguageMode,
+  LogLevel,
+  LogMessage,
+  MacroAnalysisResponse,
+  MsgType,
+  ProductViewMode,
+  ReportSectionKey,
+  Task,
+  TaskEvent,
+} from "../types";
 import { buildEvidenceForSection } from "../utils/evidence";
 import EvidenceDrawer from "./EvidenceDrawer";
 import KeyTransactionCards from "./KeyTransactionCards";
@@ -12,6 +23,8 @@ interface StructuredReportProps {
   task: Task | null;
   events: TaskEvent[];
   mode?: ProductViewMode;
+  macroAnalysis?: MacroAnalysisResponse | null;
+  language?: LanguageMode;
 }
 
 interface ReportSection {
@@ -251,7 +264,13 @@ function buildMarkdownExport(task: Task, sections: ReportSection[], agentSummari
   return lines.join("\n");
 }
 
-const StructuredReport: React.FC<StructuredReportProps> = ({ task, events, mode = "report" }) => {
+const StructuredReport: React.FC<StructuredReportProps> = ({
+  task,
+  events,
+  mode = "report",
+  macroAnalysis,
+  language = "en",
+}) => {
   const { message } = AntdApp.useApp();
   const [selectedSection, setSelectedSection] = useState<ReportSection | null>(null);
   const finalReport = task?.final_report ?? "";
@@ -323,7 +342,7 @@ const StructuredReport: React.FC<StructuredReportProps> = ({ task, events, mode 
 
       <div className="report-section-list">
         <div className="product-summary-grid">
-          <KeyTransactionCards task={task} events={events} />
+          <KeyTransactionCards task={task} events={events} macroAnalysis={macroAnalysis} language={language} />
           <PatchVerificationPanel task={task} events={events} />
         </div>
 

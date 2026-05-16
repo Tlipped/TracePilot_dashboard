@@ -1,41 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Button, Descriptions, Drawer, Empty, List, Space, Tag, Typography } from "antd";
 import { ExternalLink, Info } from "lucide-react";
-
-interface DappReference {
-  time?: string;
-  link?: string;
-}
-
-interface DappMetadata {
-  name?: string;
-  cause?: string;
-  platform?: string;
-  time?: string;
-  transaction_hash?: string[];
-  report?: string;
-  detection?: DappReference;
-  disclosure?: DappReference;
-  root_cause?: string;
-  report_link?: string;
-}
-
-const dappModules = import.meta.glob("../data/*.json", { eager: true, import: "default" }) as Record<
-  string,
-  DappMetadata
->;
-
-const DAPP_CONTEXT_MAP = Object.fromEntries(
-  Object.entries(dappModules).map(([path, data]) => {
-    const fallbackName = path.split("/").pop()?.replace(/\.json$/, "") ?? "";
-    return [data.name ?? fallbackName, data];
-  }),
-) as Record<string, DappMetadata>;
-
-function shortHash(hash: string) {
-  if (hash.length <= 18) return hash;
-  return `${hash.slice(0, 10)}...${hash.slice(-8)}`;
-}
+import { getDappMetadata, shortHash } from "../utils/dappMetadata";
 
 function openExternal(url?: string) {
   if (!url) return;
@@ -51,7 +17,7 @@ interface Props {
 
 const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "default", disabled }) => {
   const [open, setOpen] = useState(false);
-  const metadata = useMemo(() => (dappName ? DAPP_CONTEXT_MAP[dappName] : undefined), [dappName]);
+  const metadata = useMemo(() => getDappMetadata(dappName), [dappName]);
   const title = metadata?.name ?? dappName ?? "DApp";
   const references = [
     { label: "Detection", ...metadata?.detection },

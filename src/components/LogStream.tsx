@@ -14,12 +14,15 @@ import {
   Wrench,
 } from "lucide-react";
 import { LogLevel, LogMessage, MsgType, TaskEvent } from "../types";
+import { getTaskLogs } from "../services/api";
 import MarkdownRenderer from "./MarkdownRenderer";
 
 interface LogStreamProps {
   events: TaskEvent[];
   selectedAgent: string | "all";
   onSelectLog: (log: LogMessage) => void;
+  taskId?: string;
+  rawMode?: boolean;
 }
 
 function isLogEvent(event: TaskEvent): event is LogMessage {
@@ -59,16 +62,68 @@ function getControlText(event: TaskEvent) {
   return "";
 }
 
-const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLog }) => {
+const ROW_HEIGHT = 132;
+const OVERSCAN = 8;
+
+function getEventKey(event: TaskEvent, index: number) {
+  if (isLogEvent(event)) return event.log_id || `${event.timestamp}-${event.agent}-${index}`;
+  return `${event.type}-${"timestamp" in event ? event.timestamp : index}-${index}`;
+}
+
+function mergeEvents(persisted: LogMessage[], liveEvents: TaskEvent[]) {
+  const map = new Map<string, TaskEvent>();
+  persisted.forEach((event, index) => map.set(getEventKey(event, index), event));
+  liveEvents.forEach((event, index) => map.set(getEventKey(event, index), event));
+  return Array.from(map.values()).sort((a, b) => {
+    const aTime = "timestamp" in a && a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const bTime = "timestamp" in b && b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    return aTime - bTime;
+  });
+}
+
+const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLog, taskId, rawMode = false }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState<"all" | LogLevel>("all");
   const [messageType, setMessageType] = useState<"all" | MsgType>("all");
+  const [persistedEvents, setPersistedEvents] = useState<LogMessage[]>([]);
+  const [nextBeforeId, setNextBeforeId] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingPage, setLoadingPage] = useState(false);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(640);
+
+  const sourceEvents = useMemo(
+    () => (rawMode ? mergeEvents(persistedEvents, events) : events),
+    [events, persistedEvents, rawMode],
+  );
+
+  const loadLogPage = async (cursor?: number | null, replace = false) => {
+    if (!taskId || loadingPage) return;
+    try {
+      setLoadingPage(true);
+      const page = await getTaskLogs(taskId, { limit: 240, before_id: cursor ?? undefined });
+      setPersistedEvents((prev) => (replace ? page.events : [...page.events, ...prev]));
+      setNextBeforeId(page.next_before_id ?? null);
+      setHasMore(page.has_more);
+    } finally {
+      setLoadingPage(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!rawMode || !taskId) return;
+    setPersistedEvents([]);
+    setNextBeforeId(null);
+    setHasMore(false);
+    loadLogPage(null, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawMode, taskId]);
 
   const filteredEvents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return events.filter((event) => {
+    return sourceEvents.filter((event) => {
       if (isLogEvent(event)) {
         if (selectedAgent !== "all" && event.agent !== selectedAgent) return false;
         if (level !== "all" && event.level !== level) return false;
@@ -84,13 +139,35 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
       if (normalizedQuery) return getControlText(event).toLowerCase().includes(normalizedQuery);
       return true;
     });
-  }, [events, level, messageType, query, selectedAgent]);
+  }, [level, messageType, query, selectedAgent, sourceEvents]);
+
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+    const resizeObserver = new ResizeObserver(() => {
+      setViewportHeight(node.clientHeight || 640);
+    });
+    resizeObserver.observe(node);
+    setViewportHeight(node.clientHeight || 640);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   useEffect(() => {
     if (autoScroll && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [autoScroll, filteredEvents.length]);
+
+  const virtualRange = useMemo(() => {
+    const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
+    const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT) + OVERSCAN * 2;
+    const end = Math.min(filteredEvents.length, start + visibleCount);
+    return { start, end };
+  }, [filteredEvents.length, scrollTop, viewportHeight]);
+
+  const virtualEvents = filteredEvents.slice(virtualRange.start, virtualRange.end);
+  const topPadding = virtualRange.start * ROW_HEIGHT;
+  const bottomPadding = Math.max(0, (filteredEvents.length - virtualRange.end) * ROW_HEIGHT);
 
   return (
     <section className="stream-panel">
@@ -137,15 +214,40 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
         </Tooltip>
       </div>
 
-      <div ref={scrollRef} className="log-stream">
+      {rawMode ? (
+        <div className="raw-recovery-bar">
+          <Space size={8} wrap>
+            <Tag color="cyan">{filteredEvents.length} visible</Tag>
+            <Tag>{persistedEvents.length} restored</Tag>
+            <Button
+              size="small"
+              loading={loadingPage}
+              disabled={!hasMore}
+              onClick={() => loadLogPage(nextBeforeId)}
+            >
+              Load older logs
+            </Button>
+          </Space>
+          <Typography.Text type="secondary">Virtualized list keeps long tasks responsive.</Typography.Text>
+        </div>
+      ) : null}
+
+      <div
+        ref={scrollRef}
+        className="log-stream virtual-log-stream"
+        onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+      >
         {filteredEvents.length === 0 ? (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No matching events" />
         ) : (
-          filteredEvents.map((event, index) => {
+          <div>
+            <div style={{ height: topPadding }} />
+            {virtualEvents.map((event, index) => {
+            const realIndex = virtualRange.start + index;
             if (!isLogEvent(event)) {
               const isWarning = event.type === "LOG_DROPPED" || event.type === "HEARTBEAT_TIMEOUT";
               return (
-                <div key={`${event.type}-${index}`} className={isWarning ? "control-event warning" : "control-event"}>
+                <div key={getEventKey(event, realIndex)} className={isWarning ? "control-event warning" : "control-event"}>
                   {isWarning ? <AlertTriangle size={14} /> : <ChevronDown size={14} />}
                   <span>{getControlText(event)}</span>
                 </div>
@@ -155,7 +257,7 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
             const contentPreview = event.message.length > 900 ? `${event.message.slice(0, 900)}...` : event.message;
             return (
               <button
-                key={`${event.timestamp}-${event.agent}-${index}`}
+                key={getEventKey(event, realIndex)}
                 className={`log-event ${getLevelClass(event.level)}`}
                 onClick={() => onSelectLog(event)}
                 type="button"
@@ -186,7 +288,9 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
                 ) : null}
               </button>
             );
-          })
+          })}
+            <div style={{ height: bottomPadding }} />
+          </div>
         )}
       </div>
     </section>

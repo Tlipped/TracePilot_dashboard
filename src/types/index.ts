@@ -29,6 +29,7 @@ export interface LogMessage {
   is_truncated: boolean;
   timestamp: string;
   log_id?: string;
+  persisted_id?: number;
 }
 
 export interface TaskCreateRequest {
@@ -121,6 +122,13 @@ export interface FullLogResponse {
   source: "cache" | "database";
 }
 
+export interface TaskLogPageResponse {
+  events: LogMessage[];
+  next_before_id?: number | null;
+  has_more: boolean;
+  total: number;
+}
+
 export interface AgentLogFileMeta {
   id: string;
   name: string;
@@ -144,6 +152,8 @@ export interface AgentLogFileResponse extends AgentLogFileMeta {
 }
 
 export type ProductViewMode = "report" | "learn" | "auditor" | "raw";
+
+export type LanguageMode = "en" | "zh";
 
 export type ReportSectionKey =
   | "root_cause"
@@ -171,4 +181,75 @@ export interface ProductModeConfig {
   showRawLogs: boolean;
   showTeachingHints: boolean;
   showEvidenceByDefault: boolean;
+}
+
+export interface AddressRole {
+  role?: string;
+  description?: string;
+}
+
+export interface TransactionRoleEvidence extends AddressRole {
+  address: string;
+}
+
+export interface TokenBalanceChange {
+  token?: string;
+  name?: string;
+  amount?: number | string | null;
+  usd_value?: number | null;
+  contract?: string | null;
+}
+
+export interface BalanceParticipantSummary {
+  address: string;
+  usd_delta: number;
+  tokens: TokenBalanceChange[];
+}
+
+export interface TransactionBalanceSummary {
+  participant_count: number;
+  total_usd_delta: number;
+  top_participants: BalanceParticipantSummary[];
+}
+
+export interface MacroTransactionSummary {
+  hash: string;
+  display_hash: string;
+  type: "attack" | "auxiliary" | "candidate";
+  is_debug_target: boolean;
+  order: number;
+  from?: string | null;
+  to?: string | null;
+  from_role?: string | null;
+  to_role?: string | null;
+  involved_roles: TransactionRoleEvidence[];
+  block_number?: number | null;
+  timestamp?: number | null;
+  function_signature?: string | null;
+  status?: string | null;
+  success?: boolean | null;
+  value_eth?: number | null;
+  gas_used?: number | null;
+  cost_eth?: number | null;
+  interacted_addresses: string[];
+  event_logs: string[];
+  balance_summary: TransactionBalanceSummary;
+}
+
+export interface MacroAnalysisResponse {
+  task_id: string;
+  dapp_name: string;
+  processed_file: string;
+  dapp?: Record<string, unknown>;
+  transaction_hash_list: string[];
+  transaction_roles: Record<string, AddressRole>;
+  attack_transactions: string[];
+  auxiliary_transactions: string[];
+  transactions_need_analyze: string[];
+  bug_summary: string;
+  time_used: Record<string, unknown>;
+  token_used: Record<string, unknown>;
+  transactions: MacroTransactionSummary[];
+  balance_change: Record<string, unknown>;
+  transaction_to_property: Record<string, unknown>;
 }

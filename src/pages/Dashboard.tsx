@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, Layout, Segmented, Space, Spin, Tabs, Tag, Typography } from "antd";
-import { Activity, ArrowLeft, Bot, FileText, FolderOpen, ListTree, RefreshCcw, Wifi, WifiOff } from "lucide-react";
+import { Activity, ArrowLeft, Bot, FileText, FolderOpen, ListTree, RefreshCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
 import { AGENT_NAMES } from "../constants/agents";
 import AgentFileLogs from "../components/AgentFileLogs";
@@ -11,10 +11,22 @@ import AttackReplayTimeline from "../components/AttackReplayTimeline";
 import DappContextButton from "../components/DappContextButton";
 import LogDetailDrawer from "../components/LogDetailDrawer";
 import LogStream from "../components/LogStream";
+import LearningGuidePanel from "../components/LearningGuidePanel";
+import MacroAnalysisPanel from "../components/MacroAnalysisPanel";
 import StructuredReport from "../components/StructuredReport";
-import { getTask } from "../services/api";
+import { getMacroAnalysis, getTask } from "../services/api";
 import WebSocketService from "../services/WebSocketService";
-import { LogLevel, LogMessage, ProductViewMode, Task, TaskEvent, TaskStatus } from "../types";
+import {
+  LanguageMode,
+  LogLevel,
+  LogMessage,
+  MacroAnalysisResponse,
+  ProductViewMode,
+  Task,
+  TaskEvent,
+  TaskStatus,
+} from "../types";
+import { modeLabel, t } from "../utils/i18n";
 
 const { Header, Content } = Layout;
 
@@ -41,6 +53,13 @@ function isTerminalTask(status?: TaskStatus) {
   return status === TaskStatus.COMPLETED || status === TaskStatus.FAILED;
 }
 
+function getDefaultMainTab(mode: ProductViewMode) {
+  if (mode === "learn") return "learning";
+  if (mode === "auditor") return "macro";
+  if (mode === "raw") return "stream";
+  return "report";
+}
+
 const Dashboard: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
@@ -54,6 +73,9 @@ const Dashboard: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [loadingTask, setLoadingTask] = useState(true);
   const [viewMode, setViewMode] = useState<ProductViewMode>("report");
+  const [language, setLanguage] = useState<LanguageMode>("zh");
+  const [activeMainTab, setActiveMainTab] = useState(getDefaultMainTab("report"));
+  const [macroAnalysis, setMacroAnalysis] = useState<MacroAnalysisResponse | null>(null);
 
   const refreshTask = useCallback(async () => {
     if (!taskId) return;
@@ -137,6 +159,30 @@ const Dashboard: React.FC = () => {
     };
   }, [refreshTask, taskId]);
 
+  useEffect(() => {
+    setActiveMainTab(getDefaultMainTab(viewMode));
+  }, [viewMode]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!taskId) {
+      setMacroAnalysis(null);
+      return;
+    }
+
+    getMacroAnalysis(taskId)
+      .then((payload) => {
+        if (!cancelled) setMacroAnalysis(payload);
+      })
+      .catch(() => {
+        if (!cancelled) setMacroAnalysis(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [taskId, task?.status, task?.completed_at]);
+
   const agentStats = useMemo<AgentStats[]>(() => {
     const map = new Map<string, AgentStats>();
     AGENT_NAMES.forEach((name) => map.set(name, { name, total: 0, errors: 0, warnings: 0 }));
@@ -158,13 +204,164 @@ const Dashboard: React.FC = () => {
   const totalLogs = events.filter(isLogEvent).length;
   const wsOpen = wsStatus === WebSocket.OPEN;
   const terminalTask = isTerminalTask(task?.status);
-  const connectionLabel = wsOpen ? "live" : terminalTask ? "archived" : "offline";
+  const connectionLabel = wsOpen ? t(language, "live") : terminalTask ? t(language, "archived") : t(language, "offline");
   const connectionColor = wsOpen ? "success" : terminalTask ? "default" : "error";
 
   const openLog = (log: LogMessage) => {
     setSelectedLog(log);
     setDrawerOpen(true);
   };
+
+  const mainTabItems = useMemo(() => {
+    const reportTab = {
+      key: "report",
+      label: (
+        <Space size={6}>
+          <FileText size={14} />
+          {t(language, "reportTab")}
+        </Space>
+      ),
+      children: <StructuredReport task={task} events={events} mode={viewMode} macroAnalysis={macroAnalysis} language={language} />,
+    };
+
+    const replayTab = {
+      key: "attack-replay",
+      label: (
+        <Space size={6}>
+          <ListTree size={14} />
+          {t(language, "replayTab")}
+        </Space>
+      ),
+      children: <AttackReplayTimeline task={task} events={events} mode={viewMode} />,
+    };
+
+    const learningTab = {
+      key: "learning",
+      label: (
+        <Space size={6}>
+          <Bot size={14} />
+          {language === "zh" ? "学习导览" : "Learning Guide"}
+        </Space>
+      ),
+      children: <LearningGuidePanel task={task} macro={macroAnalysis} language={language} />,
+    };
+
+    const macroTab = {
+      key: "macro",
+      label: (
+        <Space size={6}>
+          <ShieldCheck size={14} />
+          {t(language, "macroTab")}
+        </Space>
+      ),
+      children: <MacroAnalysisPanel macro={macroAnalysis} language={language} />,
+    };
+
+    const streamTab = {
+      key: "stream",
+      label: (
+        <Space size={6}>
+          <Activity size={14} />
+          {t(language, "rawLogsTab")}
+        </Space>
+      ),
+      children: (
+        <LogStream
+          taskId={taskId}
+          events={events}
+          selectedAgent={selectedAgent}
+          onSelectLog={openLog}
+          rawMode
+        />
+      ),
+    };
+
+    const timelineTab = {
+      key: "timeline",
+      label: (
+        <Space size={6}>
+          <ListTree size={14} />
+          {t(language, "timelineTab")}
+        </Space>
+      ),
+      children: <AgentTimeline events={events} selectedAgent={selectedAgent} onSelectLog={openLog} />,
+    };
+
+    if (viewMode === "learn") return [learningTab, replayTab, reportTab, macroTab];
+    if (viewMode === "auditor") return [macroTab, reportTab, replayTab, timelineTab];
+    if (viewMode === "raw") return [streamTab, timelineTab, macroTab, reportTab];
+    return [reportTab, replayTab, macroTab];
+  }, [events, language, macroAnalysis, selectedAgent, task, taskId, viewMode]);
+
+  const inspectorTabItems = useMemo(
+    () => [
+      {
+        key: "agents",
+        label: (
+          <Space size={6}>
+            <Bot size={14} />
+            {t(language, "agentBriefTab")}
+          </Space>
+        ),
+        children: (
+          <AgentInsights
+            events={events}
+            selectedAgent={selectedAgent}
+            onSelectAgent={setSelectedAgent}
+            onSelectLog={openLog}
+          />
+        ),
+      },
+      ...(viewMode === "raw"
+        ? [
+            {
+              key: "agent-files",
+              label: (
+                <Space size={6}>
+                  <FolderOpen size={14} />
+                  {t(language, "fileLogsTab")}
+                </Space>
+              ),
+              children: <AgentFileLogs taskId={taskId ?? ""} />,
+            },
+          ]
+        : []),
+      {
+        key: "summary",
+        label: t(language, "taskTab"),
+        children: (
+          <div className="task-detail-list">
+            <div>
+              <span>{t(language, "taskId")}</span>
+              <Typography.Text copyable className="text-mono">
+                {taskId}
+              </Typography.Text>
+            </div>
+            <div>
+              <span>{t(language, "status")}</span>
+              <Space size={6}>
+                <Tag color={getStatusColor(task?.status)}>{task?.status}</Tag>
+                {task?.archived ? <Tag>{t(language, "archived")}</Tag> : null}
+              </Space>
+            </div>
+            <div>
+              <span>{t(language, "created")}</span>
+              <Typography.Text>{task?.created_at ?? "N/A"}</Typography.Text>
+            </div>
+            <div>
+              <span>{t(language, "completed")}</span>
+              <Typography.Text>{task?.completed_at ?? "N/A"}</Typography.Text>
+            </div>
+            <div>
+              <span>{t(language, "error")}</span>
+              <Typography.Text type={task?.error ? "danger" : "secondary"}>{task?.error ?? t(language, "none")}</Typography.Text>
+            </div>
+          </div>
+        ),
+      },
+    ],
+    [events, language, selectedAgent, task, taskId, viewMode],
+  );
 
   return (
     <Layout className="app-shell">
@@ -186,22 +383,31 @@ const Dashboard: React.FC = () => {
             value={viewMode}
             onChange={(value) => setViewMode(value as ProductViewMode)}
             options={[
-              { label: "Report", value: "report" },
-              { label: "Learn", value: "learn" },
-              { label: "Auditor", value: "auditor" },
-              { label: "Raw", value: "raw" },
+              { label: modeLabel(language, "report"), value: "report" },
+              { label: modeLabel(language, "learn"), value: "learn" },
+              { label: modeLabel(language, "auditor"), value: "auditor" },
+              { label: modeLabel(language, "raw"), value: "raw" },
             ]}
           />
-          <Tag color={getStatusColor(task?.status)}>{task?.status ?? "loading"}</Tag>
-          {task?.archived ? <Tag>archived</Tag> : null}
-          <Tag>{task?.dapp_name ?? "Unknown DApp"}</Tag>
+          <Segmented
+            size="small"
+            value={language}
+            onChange={(value) => setLanguage(value as LanguageMode)}
+            options={[
+              { label: "中文", value: "zh" },
+              { label: "EN", value: "en" },
+            ]}
+          />
+          <Tag color={getStatusColor(task?.status)}>{task?.status ?? t(language, "loading")}</Tag>
+          {task?.archived ? <Tag>{t(language, "archived")}</Tag> : null}
+          <Tag>{task?.dapp_name ?? t(language, "unknownDapp")}</Tag>
           <Tag>{formatDuration(task?.duration)}</Tag>
           <Tag icon={wsOpen ? <Wifi size={13} /> : <WifiOff size={13} />} color={connectionColor}>
             {connectionLabel}
           </Tag>
           <DappContextButton dappName={task?.dapp_name} />
           <Button icon={<RefreshCcw size={15} />} onClick={refreshTask}>
-            Refresh
+            {t(language, "refresh")}
           </Button>
         </Space>
       </Header>
@@ -211,21 +417,21 @@ const Dashboard: React.FC = () => {
 
         <div className="task-overview">
           <div>
-            <Typography.Text type="secondary">DApp</Typography.Text>
+            <Typography.Text type="secondary">{t(language, "dapp")}</Typography.Text>
             <Typography.Title level={4}>{task?.dapp_name ?? "Loading..."}</Typography.Title>
           </div>
           <div className="overview-metrics">
             <div>
               <span className="metric-value">{totalLogs}</span>
-              <span className="metric-label">logs</span>
+              <span className="metric-label">{t(language, "logs")}</span>
             </div>
             <div>
               <span className="metric-value">{agentStats.filter((item) => item.total > 0).length}</span>
-              <span className="metric-label">agents</span>
+              <span className="metric-label">{t(language, "agents")}</span>
             </div>
             <div>
               <span className="metric-value">{formatDuration(task?.duration)}</span>
-              <span className="metric-label">duration</span>
+              <span className="metric-label">{t(language, "duration")}</span>
             </div>
           </div>
         </div>
@@ -240,119 +446,16 @@ const Dashboard: React.FC = () => {
 
             <div className="analysis-center">
               <Tabs
-                defaultActiveKey="report"
-                items={[
-                  {
-                    key: "report",
-                    label: (
-                      <Space size={6}>
-                        <FileText size={14} />
-                        Report
-                      </Space>
-                    ),
-                    children: <StructuredReport task={task} events={events} mode={viewMode} />,
-                  },
-                  {
-                    key: "attack-replay",
-                    label: (
-                      <Space size={6}>
-                        <ListTree size={14} />
-                        Attack Replay
-                      </Space>
-                    ),
-                    children: <AttackReplayTimeline task={task} events={events} mode={viewMode} />,
-                  },
-                  {
-                    key: "stream",
-                    label: (
-                      <Space size={6}>
-                        <Activity size={14} />
-                        Raw Logs
-                      </Space>
-                    ),
-                    children: <LogStream events={events} selectedAgent={selectedAgent} onSelectLog={openLog} />,
-                  },
-                  {
-                    key: "timeline",
-                    label: (
-                      <Space size={6}>
-                        <ListTree size={14} />
-                        Agent Timeline
-                      </Space>
-                    ),
-                    children: <AgentTimeline events={events} selectedAgent={selectedAgent} onSelectLog={openLog} />,
-                  },
-                ]}
+                activeKey={activeMainTab}
+                onChange={setActiveMainTab}
+                items={mainTabItems}
               />
             </div>
 
             <aside className="inspector-panel">
               <Tabs
                 defaultActiveKey="agents"
-                items={[
-                  {
-                    key: "agents",
-                    label: (
-                      <Space size={6}>
-                        <Bot size={14} />
-                        Agent Brief
-                      </Space>
-                    ),
-                    children: (
-                      <AgentInsights
-                        events={events}
-                        selectedAgent={selectedAgent}
-                        onSelectAgent={setSelectedAgent}
-                        onSelectLog={openLog}
-                      />
-                    ),
-                  },
-                  {
-                    key: "agent-files",
-                    label: (
-                      <Space size={6}>
-                        <FolderOpen size={14} />
-                        File Logs
-                      </Space>
-                    ),
-                    children: <AgentFileLogs taskId={taskId ?? ""} />,
-                  },
-                  {
-                    key: "summary",
-                    label: "Task",
-                    children: (
-                      <div className="task-detail-list">
-                        <div>
-                          <span>Task ID</span>
-                          <Typography.Text copyable className="text-mono">
-                            {taskId}
-                          </Typography.Text>
-                        </div>
-                        <div>
-                          <span>Status</span>
-                          <Space size={6}>
-                            <Tag color={getStatusColor(task?.status)}>{task?.status}</Tag>
-                            {task?.archived ? <Tag>archived</Tag> : null}
-                          </Space>
-                        </div>
-                        <div>
-                          <span>Created</span>
-                          <Typography.Text>{task?.created_at ?? "N/A"}</Typography.Text>
-                        </div>
-                        <div>
-                          <span>Completed</span>
-                          <Typography.Text>{task?.completed_at ?? "N/A"}</Typography.Text>
-                        </div>
-                        <div>
-                          <span>Error</span>
-                          <Typography.Text type={task?.error ? "danger" : "secondary"}>
-                            {task?.error ?? "None"}
-                          </Typography.Text>
-                        </div>
-                      </div>
-                    ),
-                  },
-                ]}
+                items={inspectorTabItems}
               />
             </aside>
           </div>
