@@ -4,7 +4,9 @@ import { Bug, CheckCircle2, Download, FileJson, KeyRound, Route, SearchCheck, Sh
 import { EvidenceItem, LogLevel, LogMessage, MsgType, ProductViewMode, ReportSectionKey, Task, TaskEvent } from "../types";
 import { buildEvidenceForSection } from "../utils/evidence";
 import EvidenceDrawer from "./EvidenceDrawer";
+import KeyTransactionCards from "./KeyTransactionCards";
 import MarkdownRenderer from "./MarkdownRenderer";
+import PatchVerificationPanel from "./PatchVerificationPanel";
 
 interface StructuredReportProps {
   task: Task | null;
@@ -320,6 +322,11 @@ const StructuredReport: React.FC<StructuredReportProps> = ({ task, events, mode 
       </div>
 
       <div className="report-section-list">
+        <div className="product-summary-grid">
+          <KeyTransactionCards task={task} events={events} />
+          <PatchVerificationPanel task={task} events={events} />
+        </div>
+
         {sections.map((section) => (
           <section className="report-section-card" key={section.key}>
             <div className="report-section-head">

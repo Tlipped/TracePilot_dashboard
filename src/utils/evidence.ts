@@ -23,7 +23,7 @@ export function compactEvidenceText(value: string, limit = 520) {
   return cleaned.length > limit ? `${cleaned.slice(0, limit)}...` : cleaned;
 }
 
-function isLowValueOperationalLog(log: LogMessage) {
+export function isLowValueOperationalLog(log: LogMessage) {
   const cleaned = compactEvidenceText(log.message, 1200).toLowerCase();
   if (!cleaned) return true;
 
