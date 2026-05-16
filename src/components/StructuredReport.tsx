@@ -1,20 +1,24 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { App as AntdApp, Button, Empty, Space, Tag, Typography } from "antd";
-import { Bug, CheckCircle2, Download, FileJson, KeyRound, Route, ShieldCheck, Wrench } from "lucide-react";
-import { LogLevel, LogMessage, MsgType, Task, TaskEvent } from "../types";
+import { Bug, CheckCircle2, Download, FileJson, KeyRound, Route, SearchCheck, ShieldCheck, Wrench } from "lucide-react";
+import { EvidenceItem, LogLevel, LogMessage, MsgType, ProductViewMode, ReportSectionKey, Task, TaskEvent } from "../types";
+import { buildEvidenceForSection } from "../utils/evidence";
+import EvidenceDrawer from "./EvidenceDrawer";
 import MarkdownRenderer from "./MarkdownRenderer";
 
 interface StructuredReportProps {
   task: Task | null;
   events: TaskEvent[];
+  mode?: ProductViewMode;
 }
 
 interface ReportSection {
-  key: string;
+  key: ReportSectionKey;
   title: string;
   description: string;
   content: string;
   icon: React.ReactNode;
+  evidence: EvidenceItem[];
 }
 
 interface AgentExportSummary {
@@ -28,7 +32,14 @@ interface AgentExportSummary {
   latest_timestamp?: string;
 }
 
-const SECTION_DEFS = [
+const SECTION_DEFS: Array<{
+  key: ReportSectionKey;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  patterns: string[];
+  keywords: string[];
+}> = [
   {
     key: "root_cause",
     title: "漏洞根因",
@@ -152,12 +163,14 @@ function parseReportSections(report: string, events: TaskEvent[]): ReportSection
         ? transactions.map((hash) => `- \`${hash}\``).join("\n")
         : findParagraphByKeyword(report, definition.keywords);
 
+    const content = byHeading || fallback || "暂未从最终报告中提取到该区块，可查看 Raw Report 获取完整上下文。";
     return {
       key: definition.key,
       title: definition.title,
       description: definition.description,
       icon: definition.icon,
-      content: byHeading || fallback || "暂未从最终报告中提取到该区块，可查看 Raw Report 获取完整上下文。",
+      content,
+      evidence: buildEvidenceForSection(definition.key, content, events),
     };
   });
 }
@@ -236,8 +249,9 @@ function buildMarkdownExport(task: Task, sections: ReportSection[], agentSummari
   return lines.join("\n");
 }
 
-const StructuredReport: React.FC<StructuredReportProps> = ({ task, events }) => {
+const StructuredReport: React.FC<StructuredReportProps> = ({ task, events, mode = "report" }) => {
   const { message } = AntdApp.useApp();
+  const [selectedSection, setSelectedSection] = useState<ReportSection | null>(null);
   const finalReport = task?.final_report ?? "";
   const sections = useMemo(() => parseReportSections(finalReport, events), [events, finalReport]);
   const agentSummaries = useMemo(() => buildAgentSummaries(events), [events]);
@@ -289,7 +303,11 @@ const StructuredReport: React.FC<StructuredReportProps> = ({ task, events }) => 
       <div className="report-actions">
         <div>
           <Typography.Text strong>Structured Audit Report</Typography.Text>
-          <Typography.Text type="secondary">{sections.length} sections extracted from final report.</Typography.Text>
+          <Typography.Text type="secondary">
+            {mode === "learn"
+              ? "Learn mode keeps the conclusion readable and links each claim to evidence."
+              : `${sections.length} sections extracted from final report with linked evidence.`}
+          </Typography.Text>
         </div>
         <Space size={8} wrap>
           <Button size="small" icon={<Download size={14} />} onClick={exportMarkdown}>
@@ -310,9 +328,21 @@ const StructuredReport: React.FC<StructuredReportProps> = ({ task, events }) => 
                 <Typography.Text strong>{section.title}</Typography.Text>
                 <Typography.Text type="secondary">{section.description}</Typography.Text>
               </div>
-              {section.content.startsWith("暂未") ? <Tag>fallback</Tag> : <Tag color="success">parsed</Tag>}
+              <Space size={6}>
+                <Tag color={section.evidence.length > 0 ? "cyan" : "default"}>{section.evidence.length} evidence</Tag>
+                {section.content.startsWith("暂未") ? <Tag>fallback</Tag> : <Tag color="success">parsed</Tag>}
+              </Space>
             </div>
             <MarkdownRenderer content={section.content} compact />
+            <div className="report-section-footer">
+              <Button
+                size="small"
+                icon={<SearchCheck size={14} />}
+                onClick={() => setSelectedSection(section)}
+              >
+                Evidence
+              </Button>
+            </div>
           </section>
         ))}
 
@@ -329,6 +359,13 @@ const StructuredReport: React.FC<StructuredReportProps> = ({ task, events }) => 
           <MarkdownRenderer content={finalReport} compact />
         </section>
       </div>
+
+      <EvidenceDrawer
+        title={selectedSection ? `${selectedSection.title} Evidence` : "Evidence"}
+        open={Boolean(selectedSection)}
+        evidence={selectedSection?.evidence ?? []}
+        onClose={() => setSelectedSection(null)}
+      />
     </div>
   );
 };

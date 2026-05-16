@@ -1,18 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Alert, Button, Layout, Space, Spin, Tabs, Tag, Typography } from "antd";
+import { Alert, Button, Layout, Segmented, Space, Spin, Tabs, Tag, Typography } from "antd";
 import { Activity, ArrowLeft, Bot, FileText, FolderOpen, ListTree, RefreshCcw, Wifi, WifiOff } from "lucide-react";
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
 import { AGENT_NAMES } from "../constants/agents";
 import AgentFileLogs from "../components/AgentFileLogs";
 import AgentInsights from "../components/AgentInsights";
 import AgentTimeline from "../components/AgentTimeline";
+import AttackReplayTimeline from "../components/AttackReplayTimeline";
+import DappContextButton from "../components/DappContextButton";
 import LogDetailDrawer from "../components/LogDetailDrawer";
 import LogStream from "../components/LogStream";
 import StructuredReport from "../components/StructuredReport";
 import { getTask } from "../services/api";
 import WebSocketService from "../services/WebSocketService";
-import { LogLevel, LogMessage, Task, TaskEvent, TaskStatus } from "../types";
+import { LogLevel, LogMessage, ProductViewMode, Task, TaskEvent, TaskStatus } from "../types";
 
 const { Header, Content } = Layout;
 
@@ -51,6 +53,7 @@ const Dashboard: React.FC = () => {
   const [wsStatus, setWsStatus] = useState<WebSocket["readyState"] | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [loadingTask, setLoadingTask] = useState(true);
+  const [viewMode, setViewMode] = useState<ProductViewMode>("report");
 
   const refreshTask = useCallback(async () => {
     if (!taskId) return;
@@ -178,6 +181,17 @@ const Dashboard: React.FC = () => {
           </div>
         </Space>
         <Space size={10}>
+          <Segmented
+            size="small"
+            value={viewMode}
+            onChange={(value) => setViewMode(value as ProductViewMode)}
+            options={[
+              { label: "Report", value: "report" },
+              { label: "Learn", value: "learn" },
+              { label: "Auditor", value: "auditor" },
+              { label: "Raw", value: "raw" },
+            ]}
+          />
           <Tag color={getStatusColor(task?.status)}>{task?.status ?? "loading"}</Tag>
           {task?.archived ? <Tag>archived</Tag> : null}
           <Tag>{task?.dapp_name ?? "Unknown DApp"}</Tag>
@@ -185,6 +199,7 @@ const Dashboard: React.FC = () => {
           <Tag icon={wsOpen ? <Wifi size={13} /> : <WifiOff size={13} />} color={connectionColor}>
             {connectionLabel}
           </Tag>
+          <DappContextButton dappName={task?.dapp_name} />
           <Button icon={<RefreshCcw size={15} />} onClick={refreshTask}>
             Refresh
           </Button>
@@ -225,14 +240,34 @@ const Dashboard: React.FC = () => {
 
             <div className="analysis-center">
               <Tabs
-                defaultActiveKey="stream"
+                defaultActiveKey="report"
                 items={[
+                  {
+                    key: "report",
+                    label: (
+                      <Space size={6}>
+                        <FileText size={14} />
+                        Report
+                      </Space>
+                    ),
+                    children: <StructuredReport task={task} events={events} mode={viewMode} />,
+                  },
+                  {
+                    key: "attack-replay",
+                    label: (
+                      <Space size={6}>
+                        <ListTree size={14} />
+                        Attack Replay
+                      </Space>
+                    ),
+                    children: <AttackReplayTimeline task={task} events={events} mode={viewMode} />,
+                  },
                   {
                     key: "stream",
                     label: (
                       <Space size={6}>
                         <Activity size={14} />
-                        Log Stream
+                        Raw Logs
                       </Space>
                     ),
                     children: <LogStream events={events} selectedAgent={selectedAgent} onSelectLog={openLog} />,
@@ -242,7 +277,7 @@ const Dashboard: React.FC = () => {
                     label: (
                       <Space size={6}>
                         <ListTree size={14} />
-                        Timeline
+                        Agent Timeline
                       </Space>
                     ),
                     children: <AgentTimeline events={events} selectedAgent={selectedAgent} onSelectLog={openLog} />,
@@ -271,16 +306,6 @@ const Dashboard: React.FC = () => {
                         onSelectLog={openLog}
                       />
                     ),
-                  },
-                  {
-                    key: "report",
-                    label: (
-                      <Space size={6}>
-                        <FileText size={14} />
-                        Final Report
-                      </Space>
-                    ),
-                    children: <StructuredReport task={task} events={events} />,
                   },
                   {
                     key: "agent-files",

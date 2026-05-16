@@ -15,12 +15,13 @@ import {
   Undo2,
   XCircle,
 } from "lucide-react";
+import DappContextButton from "../components/DappContextButton";
 import { archiveTask, cancelTask, createTask, deleteTask, listTasks, unarchiveTask } from "../services/api";
 import { Task, TaskCreateRequest, TaskStatus } from "../types";
 
 const { Header, Content } = Layout;
 
-const dappModules = import.meta.glob("../data/*.json");
+const dappModules = import.meta.glob("../data/*.json", { eager: true, import: "default" });
 const DAPP_OPTIONS = Object.keys(dappModules)
   .map((path) => path.split("/").pop()?.replace(/\.json$/, "") ?? "")
   .filter(Boolean)
@@ -204,12 +205,13 @@ const TaskList: React.FC = () => {
     {
       title: "Action",
       key: "action",
-      width: 330,
+      width: 420,
       render: (_, record) => (
         <Space>
           <Button size="small" icon={<Eye size={14} />} onClick={() => navigate(`/tasks/${record.task_id}`)}>
             View
           </Button>
+          <DappContextButton dappName={record.dapp_name} />
           {isRunnableTask(record.status) ? (
             <Button size="small" icon={<Square size={14} />} danger onClick={() => handleCancel(record)}>
               Cancel
@@ -373,6 +375,15 @@ const TaskList: React.FC = () => {
             showSearch
             optionFilterProp="label"
           />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <Typography.Text type="secondary">
+              View case context while the analysis task is running.
+            </Typography.Text>
+            <DappContextButton
+              dappName={selectedDapps.length === 1 ? selectedDapps[0] : undefined}
+              disabled={selectedDapps.length !== 1}
+            />
+          </div>
         </Space>
       </Modal>
     </Layout>

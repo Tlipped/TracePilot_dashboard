@@ -142,3 +142,32 @@ export interface AgentLogFileResponse extends AgentLogFileMeta {
   content: string;
   truncated: boolean;
 }
+
+export type ProductViewMode = "report" | "learn" | "auditor" | "raw";
+
+export type ReportSectionKey =
+  | "root_cause"
+  | "attack_path"
+  | "key_transactions"
+  | "patch_suggestions"
+  | "verification_results";
+
+export interface EvidenceItem {
+  id: string;
+  title: string;
+  source: "report" | "agent_log" | "tool" | "transaction" | "system";
+  agent?: string;
+  level?: LogLevel;
+  message_type?: MsgType;
+  timestamp?: string;
+  log_id?: string;
+  content: string;
+  confidence: "high" | "medium" | "low";
+}
+
+export interface ProductModeConfig {
+  mode: ProductViewMode;
+  showRawLogs: boolean;
+  showTeachingHints: boolean;
+  showEvidenceByDefault: boolean;
+}
