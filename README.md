@@ -1,19 +1,20 @@
 # TracePilot Dashboard
 
-TracePilot Dashboard 是 TracePilot 多智能体 DApp 漏洞定位系统的前端工作台。它用于创建分析任务、观察 9 个 Agent 的执行状态、查看实时日志和文件日志，并将最终结果整理为结构化审计报告。
+TracePilot Dashboard 是 TracePilot 多智能体 DApp 漏洞定位系统的前端工作台。它用于创建分析任务、观察 Agent 状态、查看实时/历史日志，并把最终结果组织成结构化审计报告、学习导览和可复现证据视图。
 
-前端的定位不是单纯展示 Markdown，而是把长链 Agent 分析过程做成可观察、可复盘、可导出的工程化界面。
+这个前端的目标不是简单渲染 Markdown，而是把长链 Agent 分析过程做成可观察、可复盘、可导出、可演示的工程化平台。
 
-## 功能概览
+## 核心能力
 
 - **任务管理**：创建、查看、取消、归档、恢复、删除分析任务。
-- **实时日志流**：通过 WebSocket 接收后端推送的任务状态和 Agent 中间输出。
-- **Agent Brief**：聚合展示每个 Agent 的事件数、工具调用数、结果数和最新摘要。
-- **Agent Timeline**：将工具调用、结果输出、错误告警和任务状态整理成时间线。
-- **文件日志查看**：读取后端 `agents/logs/{time}/{DApp}` 下的 Agent 原始日志文件。
-- **结构化最终报告**：将最终报告拆成漏洞根因、攻击路径、关键交易、补丁建议、验证结果。
+- **多模式工作台**：支持报告、学习、审计、原始日志四种模式，面向不同用户角色。
+- **结构化最终报告**：将最终报告拆成漏洞根因、攻击路径、关键交易、补丁建议、验证结果等区块。
+- **宏观分析面板**：展示地址角色、攻击交易、辅助交易、微观调试目标和宏观漏洞摘要。
+- **学习导览**：结合 DApp 背景、参考链接和攻击阶段，帮助用户理解漏洞案例。
+- **Raw Mode 隔离**：原始日志、文件日志和完整时间线集中放在 Raw 模式，避免干扰普通用户。
+- **长日志支持**：日志流支持虚拟滚动和分页恢复，可加载更长任务的历史日志。
+- **Evidence Drawer**：点击报告结论、攻击阶段、关键交易可查看关联证据。
 - **报告导出**：支持导出 Markdown 审计报告和 JSON evidence package。
-- **刷新恢复**：页面刷新后可通过任务详情、数据库日志和文件日志恢复任务上下文。
 
 ## 技术栈
 
@@ -34,26 +35,37 @@ TracePilot Dashboard 是 TracePilot 多智能体 DApp 漏洞定位系统的前�
 ```text
 TracePilot-dashboard/
 ├── src/
-│   ├── components/                 # 可复用组件
-│   │   ├── AgentFileLogs.tsx       # Agent 文件日志查看
-│   │   ├── AgentInsights.tsx       # Agent Brief 摘要
-│   │   ├── AgentNavigator.tsx      # Agent 状态导航
-│   │   ├── AgentTimeline.tsx       # Agent 时间线
-│   │   ├── LogDetailDrawer.tsx     # 日志详情抽屉
-│   │   ├── LogStream.tsx           # 实时日志流
-│   │   ├── MarkdownRenderer.tsx    # Markdown 渲染
-│   │   └── StructuredReport.tsx    # 结构化报告与导出
-│   ├── config/                     # 后端地址等运行配置
-│   ├── constants/                  # Agent 名称等常量
-│   ├── data/                       # DApp 样例数据，用于创建任务下拉列表
+│   ├── components/
+│   │   ├── AgentFileLogs.tsx         # Agent 文件日志查看
+│   │   ├── AgentInsights.tsx         # Agent 摘要
+│   │   ├── AgentNavigator.tsx        # Agent 状态导航
+│   │   ├── AgentTimeline.tsx         # Agent 时间线
+│   │   ├── AttackReplayTimeline.tsx  # 攻击复盘时间线
+│   │   ├── DappContextButton.tsx     # DApp 背景信息抽屉
+│   │   ├── EvidenceDrawer.tsx        # 证据详情抽屉
+│   │   ├── KeyTransactionCards.tsx   # 关键交易卡片
+│   │   ├── LearningGuidePanel.tsx    # 学习导览面板
+│   │   ├── LogStream.tsx             # 虚拟滚动日志流
+│   │   ├── MacroAnalysisPanel.tsx    # 宏观分析面板
+│   │   ├── MarkdownRenderer.tsx      # Markdown 渲染
+│   │   ├── PatchVerificationPanel.tsx
+│   │   └── StructuredReport.tsx
+│   ├── config/
+│   │   └── appConfig.ts              # 后端 HTTP/WS 地址配置
+│   ├── constants/
+│   ├── data/                         # DApp 样例元数据
 │   ├── pages/
-│   │   ├── Dashboard.tsx           # 任务详情工作台
-│   │   └── TaskList.tsx            # 首页任务列表
+│   │   ├── Dashboard.tsx             # 任务详情工作台
+│   │   └── TaskList.tsx              # 首页任务列表
 │   ├── services/
-│   │   ├── api.ts                  # REST API 封装
-│   │   └── WebSocketService.ts     # WebSocket 连接与历史事件
+│   │   ├── api.ts                    # REST API 封装
+│   │   └── WebSocketService.ts       # WebSocket 连接与历史事件
 │   ├── types/
-│   │   └── index.ts                # TypeScript 类型定义
+│   │   └── index.ts                  # TypeScript 类型定义
+│   ├── utils/
+│   │   ├── dappMetadata.ts           # DApp 元数据读取
+│   │   ├── evidence.ts               # 证据抽取与清洗
+│   │   └── i18n.ts                   # 轻量中英文 UI 标签
 │   ├── App.css
 │   ├── App.tsx
 │   └── main.tsx
@@ -76,7 +88,7 @@ TracePilot-dashboard/
 
 ### 1. 先启动后端
 
-前端依赖后端 API 和 WebSocket。请先在后端仓库启动服务：
+前端依赖后端 REST API 和 WebSocket。请先在后端仓库启动服务：
 
 ```bash
 cd ../TracePilot-backend
@@ -104,12 +116,12 @@ npm install
 http://localhost:8000
 ```
 
-后端地址统一由 `src/config/appConfig.ts` 管理。日常开发可以直接改这个文件里的默认值；部署或多人协作时，推荐创建 `.env.local` 覆盖：
+后端地址统一由 `src/config/appConfig.ts` 管理。日常开发可创建 `.env.local` 覆盖：
 
 ```env
 VITE_BACKEND_HTTP_URL=http://localhost:8000
 
-# 可选；不填时会根据 HTTP 地址自动推导为 ws:// 或 wss://
+# 可选；不填时会根据 HTTP 地址自动推导 ws:// 或 wss://
 VITE_BACKEND_WS_URL=ws://localhost:8000
 ```
 
@@ -119,7 +131,7 @@ VITE_BACKEND_WS_URL=ws://localhost:8000
 VITE_BACKEND_HTTP_URL=https://tracepilot-api.example.com
 ```
 
-前端会自动把 WebSocket 地址推导为 `wss://tracepilot-api.example.com`。旧变量 `VITE_API_BASE_URL` 和 `VITE_WS_BASE_URL` 仍然兼容，但新项目建议使用 `VITE_BACKEND_HTTP_URL` 和 `VITE_BACKEND_WS_URL`。
+前端会自动将 WebSocket 地址推导为 `wss://tracepilot-api.example.com`。旧变量 `VITE_API_BASE_URL` 和 `VITE_WS_BASE_URL` 仍兼容，但新项目建议使用 `VITE_BACKEND_HTTP_URL` 和 `VITE_BACKEND_WS_URL`。
 
 ### 4. 启动开发服务
 
@@ -137,15 +149,15 @@ http://localhost:5173
 
 1. 打开首页 `TracePilot Dashboard`。
 2. 点击 `New Task`。
-3. 选择一个 DApp，例如 `Audius`。
+3. 选择一个 DApp，例如 `SushiSwap` 或 `Audius`。
 4. 提交任务后会自动进入任务详情页。
 5. 在详情页观察：
    - 左侧 `Agent State`：每个 Agent 的活跃状态和事件数量。
-   - 中间 `Log Stream`：实时日志流。
-   - 中间 `Timeline`：关键事件时间线。
-   - 右侧 `Agent Brief`：Agent 聚合摘要。
-   - 右侧 `Final Report`：结构化最终报告和导出按钮。
-   - 右侧 `File Logs`：后端持久化的 Agent 原始日志。
+   - 中间模式切换：`报告 / 学习 / 审计 / 原始`。
+   - `报告模式`：查看结构化报告、关键交易、补丁验证结果。
+   - `学习模式`：查看漏洞背景、攻击阶段解释和参考链接。
+   - `审计模式`：查看宏观分析面板、地址角色、交易分类和调试目标。
+   - `原始模式`：查看虚拟滚动日志流、Agent 文件日志和完整时间线。
 6. 任务完成后可执行：
    - `Export MD`：导出审计报告。
    - `Export JSON`：导出证据包。
@@ -154,9 +166,9 @@ http://localhost:5173
 
 ## 页面说明
 
-### 任务首页
+### 首页
 
-首页用于管理所有分析任务。
+首页用于管理所有分析任务：
 
 - `Active tasks`：默认视图，只看未归档任务。
 - `Archived`：查看已归档任务，可恢复。
@@ -166,16 +178,16 @@ http://localhost:5173
 
 ### 任务详情页
 
-任务详情页是主要的分析工作台。
+任务详情页是主要分析工作台：
 
 | 区域 | 说明 |
 | --- | --- |
 | Agent State | 9 个 Agent 的状态和事件数量 |
-| Log Stream | 原始实时日志，支持按 Agent、级别、消息类型过滤 |
-| Timeline | 将关键状态、工具调用、结果输出、错误告警整理为时间线 |
+| Report Mode | 结构化最终报告、关键交易、补丁验证、证据抽屉 |
+| Learn Mode | DApp 背景、攻击阶段解释、关键交易入口和参考链接 |
+| Auditor Mode | 宏观地址角色、攻击/辅助交易、调试目标、漏洞摘要 |
+| Raw Mode | 原始日志流、分页恢复、虚拟滚动、文件日志、完整时间线 |
 | Agent Brief | 每个 Agent 的结构化摘要 |
-| Final Report | 结构化报告、Raw Report、Markdown/JSON 导出 |
-| File Logs | 查看后端 `agents/logs` 下的本地 Agent 日志 |
 | Task | 任务 ID、状态、创建时间、完成时间、错误信息 |
 
 ## API 对接
@@ -188,6 +200,8 @@ http://localhost:5173
 | `GET` | `/api/tasks?include_archived=true` | 获取全部任务 |
 | `POST` | `/api/tasks` | 创建任务 |
 | `GET` | `/api/tasks/{task_id}` | 获取任务详情 |
+| `GET` | `/api/tasks/{task_id}/macro-analysis` | 获取宏观分析结果 |
+| `GET` | `/api/tasks/{task_id}/logs` | 分页获取历史日志 |
 | `POST` | `/api/tasks/{task_id}/cancel` | 取消任务 |
 | `POST` | `/api/tasks/{task_id}/archive` | 归档任务 |
 | `POST` | `/api/tasks/{task_id}/unarchive` | 恢复归档任务 |
@@ -222,7 +236,7 @@ npm run preview
 - WebSocket 状态和历史事件统一由 `WebSocketService` 管理。
 - 后端返回结构变化时，同步更新 `src/types/index.ts`。
 - 组件命名使用 `PascalCase`，变量和函数命名使用 `camelCase`。
-- 提交信息建议使用 `feat: ...`、`fix: ...`、`docs: ...` 等前缀。
+- 原始模型输出和证据正文不做自动翻译，避免审计语义偏差。
 
 ## 常见问题
 
@@ -248,15 +262,16 @@ docker-compose logs -f backend
 
 可能是后端任务异常退出、浏览器刷新、代理超时或网络波动。任务完成后仍可通过数据库日志和 `File Logs` 恢复大部分上下文。
 
-### 4. 为什么归档后首页看不到任务？
+### 4. Raw Mode 里日志很多会不会卡
 
-这是预期行为。归档任务不会被删除，只是从 `Active tasks` 隐藏。切换到 `Archived` 或 `All records` 即可查看。
+Raw Mode 的 `LogStream` 使用虚拟滚动，只渲染可视区域附近的日志；历史日志通过 `/api/tasks/{task_id}/logs` 分页加载，不会一次性渲染所有日志。
 
 ### 5. 打包时提示 chunk 过大
 
-当前项目包含较多 DApp JSON 样例，Vite 可能提示 chunk size warning。该提示不影响运行。后续可以考虑按 DApp 数据做动态加载或拆包。
+当前项目包含较多 DApp JSON 样例和 Markdown 渲染依赖，Vite 可能提示 chunk size warning。该提示不影响运行，后续可以对 DApp 数据和报告组件做动态加载。
 
 ## 相关文档
 
 - [工程化可观测性与报告导出说明](./AGENT_OBSERVABILITY_INTERVIEW_NOTES.md)
 - [前端重设计计划](./FRONTEND_REDESIGN_PLAN.md)
+- 后端：[工程化技术决策记录](../TracePilot-backend/md/TracePilot工程化技术决策记录.md)
