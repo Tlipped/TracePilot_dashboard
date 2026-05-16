@@ -7,6 +7,7 @@ import {
   extractTransactionHashes,
   isLogEvent,
   isLowValueOperationalLog,
+  normalizeEvidenceMarkdown,
 } from "../utils/evidence";
 import EvidenceDrawer from "./EvidenceDrawer";
 
@@ -75,6 +76,7 @@ function buildTransactions(task: Task | null, events: TaskEvent[]): KeyTransacti
         title: `Transaction ${shortHash(hash)}`,
         source: "transaction",
         content: hash,
+        full_content: hash,
         confidence: "high",
       },
     ];
@@ -85,6 +87,7 @@ function buildTransactions(task: Task | null, events: TaskEvent[]): KeyTransacti
         title: "Report context",
         source: "report",
         content: compactEvidenceText(reportContext, 700),
+        full_content: normalizeEvidenceMarkdown(reportContext),
         confidence: "medium",
       });
     }
@@ -100,6 +103,7 @@ function buildTransactions(task: Task | null, events: TaskEvent[]): KeyTransacti
         timestamp: log.timestamp,
         log_id: log.log_id,
         content: compactEvidenceText(log.message),
+        full_content: normalizeEvidenceMarkdown(log.message),
         confidence: log.message_type === "tool" ? "high" : "medium",
       });
     });

@@ -2,6 +2,8 @@ import React from "react";
 import { Descriptions, Drawer, Empty, List, Space, Tag, Typography } from "antd";
 import { Database, FileText, TerminalSquare, Wrench } from "lucide-react";
 import { EvidenceItem } from "../types";
+import { normalizeEvidenceMarkdown } from "../utils/evidence";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 interface EvidenceDrawerProps {
   title: string;
@@ -21,6 +23,10 @@ function getConfidenceColor(confidence: EvidenceItem["confidence"]) {
   if (confidence === "high") return "success";
   if (confidence === "medium") return "warning";
   return "default";
+}
+
+function renderableContent(item: EvidenceItem) {
+  return normalizeEvidenceMarkdown(item.full_content || item.content);
 }
 
 const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ title, open, evidence, onClose }) => {
@@ -57,7 +63,9 @@ const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ title, open, evidence, 
                   ) : null}
                 </Descriptions>
 
-                <pre className="evidence-content">{item.content}</pre>
+                <div className="evidence-content">
+                  <MarkdownRenderer content={renderableContent(item)} compact />
+                </div>
               </Space>
             </List.Item>
           )}

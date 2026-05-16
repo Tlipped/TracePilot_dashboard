@@ -23,6 +23,19 @@ export function compactEvidenceText(value: string, limit = 520) {
   return cleaned.length > limit ? `${cleaned.slice(0, limit)}...` : cleaned;
 }
 
+export function normalizeEvidenceMarkdown(value: string) {
+  return value
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\t/g, "  ")
+    .replace(/^✅\s*任务输出\s*/i, "")
+    .replace(/^Task output\s*/i, "")
+    .replace(/📊\s*统计\s*:?.*?(?:Token\s+\d+)?/gi, "")
+    .replace(/耗时\s*\d+(?:\.\d+)?s\s*\|\s*Token\s*\d+/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 export function isLowValueOperationalLog(log: LogMessage) {
   const cleaned = compactEvidenceText(log.message, 1200).toLowerCase();
   if (!cleaned) return true;
@@ -138,6 +151,7 @@ export function buildEvidenceForSection(
       timestamp: log.timestamp,
       log_id: log.log_id,
       content: compactEvidenceText(log.message),
+      full_content: normalizeEvidenceMarkdown(log.message),
       confidence: confidenceFromScore(score),
     });
   });
@@ -148,6 +162,7 @@ export function buildEvidenceForSection(
       title: "Report section summary",
       source: "report",
       content: compactEvidenceText(sectionContent, 700),
+      full_content: normalizeEvidenceMarkdown(sectionContent),
       confidence: "medium",
     });
   }
@@ -175,6 +190,7 @@ export function buildAttackPhaseEvidence(events: TaskEvent[], keywords: string[]
       timestamp: log.timestamp,
       log_id: log.log_id,
       content: compactEvidenceText(log.message),
+      full_content: normalizeEvidenceMarkdown(log.message),
       confidence: log.message_type === MsgType.RESULT ? "high" : "medium",
     }));
 }

@@ -6,6 +6,7 @@ import {
   compactEvidenceText,
   isLogEvent,
   isLowValueOperationalLog,
+  normalizeEvidenceMarkdown,
 } from "../utils/evidence";
 import EvidenceDrawer from "./EvidenceDrawer";
 
@@ -60,6 +61,7 @@ function buildPatchEvidence(report: string, logs: LogMessage[]): EvidenceItem[] 
       title: "Report verification context",
       source: "report",
       content: compactEvidenceText(reportContext, 900),
+      full_content: normalizeEvidenceMarkdown(reportContext),
       confidence: "medium",
     });
   }
@@ -78,6 +80,7 @@ function buildPatchEvidence(report: string, logs: LogMessage[]): EvidenceItem[] 
         timestamp: log.timestamp,
         log_id: log.log_id,
         content: compactEvidenceText(log.message, 900),
+        full_content: normalizeEvidenceMarkdown(log.message),
         confidence: /success|verified|抵挡|成功|passed/i.test(log.message) ? "high" : "medium",
       });
     });

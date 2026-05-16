@@ -162,6 +162,7 @@ export interface EvidenceItem {
   timestamp?: string;
   log_id?: string;
   content: string;
+  full_content?: string;
   confidence: "high" | "medium" | "low";
 }
 

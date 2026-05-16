@@ -2,7 +2,11 @@ import React, { useMemo, useState } from "react";
 import { Button, Empty, Space, Tag, Typography } from "antd";
 import { CircleDollarSign, GitBranch, PlayCircle, SearchCheck, ShieldCheck, Zap } from "lucide-react";
 import { EvidenceItem, ProductViewMode, Task, TaskEvent } from "../types";
-import { buildAttackPhaseEvidence, compactEvidenceText, extractTransactionHashes } from "../utils/evidence";
+import {
+  buildAttackPhaseEvidence,
+  compactEvidenceText,
+  extractTransactionHashes,
+} from "../utils/evidence";
 import EvidenceDrawer from "./EvidenceDrawer";
 
 interface AttackReplayTimelineProps {
@@ -41,6 +45,7 @@ function transactionEvidence(report: string): EvidenceItem[] {
       title: `Attack transaction ${index + 1}`,
       source: "transaction",
       content: hash,
+      full_content: hash,
       confidence: "high",
     }));
 }
