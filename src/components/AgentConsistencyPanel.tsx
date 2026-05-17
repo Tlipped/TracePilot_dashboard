@@ -1,13 +1,14 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import { Progress, Space, Tag, Typography } from "antd";
 import { GitCompareArrows, Network, ShieldCheck, TriangleAlert } from "lucide-react";
-import { LanguageMode, MacroAnalysisResponse, Task, TaskEvent } from "../types";
-import { analyzeAgentConsistency, ConsistencyStatus } from "../utils/agentConsistency";
+import { AutomatedReviewResponse, ConsistencyStatus, LanguageMode, MacroAnalysisResponse, Task, TaskEvent } from "../types";
+import { analyzeAgentConsistency } from "../utils/agentConsistency";
 
 interface AgentConsistencyPanelProps {
   task: Task | null;
   events: TaskEvent[];
   macro: MacroAnalysisResponse | null;
+  review?: AutomatedReviewResponse | null;
   language?: LanguageMode;
 }
 
@@ -25,10 +26,21 @@ const AgentConsistencyPanel: React.FC<AgentConsistencyPanelProps> = ({
   task,
   events,
   macro,
+  review,
   language = "zh",
 }) => {
   const isZh = language === "zh";
-  const summary = useMemo(() => analyzeAgentConsistency(task, events, macro), [events, macro, task]);
+  const localSummary = useMemo(() => analyzeAgentConsistency(task, events, macro), [events, macro, task]);
+  const summary = review
+    ? {
+        score: review.score,
+        status: review.status,
+        checks: review.checks,
+        agentSignals: review.agent_signals,
+        sharedTransactions: review.shared_transactions,
+        sharedFunctions: review.shared_functions,
+      }
+    : localSummary;
 
   return (
     <section className="agent-consistency-card">
@@ -44,7 +56,10 @@ const AgentConsistencyPanel: React.FC<AgentConsistencyPanelProps> = ({
             </Typography.Text>
           </div>
         </Space>
-        <Tag color={statusColor(summary.status)}>{summary.status}</Tag>
+        <Space size={6}>
+          <Tag color={review ? "cyan" : "default"}>{review ? "backend review" : "local review"}</Tag>
+          <Tag color={statusColor(summary.status)}>{summary.status}</Tag>
+        </Space>
       </div>
 
       <div className="agent-consistency-overview">

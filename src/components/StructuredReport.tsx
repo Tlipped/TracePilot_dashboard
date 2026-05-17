@@ -3,6 +3,7 @@ import { App as AntdApp, Button, Empty, Space, Tag, Typography } from "antd";
 import { Bug, CheckCircle2, Download, FileJson, KeyRound, Route, SearchCheck, ShieldCheck, Wrench } from "lucide-react";
 import {
   EvidenceItem,
+  AutomatedReviewResponse,
   LanguageMode,
   LogLevel,
   LogMessage,
@@ -26,6 +27,7 @@ interface StructuredReportProps {
   events: TaskEvent[];
   mode?: ProductViewMode;
   macroAnalysis?: MacroAnalysisResponse | null;
+  automatedReview?: AutomatedReviewResponse | null;
   language?: LanguageMode;
 }
 
@@ -271,6 +273,7 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
   events,
   mode = "report",
   macroAnalysis,
+  automatedReview,
   language = "en",
 }) => {
   const { message } = AntdApp.useApp();
@@ -349,7 +352,13 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
         </div>
 
         <EvidenceIntelligencePanel sections={sections} language={language} />
-        <AgentConsistencyPanel task={task} events={events} macro={macroAnalysis ?? null} language={language} />
+        <AgentConsistencyPanel
+          task={task}
+          events={events}
+          macro={macroAnalysis ?? null}
+          review={automatedReview}
+          language={language}
+        />
 
         {sections.map((section) => (
           <section className="report-section-card" key={section.key}>

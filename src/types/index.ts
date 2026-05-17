@@ -256,3 +256,43 @@ export interface MacroAnalysisResponse {
   balance_change: Record<string, unknown>;
   transaction_to_property: Record<string, unknown>;
 }
+
+export type ConsistencyStatus = "pass" | "warning" | "risk";
+
+export interface AgentSignalSummary {
+  agent: string;
+  events: number;
+  transactions: string[];
+  functions: string[];
+  mentions_patch?: boolean;
+  mentions_verification?: boolean;
+  mentions_root_cause?: boolean;
+  mentionsPatch?: boolean;
+  mentionsVerification?: boolean;
+  mentionsRootCause?: boolean;
+}
+
+export interface ConsistencyCheck {
+  id: string;
+  title: string;
+  description: string;
+  status: ConsistencyStatus;
+  score: number;
+  evidence: string[];
+  recommendation?: string | null;
+}
+
+export interface AutomatedReviewResponse {
+  task_id: string;
+  dapp_name: string;
+  generated_at: string;
+  review_type: string;
+  status: ConsistencyStatus;
+  score: number;
+  checks: ConsistencyCheck[];
+  agent_signals: AgentSignalSummary[];
+  shared_transactions: Array<{ value: string; agents: string[] }>;
+  shared_functions: Array<{ value: string; agents: string[] }>;
+  next_actions: string[];
+  llm_review_agent_used: boolean;
+}

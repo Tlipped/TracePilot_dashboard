@@ -1,4 +1,4 @@
-# TracePilot Dashboard
+﻿# TracePilot Dashboard
 
 TracePilot Dashboard 是 TracePilot 多智能体 DApp 漏洞定位系统的前端工作台。它用于创建分析任务、观察 Agent 状态、查看实时/历史日志，并把最终结果组织成结构化审计报告、学习导览和可复现证据视图。
 
@@ -15,7 +15,7 @@ TracePilot Dashboard 是 TracePilot 多智能体 DApp 漏洞定位系统的前�
 - **长日志支持**：日志流支持虚拟滚动和分页恢复，可加载更长任务的历史日志。
 - **Evidence Drawer**：点击报告结论、攻击阶段、关键交易可查看关联证据。
 - **Evidence Intelligence**：对证据按来源、工具调用、交易哈希、Agent 结果和安全关键词打分，提示证据健康度与风险。
-- **多 Agent 一致性检查**：检查宏观交易筛选、Trace 调试、根因函数、补丁生成和补丁验证是否围绕同一证据链展开。
+- **多 Agent 一致性检查**：优先消费后端自动化审查接口，检查宏观交易筛选、Trace 调试、根因函数、补丁生成和补丁验证是否围绕同一证据链展开；接口不可用时回退到前端本地检查。
 - **报告导出**：支持导出 Markdown 审计报告和 JSON evidence package。
 
 ## 技术栈
@@ -211,6 +211,7 @@ http://localhost:5173
 | `POST` | `/api/tasks` | 创建任务 |
 | `GET` | `/api/tasks/{task_id}` | 获取任务详情 |
 | `GET` | `/api/tasks/{task_id}/macro-analysis` | 获取宏观分析结果 |
+| `GET` | `/api/tasks/{task_id}/automated-review` | 获取后端自动化审查结果 |
 | `GET` | `/api/tasks/{task_id}/logs` | 分页获取历史日志 |
 | `POST` | `/api/tasks/{task_id}/cancel` | 取消任务 |
 | `POST` | `/api/tasks/{task_id}/archive` | 归档任务 |
@@ -285,3 +286,5 @@ Raw Mode 的 `LogStream` 使用虚拟滚动，只渲染可视区域附近的日�
 - [工程化可观测性与报告导出说明](./AGENT_OBSERVABILITY_INTERVIEW_NOTES.md)
 - [前端重设计计划](./FRONTEND_REDESIGN_PLAN.md)
 - 后端：[工程化技术决策记录](../TracePilot-backend/md/TracePilot工程化技术决策记录.md)
+
+

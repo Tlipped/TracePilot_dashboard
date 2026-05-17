@@ -15,12 +15,13 @@ import LogStream from "../components/LogStream";
 import LearningGuidePanel from "../components/LearningGuidePanel";
 import MacroAnalysisPanel from "../components/MacroAnalysisPanel";
 import StructuredReport from "../components/StructuredReport";
-import { getMacroAnalysis, getTask } from "../services/api";
+import { getAutomatedReview, getMacroAnalysis, getTask } from "../services/api";
 import WebSocketService from "../services/WebSocketService";
 import {
   LanguageMode,
   LogLevel,
   LogMessage,
+  AutomatedReviewResponse,
   MacroAnalysisResponse,
   ProductViewMode,
   Task,
@@ -77,6 +78,7 @@ const Dashboard: React.FC = () => {
   const [language, setLanguage] = useState<LanguageMode>("zh");
   const [activeMainTab, setActiveMainTab] = useState(getDefaultMainTab("report"));
   const [macroAnalysis, setMacroAnalysis] = useState<MacroAnalysisResponse | null>(null);
+  const [automatedReview, setAutomatedReview] = useState<AutomatedReviewResponse | null>(null);
 
   const refreshTask = useCallback(async () => {
     if (!taskId) return;
@@ -184,6 +186,26 @@ const Dashboard: React.FC = () => {
     };
   }, [taskId, task?.status, task?.completed_at]);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!taskId) {
+      setAutomatedReview(null);
+      return;
+    }
+
+    getAutomatedReview(taskId)
+      .then((payload) => {
+        if (!cancelled) setAutomatedReview(payload);
+      })
+      .catch(() => {
+        if (!cancelled) setAutomatedReview(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [taskId, task?.status, task?.completed_at]);
+
   const agentStats = useMemo<AgentStats[]>(() => {
     const map = new Map<string, AgentStats>();
     AGENT_NAMES.forEach((name) => map.set(name, { name, total: 0, errors: 0, warnings: 0 }));
@@ -222,7 +244,16 @@ const Dashboard: React.FC = () => {
           {t(language, "reportTab")}
         </Space>
       ),
-      children: <StructuredReport task={task} events={events} mode={viewMode} macroAnalysis={macroAnalysis} language={language} />,
+      children: (
+        <StructuredReport
+          task={task}
+          events={events}
+          mode={viewMode}
+          macroAnalysis={macroAnalysis}
+          automatedReview={automatedReview}
+          language={language}
+        />
+      ),
     };
 
     const replayTab = {
@@ -266,7 +297,15 @@ const Dashboard: React.FC = () => {
           {language === "zh" ? "一致性检查" : "Consistency"}
         </Space>
       ),
-      children: <AgentConsistencyPanel task={task} events={events} macro={macroAnalysis} language={language} />,
+      children: (
+        <AgentConsistencyPanel
+          task={task}
+          events={events}
+          macro={macroAnalysis}
+          review={automatedReview}
+          language={language}
+        />
+      ),
     };
 
     const streamTab = {
@@ -303,7 +342,7 @@ const Dashboard: React.FC = () => {
     if (viewMode === "auditor") return [macroTab, consistencyTab, reportTab, replayTab, timelineTab];
     if (viewMode === "raw") return [streamTab, timelineTab, macroTab, reportTab];
     return [reportTab, replayTab, macroTab];
-  }, [events, language, macroAnalysis, selectedAgent, task, taskId, viewMode]);
+  }, [automatedReview, events, language, macroAnalysis, selectedAgent, task, taskId, viewMode]);
 
   const inspectorTabItems = useMemo(
     () => [

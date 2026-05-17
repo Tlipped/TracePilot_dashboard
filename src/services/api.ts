@@ -3,6 +3,7 @@ import { BACKEND_HTTP_URL } from "../config/appConfig";
 import {
   AgentLogFileResponse,
   AgentLogFilesResponse,
+  AutomatedReviewResponse,
   FullLogResponse,
   MacroAnalysisResponse,
   Task,
@@ -28,6 +29,11 @@ export async function getTask(taskId: string): Promise<Task> {
 
 export async function getMacroAnalysis(taskId: string): Promise<MacroAnalysisResponse> {
   const response = await api.get<MacroAnalysisResponse>(`/api/tasks/${taskId}/macro-analysis`);
+  return response.data;
+}
+
+export async function getAutomatedReview(taskId: string): Promise<AutomatedReviewResponse> {
+  const response = await api.get<AutomatedReviewResponse>(`/api/tasks/${taskId}/automated-review`);
   return response.data;
 }
 
