@@ -6,6 +6,7 @@ import {
   ReportSectionKey,
   TaskEvent,
 } from "../types";
+import { enrichEvidenceItems } from "./evidenceScoring";
 
 export function isLogEvent(event: TaskEvent): event is LogMessage {
   return event.type === "LOG";
@@ -167,12 +168,12 @@ export function buildEvidenceForSection(
     });
   }
 
-  return evidence.slice(0, 10);
+  return enrichEvidenceItems(evidence).slice(0, 10);
 }
 
 export function buildAttackPhaseEvidence(events: TaskEvent[], keywords: string[]) {
   const normalized = keywords.map((keyword) => keyword.toLowerCase());
-  return events
+  return enrichEvidenceItems(events
     .filter(isLogEvent)
     .filter((log) => !isLowValueOperationalLog(log))
     .filter((log) => {
@@ -192,5 +193,5 @@ export function buildAttackPhaseEvidence(events: TaskEvent[], keywords: string[]
       content: compactEvidenceText(log.message),
       full_content: normalizeEvidenceMarkdown(log.message),
       confidence: log.message_type === MsgType.RESULT ? "high" : "medium",
-    }));
+    })));
 }

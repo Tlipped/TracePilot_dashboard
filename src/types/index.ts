@@ -174,6 +174,9 @@ export interface EvidenceItem {
   content: string;
   full_content?: string;
   confidence: "high" | "medium" | "low";
+  score?: number;
+  score_label?: "strong" | "supporting" | "weak";
+  score_reasons?: string[];
 }
 
 export interface ProductModeConfig {

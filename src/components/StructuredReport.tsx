@@ -15,6 +15,7 @@ import {
 } from "../types";
 import { buildEvidenceForSection } from "../utils/evidence";
 import EvidenceDrawer from "./EvidenceDrawer";
+import EvidenceIntelligencePanel from "./EvidenceIntelligencePanel";
 import KeyTransactionCards from "./KeyTransactionCards";
 import MarkdownRenderer from "./MarkdownRenderer";
 import PatchVerificationPanel from "./PatchVerificationPanel";
@@ -345,6 +346,8 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
           <KeyTransactionCards task={task} events={events} macroAnalysis={macroAnalysis} language={language} />
           <PatchVerificationPanel task={task} events={events} />
         </div>
+
+        <EvidenceIntelligencePanel sections={sections} language={language} />
 
         {sections.map((section) => (
           <section className="report-section-card" key={section.key}>

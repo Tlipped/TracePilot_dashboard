@@ -724,6 +724,118 @@
   line-height: 1.6;
 }
 
+.evidence-intelligence-card {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(14, 116, 144, 0.08), rgba(15, 23, 42, 0.7)),
+    rgba(15, 23, 42, 0.62);
+}
+
+.evidence-intelligence-head {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.evidence-intelligence-head>span,
+.evidence-intelligence-head .ant-space-item:last-child>div {
+  min-width: 0;
+}
+
+.evidence-intelligence-head .ant-typography-secondary {
+  display: block;
+  font-size: 12px;
+}
+
+.evidence-health-grid {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.evidence-score-card {
+  min-height: 96px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(7, 11, 16, 0.44);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.evidence-score-card>div:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.evidence-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(92px, 1fr));
+  gap: 8px;
+}
+
+.evidence-metric-strip span {
+  min-height: 40px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(7, 11, 16, 0.38);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.evidence-section-bars {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.evidence-section-bar {
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(7, 11, 16, 0.34);
+}
+
+.evidence-section-bar>div:first-child {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.evidence-section-bar .ant-typography {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.evidence-risk-row {
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.06);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .report-section-card {
   padding: 11px;
   border: 1px solid var(--border);
@@ -1147,6 +1259,20 @@
   color: var(--text-primary);
   max-height: 460px;
   overflow: auto;
+}
+
+.evidence-score-row {
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(7, 11, 16, 0.4);
+}
+
+.evidence-reasons {
+  margin-top: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
 .evidence-content .markdown-content {

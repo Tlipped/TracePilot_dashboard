@@ -14,6 +14,7 @@ TracePilot Dashboard 是 TracePilot 多智能体 DApp 漏洞定位系统的前�
 - **Raw Mode 隔离**：原始日志、文件日志和完整时间线集中放在 Raw 模式，避免干扰普通用户。
 - **长日志支持**：日志流支持虚拟滚动和分页恢复，可加载更长任务的历史日志。
 - **Evidence Drawer**：点击报告结论、攻击阶段、关键交易可查看关联证据。
+- **Evidence Intelligence**：对证据按来源、工具调用、交易哈希、Agent 结果和安全关键词打分，提示证据健康度与风险。
 - **报告导出**：支持导出 Markdown 审计报告和 JSON evidence package。
 
 ## 技术栈
@@ -43,6 +44,7 @@ TracePilot-dashboard/
 │   │   ├── AttackReplayTimeline.tsx  # 攻击复盘时间线
 │   │   ├── DappContextButton.tsx     # DApp 背景信息抽屉
 │   │   ├── EvidenceDrawer.tsx        # 证据详情抽屉
+│   │   ├── EvidenceIntelligencePanel.tsx # 证据评分与健康度面板
 │   │   ├── KeyTransactionCards.tsx   # 关键交易卡片
 │   │   ├── LearningGuidePanel.tsx    # 学习导览面板
 │   │   ├── LogStream.tsx             # 虚拟滚动日志流
@@ -65,6 +67,7 @@ TracePilot-dashboard/
 │   ├── utils/
 │   │   ├── dappMetadata.ts           # DApp 元数据读取
 │   │   ├── evidence.ts               # 证据抽取与清洗
+│   │   ├── evidenceScoring.ts        # 证据质量评分
 │   │   └── i18n.ts                   # 轻量中英文 UI 标签
 │   ├── App.css
 │   ├── App.tsx
@@ -189,6 +192,8 @@ http://localhost:5173
 | Raw Mode | 原始日志流、分页恢复、虚拟滚动、文件日志、完整时间线 |
 | Agent Brief | 每个 Agent 的结构化摘要 |
 | Task | 任务 ID、状态、创建时间、完成时间、错误信息 |
+
+报告模式中的 Evidence Intelligence 会对每个报告区块的证据强度做评分。评分是确定性的启发式规则，不额外调用模型，便于解释和复现。
 
 ## API 对接
 

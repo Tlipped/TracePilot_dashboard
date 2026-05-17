@@ -1,8 +1,9 @@
-import React from "react";
-import { Descriptions, Drawer, Empty, List, Space, Tag, Typography } from "antd";
+import React, { useMemo } from "react";
+import { Descriptions, Drawer, Empty, List, Progress, Space, Tag, Typography } from "antd";
 import { Database, FileText, TerminalSquare, Wrench } from "lucide-react";
 import { EvidenceItem } from "../types";
 import { normalizeEvidenceMarkdown } from "../utils/evidence";
+import { enrichEvidenceItems } from "../utils/evidenceScoring";
 import MarkdownRenderer from "./MarkdownRenderer";
 
 interface EvidenceDrawerProps {
@@ -25,19 +26,27 @@ function getConfidenceColor(confidence: EvidenceItem["confidence"]) {
   return "default";
 }
 
+function getScoreColor(label?: EvidenceItem["score_label"]) {
+  if (label === "strong") return "success";
+  if (label === "supporting") return "processing";
+  return "default";
+}
+
 function renderableContent(item: EvidenceItem) {
   return normalizeEvidenceMarkdown(item.full_content || item.content);
 }
 
 const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ title, open, evidence, onClose }) => {
+  const rankedEvidence = useMemo(() => enrichEvidenceItems(evidence), [evidence]);
+
   return (
     <Drawer title={title} open={open} onClose={onClose} size="large" className="evidence-drawer">
-      {evidence.length === 0 ? (
+      {rankedEvidence.length === 0 ? (
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No linked evidence yet" />
       ) : (
         <List
           className="evidence-list"
-          dataSource={evidence}
+          dataSource={rankedEvidence}
           renderItem={(item) => (
             <List.Item className="evidence-item">
               <Space orientation="vertical" size={10} style={{ width: "100%" }}>
@@ -47,7 +56,22 @@ const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ title, open, evidence, 
                     <Typography.Text strong>{item.title}</Typography.Text>
                     <Tag>{item.source}</Tag>
                     <Tag color={getConfidenceColor(item.confidence)}>{item.confidence}</Tag>
+                    <Tag color={getScoreColor(item.score_label)}>{item.score_label}</Tag>
                   </Space>
+                </div>
+
+                <div className="evidence-score-row">
+                  <Progress
+                    percent={item.score ?? 0}
+                    size="small"
+                    status={item.score_label === "weak" ? "exception" : "normal"}
+                    showInfo
+                  />
+                  <div className="evidence-reasons">
+                    {(item.score_reasons ?? []).map((reason) => (
+                      <Tag key={reason}>{reason}</Tag>
+                    ))}
+                  </div>
                 </div>
 
                 <Descriptions bordered size="small" column={1}>
