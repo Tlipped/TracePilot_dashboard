@@ -5,6 +5,7 @@ import { Activity, ArrowLeft, Bot, FileText, FolderOpen, ListTree, RefreshCcw, S
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
 import { AGENT_NAMES } from "../constants/agents";
 import AgentFileLogs from "../components/AgentFileLogs";
+import AgentConsistencyPanel from "../components/AgentConsistencyPanel";
 import AgentInsights from "../components/AgentInsights";
 import AgentTimeline from "../components/AgentTimeline";
 import AttackReplayTimeline from "../components/AttackReplayTimeline";
@@ -257,6 +258,17 @@ const Dashboard: React.FC = () => {
       children: <MacroAnalysisPanel macro={macroAnalysis} language={language} />,
     };
 
+    const consistencyTab = {
+      key: "consistency",
+      label: (
+        <Space size={6}>
+          <ShieldCheck size={14} />
+          {language === "zh" ? "一致性检查" : "Consistency"}
+        </Space>
+      ),
+      children: <AgentConsistencyPanel task={task} events={events} macro={macroAnalysis} language={language} />,
+    };
+
     const streamTab = {
       key: "stream",
       label: (
@@ -288,7 +300,7 @@ const Dashboard: React.FC = () => {
     };
 
     if (viewMode === "learn") return [learningTab, replayTab, reportTab, macroTab];
-    if (viewMode === "auditor") return [macroTab, reportTab, replayTab, timelineTab];
+    if (viewMode === "auditor") return [macroTab, consistencyTab, reportTab, replayTab, timelineTab];
     if (viewMode === "raw") return [streamTab, timelineTab, macroTab, reportTab];
     return [reportTab, replayTab, macroTab];
   }, [events, language, macroAnalysis, selectedAgent, task, taskId, viewMode]);

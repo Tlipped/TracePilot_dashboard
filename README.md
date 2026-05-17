@@ -15,6 +15,7 @@ TracePilot Dashboard 是 TracePilot 多智能体 DApp 漏洞定位系统的前�
 - **长日志支持**：日志流支持虚拟滚动和分页恢复，可加载更长任务的历史日志。
 - **Evidence Drawer**：点击报告结论、攻击阶段、关键交易可查看关联证据。
 - **Evidence Intelligence**：对证据按来源、工具调用、交易哈希、Agent 结果和安全关键词打分，提示证据健康度与风险。
+- **多 Agent 一致性检查**：检查宏观交易筛选、Trace 调试、根因函数、补丁生成和补丁验证是否围绕同一证据链展开。
 - **报告导出**：支持导出 Markdown 审计报告和 JSON evidence package。
 
 ## 技术栈
@@ -38,6 +39,7 @@ TracePilot-dashboard/
 ├── src/
 │   ├── components/
 │   │   ├── AgentFileLogs.tsx         # Agent 文件日志查看
+│   │   ├── AgentConsistencyPanel.tsx # 多 Agent 一致性检查
 │   │   ├── AgentInsights.tsx         # Agent 摘要
 │   │   ├── AgentNavigator.tsx        # Agent 状态导航
 │   │   ├── AgentTimeline.tsx         # Agent 时间线
@@ -66,6 +68,7 @@ TracePilot-dashboard/
 │   │   └── index.ts                  # TypeScript 类型定义
 │   ├── utils/
 │   │   ├── dappMetadata.ts           # DApp 元数据读取
+│   │   ├── agentConsistency.ts       # 多 Agent 结论连续性检查
 │   │   ├── evidence.ts               # 证据抽取与清洗
 │   │   ├── evidenceScoring.ts        # 证据质量评分
 │   │   └── i18n.ts                   # 轻量中英文 UI 标签
@@ -194,6 +197,8 @@ http://localhost:5173
 | Task | 任务 ID、状态、创建时间、完成时间、错误信息 |
 
 报告模式中的 Evidence Intelligence 会对每个报告区块的证据强度做评分。评分是确定性的启发式规则，不额外调用模型，便于解释和复现。
+
+报告模式和审计模式中的多 Agent 一致性检查会对“宏观交易 -> Trace Debug -> 根因函数 -> Patch -> Verification”进行连续性检查，用于发现多 Agent 结论漂移。
 
 ## API 对接
 

@@ -836,6 +836,136 @@
   gap: 8px;
 }
 
+.agent-consistency-card {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(15, 23, 42, 0.7)),
+    rgba(15, 23, 42, 0.62);
+}
+
+.agent-consistency-head {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.agent-consistency-head .ant-typography-secondary {
+  display: block;
+  font-size: 12px;
+}
+
+.agent-consistency-overview {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.agent-consistency-score {
+  min-height: 116px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(7, 11, 16, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.agent-consistency-shared {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(7, 11, 16, 0.32);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.consistency-chip-row {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.consistency-check-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+}
+
+.consistency-check-card {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: 8px;
+  background: rgba(7, 11, 16, 0.36);
+}
+
+.consistency-check-card.check-pass {
+  border-left-color: var(--green);
+}
+
+.consistency-check-card.check-warning {
+  border-left-color: var(--gold);
+}
+
+.consistency-check-card.check-risk {
+  border-left-color: var(--red);
+}
+
+.consistency-check-title {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.consistency-check-title>div {
+  min-width: 0;
+}
+
+.consistency-check-title p {
+  margin: 4px 0 0 !important;
+  color: var(--text-muted) !important;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.consistency-check-card ul {
+  margin: 9px 0 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.consistency-recommendation {
+  margin-top: 9px;
+  padding: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 7px;
+  background: rgba(245, 158, 11, 0.06);
+  color: var(--gold);
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .report-section-card {
   padding: 11px;
   border: 1px solid var(--border);
@@ -1701,7 +1831,9 @@
 @media (max-width: 1100px) {
   .product-summary-grid,
   .macro-grid,
-  .learning-context-grid {
+  .learning-context-grid,
+  .agent-consistency-overview,
+  .agent-consistency-shared {
     grid-template-columns: 1fr;
   }
 
