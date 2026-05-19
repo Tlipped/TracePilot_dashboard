@@ -4,6 +4,7 @@ import {
   AgentLogFileResponse,
   AgentLogFilesResponse,
   AutomatedReviewResponse,
+  DappCatalogResponse,
   FullLogResponse,
   MacroAnalysisResponse,
   Task,
@@ -19,6 +20,11 @@ export async function listTasks(includeArchived = false): Promise<Task[]> {
   const response = await api.get<Task[]>("/api/tasks", {
     params: includeArchived ? { include_archived: true } : undefined,
   });
+  return response.data;
+}
+
+export async function listDapps(): Promise<DappCatalogResponse> {
+  const response = await api.get<DappCatalogResponse>("/api/dapps");
   return response.data;
 }
 

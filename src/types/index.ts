@@ -36,6 +36,35 @@ export interface TaskCreateRequest {
   dapp_name: string;
 }
 
+export interface DappReference {
+  time?: string | null;
+  link?: string | null;
+}
+
+export interface DappCatalogItem {
+  name: string;
+  cause?: string | null;
+  platform?: string | null;
+  time?: string | null;
+  root_cause?: string | null;
+  report?: string | null;
+  detection?: DappReference | null;
+  disclosure?: DappReference | null;
+  report_link?: string | null;
+  transaction_hash: string[];
+  transaction_count: number;
+  raw_file: string;
+  processed_file?: string | null;
+  has_processed_analysis: boolean;
+  demo_ready: boolean;
+}
+
+export interface DappCatalogResponse {
+  total: number;
+  demo_ready_count: number;
+  items: DappCatalogItem[];
+}
+
 export interface Task {
   task_id: string;
   dapp_name: string;

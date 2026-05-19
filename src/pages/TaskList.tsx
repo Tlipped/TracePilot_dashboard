@@ -16,8 +16,8 @@ import {
   XCircle,
 } from "lucide-react";
 import DappContextButton from "../components/DappContextButton";
-import { archiveTask, cancelTask, createTask, deleteTask, listTasks, unarchiveTask } from "../services/api";
-import { Task, TaskCreateRequest, TaskStatus } from "../types";
+import { archiveTask, cancelTask, createTask, deleteTask, listDapps, listTasks, unarchiveTask } from "../services/api";
+import { DappCatalogItem, Task, TaskCreateRequest, TaskStatus } from "../types";
 
 const { Header, Content } = Layout;
 
@@ -57,6 +57,9 @@ const TaskList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedDapps, setSelectedDapps] = useState<string[]>([]);
+  const [dappCatalog, setDappCatalog] = useState<DappCatalogItem[]>([]);
+  const [dappCatalogLoading, setDappCatalogLoading] = useState(false);
+  const [dappCatalogError, setDappCatalogError] = useState("");
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | TaskStatus>("all");
   const [archiveFilter, setArchiveFilter] = useState<"active" | "archived" | "all">("active");
@@ -78,6 +81,29 @@ const TaskList: React.FC = () => {
     const interval = setInterval(fetchTasks, 5000);
     return () => clearInterval(interval);
   }, [fetchTasks]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setDappCatalogLoading(true);
+    listDapps()
+      .then((catalog) => {
+        if (cancelled) return;
+        setDappCatalog(catalog.items);
+        setDappCatalogError("");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setDappCatalog([]);
+        setDappCatalogError("Backend case catalog is unavailable; using bundled frontend metadata.");
+      })
+      .finally(() => {
+        if (!cancelled) setDappCatalogLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleCreate = async () => {
     if (selectedDapps.length === 0) {
@@ -169,6 +195,21 @@ const TaskList: React.FC = () => {
     completed: filteredTasks.filter((task) => task.status === TaskStatus.COMPLETED).length,
     failed: filteredTasks.filter((task) => task.status === TaskStatus.FAILED).length,
   };
+
+  const dappOptions = useMemo(() => {
+    if (dappCatalog.length > 0) {
+      return dappCatalog.map((item) => ({
+        label: `${item.name}${item.demo_ready ? " · demo ready" : ""}${item.platform ? ` · ${item.platform}` : ""}`,
+        value: item.name,
+      }));
+    }
+    return DAPP_OPTIONS.map((name) => ({ label: name, value: name }));
+  }, [dappCatalog]);
+
+  const selectedDappDetail = useMemo(() => {
+    if (selectedDapps.length !== 1) return null;
+    return dappCatalog.find((item) => item.name === selectedDapps[0]) ?? null;
+  }, [dappCatalog, selectedDapps]);
 
   const columns: ColumnsType<Task> = [
     {
@@ -371,10 +412,26 @@ const TaskList: React.FC = () => {
             style={{ width: "100%" }}
             value={selectedDapps}
             onChange={setSelectedDapps}
-            options={DAPP_OPTIONS.map((name) => ({ label: name, value: name }))}
+            options={dappOptions}
             showSearch
             optionFilterProp="label"
+            loading={dappCatalogLoading}
           />
+          {dappCatalogError ? <Typography.Text type="warning">{dappCatalogError}</Typography.Text> : null}
+          {selectedDappDetail ? (
+            <div className="case-catalog-preview">
+              <Space size={6} wrap>
+                {selectedDappDetail.demo_ready ? <Tag color="green">Demo ready</Tag> : <Tag>Raw case</Tag>}
+                {selectedDappDetail.has_processed_analysis ? <Tag color="blue">Macro analysis</Tag> : null}
+                {selectedDappDetail.platform ? <Tag>{selectedDappDetail.platform}</Tag> : null}
+                {selectedDappDetail.cause ? <Tag>{selectedDappDetail.cause}</Tag> : null}
+              </Space>
+              <Typography.Text type="secondary">
+                {selectedDappDetail.transaction_count} transaction(s)
+                {selectedDappDetail.root_cause ? ` · root cause: ${selectedDappDetail.root_cause}` : ""}
+              </Typography.Text>
+            </div>
+          ) : null}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <Typography.Text type="secondary">
               View case context while the analysis task is running.
