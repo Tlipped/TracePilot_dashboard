@@ -32,6 +32,8 @@ import { modeLabel, t } from "../utils/i18n";
 
 const { Header, Content } = Layout;
 
+type MainTabItem = NonNullable<React.ComponentProps<typeof Tabs>["items"]>[number];
+
 function isLogEvent(event: TaskEvent): event is LogMessage {
   return event.type === "LOG";
 }
@@ -236,7 +238,7 @@ const Dashboard: React.FC = () => {
   };
 
   const mainTabItems = useMemo(() => {
-    const reportTab = {
+    const reportTab: MainTabItem = {
       key: "report",
       label: (
         <Space size={6}>
@@ -256,7 +258,7 @@ const Dashboard: React.FC = () => {
       ),
     };
 
-    const replayTab = {
+    const replayTab: MainTabItem = {
       key: "attack-replay",
       label: (
         <Space size={6}>
@@ -267,7 +269,7 @@ const Dashboard: React.FC = () => {
       children: <AttackReplayTimeline task={task} events={events} mode={viewMode} />,
     };
 
-    const learningTab = {
+    const learningTab: MainTabItem = {
       key: "learning",
       label: (
         <Space size={6}>
@@ -278,7 +280,7 @@ const Dashboard: React.FC = () => {
       children: <LearningGuidePanel task={task} macro={macroAnalysis} language={language} />,
     };
 
-    const macroTab = {
+    const macroTab: MainTabItem = {
       key: "macro",
       label: (
         <Space size={6}>
@@ -289,7 +291,7 @@ const Dashboard: React.FC = () => {
       children: <MacroAnalysisPanel macro={macroAnalysis} language={language} />,
     };
 
-    const consistencyTab = {
+    const consistencyTab: MainTabItem = {
       key: "consistency",
       label: (
         <Space size={6}>
@@ -308,7 +310,7 @@ const Dashboard: React.FC = () => {
       ),
     };
 
-    const streamTab = {
+    const streamTab: MainTabItem = {
       key: "stream",
       label: (
         <Space size={6}>
@@ -327,7 +329,7 @@ const Dashboard: React.FC = () => {
       ),
     };
 
-    const timelineTab = {
+    const timelineTab: MainTabItem = {
       key: "timeline",
       label: (
         <Space size={6}>
@@ -338,10 +340,22 @@ const Dashboard: React.FC = () => {
       children: <AgentTimeline events={events} selectedAgent={selectedAgent} onSelectLog={openLog} />,
     };
 
-    if (viewMode === "learn") return [learningTab, replayTab, reportTab, macroTab];
-    if (viewMode === "auditor") return [macroTab, consistencyTab, reportTab, replayTab, timelineTab];
-    if (viewMode === "raw") return [streamTab, timelineTab, macroTab, reportTab];
-    return [reportTab, replayTab, macroTab];
+    const tabMap: Record<string, MainTabItem> = {
+      report: reportTab,
+      "attack-replay": replayTab,
+      learning: learningTab,
+      macro: macroTab,
+      consistency: consistencyTab,
+      stream: streamTab,
+      timeline: timelineTab,
+    };
+    const modeOrder: Record<ProductViewMode, string[]> = {
+      report: ["report", "attack-replay", "macro", "consistency", "learning", "stream", "timeline"],
+      learn: ["learning", "attack-replay", "report", "macro", "consistency", "stream", "timeline"],
+      auditor: ["macro", "consistency", "report", "attack-replay", "timeline", "stream", "learning"],
+      raw: ["stream", "timeline", "report", "macro", "consistency", "attack-replay", "learning"],
+    };
+    return modeOrder[viewMode].map((key) => tabMap[key]);
   }, [automatedReview, events, language, macroAnalysis, selectedAgent, task, taskId, viewMode]);
 
   const inspectorTabItems = useMemo(
@@ -363,20 +377,16 @@ const Dashboard: React.FC = () => {
           />
         ),
       },
-      ...(viewMode === "raw"
-        ? [
-            {
-              key: "agent-files",
-              label: (
-                <Space size={6}>
-                  <FolderOpen size={14} />
-                  {t(language, "fileLogsTab")}
-                </Space>
-              ),
-              children: <AgentFileLogs taskId={taskId ?? ""} />,
-            },
-          ]
-        : []),
+      {
+        key: "agent-files",
+        label: (
+          <Space size={6}>
+            <FolderOpen size={14} />
+            {t(language, "fileLogsTab")}
+          </Space>
+        ),
+        children: <AgentFileLogs taskId={taskId ?? ""} />,
+      },
       {
         key: "summary",
         label: t(language, "taskTab"),
@@ -411,7 +421,7 @@ const Dashboard: React.FC = () => {
         ),
       },
     ],
-    [events, language, selectedAgent, task, taskId, viewMode],
+    [events, language, selectedAgent, task, taskId],
   );
 
   return (
@@ -429,17 +439,19 @@ const Dashboard: React.FC = () => {
           </div>
         </Space>
         <Space size={10}>
-          <Segmented
-            size="small"
-            value={viewMode}
-            onChange={(value) => setViewMode(value as ProductViewMode)}
-            options={[
-              { label: modeLabel(language, "report"), value: "report" },
-              { label: modeLabel(language, "learn"), value: "learn" },
-              { label: modeLabel(language, "auditor"), value: "auditor" },
-              { label: modeLabel(language, "raw"), value: "raw" },
-            ]}
-          />
+          <div className="view-mode-switcher">
+            <Typography.Text className="view-mode-label">{language === "zh" ? "视图模式" : "View"}</Typography.Text>
+            <Segmented
+              value={viewMode}
+              onChange={(value) => setViewMode(value as ProductViewMode)}
+              options={[
+                { label: modeLabel(language, "report"), value: "report" },
+                { label: modeLabel(language, "learn"), value: "learn" },
+                { label: modeLabel(language, "auditor"), value: "auditor" },
+                { label: modeLabel(language, "raw"), value: "raw" },
+              ]}
+            />
+          </div>
           <Segmented
             size="small"
             value={language}

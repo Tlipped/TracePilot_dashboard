@@ -195,6 +195,7 @@ export interface EvidenceItem {
   id: string;
   title: string;
   source: "report" | "agent_log" | "tool" | "transaction" | "system";
+  evidence_tier?: "verified" | "tool_backed" | "agent_derived" | "report_derived";
   agent?: string;
   level?: LogLevel;
   message_type?: MsgType;

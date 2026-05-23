@@ -47,8 +47,8 @@ const EvidenceIntelligencePanel: React.FC<EvidenceIntelligencePanelProps> = ({ s
             <Typography.Text strong>{isZh ? "证据智能筛选" : "Evidence Intelligence"}</Typography.Text>
             <Typography.Text type="secondary">
               {isZh
-                ? "按来源、工具调用、交易哈希、Agent 结果和安全关键词评估证据强度。"
-                : "Ranks evidence by source, tool usage, transaction hashes, agent results, and security signals."}
+                ? "按来源层级、工具调用和交易哈希评估支撑等级，不代表模型概率。"
+                : "Ranks support by source tier, tool usage, and transaction hashes, not model probability."}
             </Typography.Text>
           </div>
         </Space>
@@ -68,7 +68,7 @@ const EvidenceIntelligencePanel: React.FC<EvidenceIntelligencePanelProps> = ({ s
           <div>
             <Tag color={scoreColor(health.label)}>{health.label}</Tag>
             <Typography.Text type="secondary">
-              {isZh ? "整体证据健康度" : "Overall evidence health"}
+              {isZh ? "整体证据支撑度" : "Overall evidence support"}
             </Typography.Text>
           </div>
         </div>

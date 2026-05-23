@@ -4,6 +4,7 @@ export interface EvidenceScoreResult {
   score: number;
   label: "strong" | "supporting" | "weak";
   reasons: string[];
+  tier: NonNullable<EvidenceItem["evidence_tier"]>;
 }
 
 export interface EvidenceHealthSummary {
@@ -57,9 +58,30 @@ function textOf(item: EvidenceItem) {
   return `${item.title} ${item.content} ${item.full_content || ""}`.toLowerCase();
 }
 
+export function isToolBackedEvidence(item: EvidenceItem) {
+  return item.source === "tool" || item.message_type === MsgType.TOOL_CALL || item.evidence_tier === "tool_backed";
+}
+
+export function inferEvidenceTier(item: EvidenceItem): NonNullable<EvidenceItem["evidence_tier"]> {
+  const haystack = textOf(item);
+  const hasOnChainRef = /0x[a-f0-9]{40,64}/i.test(haystack);
+
+  if (item.source === "transaction" || (isToolBackedEvidence(item) && hasOnChainRef)) {
+    return "verified";
+  }
+  if (isToolBackedEvidence(item) || item.source === "system") {
+    return "tool_backed";
+  }
+  if (item.source === "agent_log") {
+    return "agent_derived";
+  }
+  return "report_derived";
+}
+
 export function scoreEvidenceItem(item: EvidenceItem): EvidenceScoreResult {
   const reasons: string[] = [];
   const haystack = textOf(item);
+  const tier = inferEvidenceTier(item);
   let score = 0;
 
   if (item.source === "transaction") {
@@ -81,12 +103,20 @@ export function scoreEvidenceItem(item: EvidenceItem): EvidenceScoreResult {
 
   if (item.confidence === "high") {
     score += 22;
-    reasons.push("high confidence link");
+    reasons.push("strong claim link");
   } else if (item.confidence === "medium") {
     score += 14;
-    reasons.push("medium confidence link");
+    reasons.push("supporting claim link");
   } else {
     score += 5;
+  }
+
+  if (tier === "verified") {
+    score += 8;
+    reasons.push("verified evidence tier");
+  } else if (tier === "report_derived") {
+    score -= 6;
+    reasons.push("report-only evidence");
   }
 
   if (item.message_type === MsgType.TOOL_CALL) {
@@ -129,6 +159,7 @@ export function scoreEvidenceItem(item: EvidenceItem): EvidenceScoreResult {
     score: finalScore,
     label: labelFromScore(finalScore),
     reasons: Array.from(new Set(reasons)).slice(0, 5),
+    tier,
   };
 }
 
@@ -136,6 +167,7 @@ export function enrichEvidenceItem(item: EvidenceItem): EvidenceItem {
   const result = scoreEvidenceItem(item);
   return {
     ...item,
+    evidence_tier: result.tier,
     score: result.score,
     score_label: result.label,
     score_reasons: result.reasons,
@@ -153,7 +185,7 @@ export function summarizeEvidenceHealth(items: EvidenceItem[]): EvidenceHealthSu
   const supporting = enriched.filter((item) => item.score_label === "supporting").length;
   const weak = enriched.filter((item) => item.score_label === "weak").length;
   const transactions = enriched.filter((item) => item.source === "transaction").length;
-  const tools = enriched.filter((item) => item.source === "tool").length;
+  const tools = enriched.filter(isToolBackedEvidence).length;
   const agents = new Set(enriched.map((item) => item.agent).filter(Boolean)).size;
   const score = total ? clamp(enriched.reduce((sum, item) => sum + (item.score ?? 0), 0) / total) : 0;
   const risks: string[] = [];
