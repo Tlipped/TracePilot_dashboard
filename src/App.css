@@ -1945,3 +1945,983 @@
     flex-direction: column;
   }
 }
+
+/* RiskPilot roadshow war room */
+.war-room-shell { min-height: 100vh; background: #f7fbff; color: #0f172a; }
+.war-room-nav { height: 64px; padding: 0 32px; border-bottom: 1px solid rgba(15,23,42,.08); background: rgba(255,255,255,.92) !important; backdrop-filter: blur(18px); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 30; }
+.war-room-nav .ant-btn-text, .war-room-nav .ant-typography { color: #172033 !important; }
+.brand-mark { width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: #fff; background: linear-gradient(135deg,#2563eb,#06b6d4); box-shadow: 0 10px 28px rgba(37,99,235,.22); }
+.war-room-brand { font-size: 16px; font-weight: 800; }
+.war-room-content { padding: 34px 44px 52px; display: flex; flex-direction: column; gap: 24px; }
+.hero-command { min-height: 430px; display: grid; grid-template-columns: minmax(360px,.95fr) minmax(520px,1.35fr); gap: 28px; align-items: center; }
+.hero-copy { display: flex; flex-direction: column; align-items: flex-start; }
+.hero-chip { border: 0; color: #2563eb; background: rgba(37,99,235,.1); font-weight: 800; margin-bottom: 22px; }
+.hero-title.ant-typography { margin: 0; max-width: 720px; color: #111827; font-size: clamp(42px,5vw,72px); line-height: 1.04; letter-spacing: 0; font-weight: 900; }
+.hero-subtitle.ant-typography { margin: 22px 0 0; max-width: 680px; color: #475569; font-size: 17px; line-height: 1.8; }
+.hero-actions { margin-top: 28px; }
+.hero-visual, .mission-panel, .briefing-card, .briefing-block, .briefing-pitch>div { border: 1px solid rgba(37,99,235,.14); border-radius: 8px; background: rgba(255,255,255,.82); box-shadow: 0 24px 70px rgba(15,23,42,.08); }
+.hero-visual { padding: 18px; background: linear-gradient(135deg,rgba(219,234,254,.96),rgba(236,253,245,.9)), #fff; }
+.visual-header { height: 38px; padding: 0 12px; border-radius: 8px; background: rgba(255,255,255,.8); color: #475569; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.window-dot { width: 10px; height: 10px; border-radius: 50%; } .window-dot.red { background: #fb7185; } .window-dot.amber { background: #fbbf24; } .window-dot.green { background: #34d399; }
+.attack-flow-map { min-height: 260px; padding: 20px 4px; display: grid; grid-template-columns: repeat(6,minmax(90px,1fr)); gap: 14px; align-items: stretch; }
+.attack-node { min-height: 144px; padding: 14px 12px; border: 1px solid rgba(15,23,42,.1); border-radius: 8px; background: rgba(255,255,255,.78); color: #0f172a; display: flex; flex-direction: column; justify-content: center; gap: 8px; position: relative; }
+.attack-node svg { color: #2563eb; } .attack-node strong { font-size: 17px; } .attack-node span { color: #64748b; line-height: 1.45; } .flow-arrow { display: none; }
+.tone-red { box-shadow: inset 0 4px 0 #ef4444; } .tone-violet { box-shadow: inset 0 4px 0 #8b5cf6; } .tone-blue { box-shadow: inset 0 4px 0 #2563eb; } .tone-amber { box-shadow: inset 0 4px 0 #f59e0b; } .tone-cyan { box-shadow: inset 0 4px 0 #06b6d4; } .tone-green { box-shadow: inset 0 4px 0 #22c55e; }
+.case-snapshot-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.case-snapshot-grid>div { padding: 14px; border-radius: 8px; background: rgba(15,23,42,.86); display: flex; flex-direction: column; gap: 5px; }
+.case-snapshot-grid span { color: #93c5fd; font-size: 12px; } .case-snapshot-grid strong { color: #fff; font-size: 15px; }
+.war-room-stats { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; }
+.war-stat { min-height: 104px; padding: 18px; border: 1px solid rgba(15,23,42,.08); border-radius: 8px; background: #fff; color: #0f172a; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 18px 45px rgba(15,23,42,.06); }
+.war-stat svg { color: #2563eb; } .war-stat strong { font-size: 28px; line-height: 1; } .war-stat span { color: #64748b; font-weight: 700; }
+.mission-grid { display: grid; grid-template-columns: 1.05fr 1.1fr .85fr; gap: 18px; align-items: stretch; } .mission-panel { padding: 22px; } .panel-heading { margin-bottom: 18px; } .panel-heading h4, .briefing-block h3 { margin: 0 0 6px !important; color: #0f172a !important; } .row-heading { display: flex; justify-content: space-between; gap: 12px; }
+.agent-step-list, .demo-case-list, .briefing-points, .skill-list { display: flex; flex-direction: column; gap: 10px; }
+.agent-step, .demo-case, .briefing-points>div, .skill-item { width: 100%; padding: 13px; border: 1px solid rgba(15,23,42,.08); border-radius: 8px; background: rgba(248,250,252,.9); color: #0f172a; }
+.agent-step { display: grid; grid-template-columns: 30px 28px 1fr; gap: 10px; align-items: center; }
+.step-index, .skill-item>span { width: 26px; height: 26px; border-radius: 50%; color: #fff; background: #2563eb; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; }
+.agent-step svg { color: #2563eb; } .agent-step strong, .demo-case strong, .briefing-points strong { display: block; font-size: 15px; } .agent-step span, .demo-case small, .briefing-points span { color: #64748b; }
+.demo-case { min-height: 68px; cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between; transition: transform .16s ease, border-color .16s ease; } .demo-case:hover { transform: translateY(-2px); border-color: rgba(37,99,235,.35); } .demo-case:disabled { cursor: wait; opacity: .72; }
+.briefing-panel .ant-btn { margin-top: 16px; }
+.briefing-shell { background: radial-gradient(circle at 15% 8%,rgba(56,189,248,.18),transparent 30%), radial-gradient(circle at 88% 12%,rgba(34,197,94,.16),transparent 28%), #f8fbff; }
+.briefing-content { padding: 34px 44px 54px; } .briefing-hero { max-width: 980px; margin-bottom: 22px; }
+.briefing-hero h1 { margin: 0 !important; color: #0f172a !important; font-size: clamp(38px,4vw,58px) !important; line-height: 1.08 !important; letter-spacing: 0; }
+.briefing-hero .ant-typography { color: #475569; font-size: 17px; line-height: 1.78; }
+.briefing-card-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 18px; }
+.briefing-card { min-height: 178px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.briefing-card svg, .briefing-pitch svg { color: #2563eb; } .briefing-card strong, .briefing-pitch strong { color: #0f172a; font-size: 18px; } .briefing-card span, .briefing-pitch span { color: #64748b; line-height: 1.62; }
+.briefing-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; } .briefing-block { padding: 24px; }
+.briefing-steps { margin: 16px 0 0; padding-left: 22px; color: #0f172a; } .briefing-steps li { margin-bottom: 14px; } .briefing-steps span { display: block; color: #64748b; line-height: 1.58; }
+.skill-item { display: grid; grid-template-columns: 30px minmax(160px,.8fr) 1fr; gap: 10px; align-items: center; } .skill-item code { color: #1d4ed8; font-size: 15px; font-weight: 800; } .skill-item small { color: #64748b; }
+.briefing-pitch { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; } .briefing-pitch>div { min-height: 190px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+@media (max-width: 1200px) { .hero-command, .mission-grid, .briefing-two-col { grid-template-columns: 1fr; } .war-room-stats, .briefing-card-grid, .briefing-pitch { grid-template-columns: repeat(2,1fr); } .attack-flow-map { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 720px) { .war-room-nav { height: auto; min-height: 64px; padding: 12px 16px; flex-direction: column; align-items: flex-start; } .war-room-nav-actions { width: 100%; flex-wrap: wrap; } .war-room-content, .briefing-content { padding: 22px 16px 34px; } .hero-title.ant-typography, .briefing-hero h1 { font-size: 38px !important; } .war-room-stats, .briefing-card-grid, .briefing-pitch, .case-snapshot-grid, .attack-flow-map { grid-template-columns: 1fr; } .skill-item { grid-template-columns: 30px 1fr; } .skill-item small { grid-column: 2; } }
+
+/* CCF cockpit simplification overrides */
+.compact-war-room {
+  background: #f7fafc;
+}
+
+.compact-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 32px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.compact-nav {
+  background: rgba(255, 255, 255, 0.96) !important;
+}
+
+.compact-hero {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(520px, 1.1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.compact-copy {
+  min-height: 390px;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.compact-title.ant-typography {
+  margin: 0 !important;
+  color: #0f172a !important;
+  font-size: clamp(56px, 7vw, 96px) !important;
+  line-height: 0.95 !important;
+  letter-spacing: 0;
+  font-weight: 900 !important;
+}
+
+.compact-subtitle-title.ant-typography {
+  margin: 14px 0 0 !important;
+  color: #172033 !important;
+  font-size: clamp(26px, 3vw, 40px) !important;
+  line-height: 1.16 !important;
+  letter-spacing: 0;
+  font-weight: 850 !important;
+}
+
+.compact-desc.ant-typography {
+  max-width: 650px;
+  margin: 18px 0 0 !important;
+  color: #4b5563 !important;
+  font-size: 16px;
+  line-height: 1.72;
+}
+
+.compact-card {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  box-shadow: 0 18px 55px rgba(15, 23, 42, 0.07);
+}
+
+.attack-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.compact-card-header {
+  min-height: 36px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #111827;
+  font-weight: 850;
+}
+
+.compact-flow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(86px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.compact-flow-step {
+  min-height: 158px;
+  padding: 16px 12px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.9), rgba(255, 255, 255, 0.95));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+}
+
+.compact-flow-step svg,
+.compact-flow-arrow {
+  color: #2563eb;
+}
+
+.compact-flow-step strong {
+  color: #111827;
+  font-size: 17px;
+}
+
+.compact-flow-step span {
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.compact-flow-arrow {
+  display: none;
+}
+
+.compact-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.compact-stat {
+  min-height: 92px;
+  padding: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.compact-stat svg {
+  color: #2563eb;
+}
+
+.compact-stat strong {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.compact-stat span {
+  color: #64748b;
+  font-weight: 750;
+}
+
+.compact-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 18px;
+}
+
+.compact-grid .compact-card {
+  padding: 20px;
+}
+
+.compact-case-list,
+.compact-points {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.compact-case,
+.compact-points > div {
+  min-height: 62px;
+  padding: 13px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.compact-case {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.compact-case:hover {
+  border-color: rgba(37, 99, 235, 0.38);
+}
+
+.compact-case strong,
+.compact-points strong {
+  display: block;
+  color: #111827;
+}
+
+.compact-case small,
+.compact-points span {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .compact-hero,
+  .compact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-flow,
+  .compact-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .compact-content {
+    padding: 24px 16px 36px;
+  }
+
+  .compact-title.ant-typography {
+    font-size: 48px !important;
+  }
+
+  .compact-flow,
+  .compact-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* CCF cockpit final visual pass */
+.war-room-shell.compact-war-room {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(96, 165, 250, 0.14), transparent 28%),
+    radial-gradient(circle at 52% 28%, rgba(45, 212, 191, 0.1), transparent 24%),
+    linear-gradient(180deg, #fbfaf7 0%, #f7fbff 66%, #ffffff 100%);
+  color: #111827;
+}
+
+.compact-war-room .compact-nav {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+  color: #111827;
+  backdrop-filter: blur(16px);
+}
+
+.compact-war-room .compact-brand,
+.compact-war-room .compact-brand strong,
+.compact-war-room .compact-nav a {
+  color: #111827 !important;
+}
+
+.compact-war-room .compact-nav a:hover {
+  color: #2563eb !important;
+}
+
+.compact-war-room .compact-content {
+  width: min(1280px, calc(100% - 48px));
+  min-height: auto;
+  margin: 0 auto;
+  padding: 54px 0 76px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.compact-war-room .compact-hero {
+  min-height: 430px;
+  grid-template-columns: minmax(390px, 0.92fr) minmax(540px, 1.08fr);
+  gap: 42px;
+  align-items: center;
+}
+
+.compact-war-room .compact-copy {
+  min-height: 430px;
+  justify-content: center;
+}
+
+.compact-war-room .compact-tag {
+  background: rgba(99, 102, 241, 0.09) !important;
+  color: #4f46e5 !important;
+  border: 0 !important;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.compact-war-room .compact-title.ant-typography {
+  color: #111827 !important;
+  font-size: clamp(58px, 6.4vw, 92px) !important;
+  line-height: 0.96 !important;
+  letter-spacing: 0;
+  text-shadow: none !important;
+}
+
+.compact-war-room .compact-subtitle-title.ant-typography {
+  max-width: 720px;
+  color: #1f2937 !important;
+  font-size: clamp(27px, 2.8vw, 38px) !important;
+  line-height: 1.18 !important;
+}
+
+.compact-war-room .compact-desc.ant-typography {
+  max-width: 660px;
+  color: #5f6b7a !important;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.compact-war-room .compact-actions {
+  margin-top: 26px;
+}
+
+.compact-war-room .compact-card.attack-card {
+  min-height: 360px;
+  padding: 28px;
+  border: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 247, 237, 0.98), rgba(255, 228, 230, 0.78) 48%, rgba(239, 246, 255, 0.96));
+  box-shadow: 0 30px 90px rgba(31, 41, 55, 0.13);
+}
+
+.compact-war-room .compact-card-header {
+  color: #111827;
+  margin-bottom: 22px;
+}
+
+.compact-war-room .compact-flow {
+  gap: 12px;
+}
+
+.compact-war-room .compact-flow-step {
+  min-height: 150px;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.compact-war-room .compact-flow-step strong {
+  color: #111827;
+  font-size: 18px;
+}
+
+.compact-war-room .compact-flow-step span {
+  color: #607086;
+  font-size: 14px;
+}
+
+.compact-war-room .compact-stats {
+  margin-top: 2px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.compact-war-room .compact-stat,
+.compact-war-room .compact-grid .compact-card {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.06);
+}
+
+.compact-war-room .compact-stat {
+  min-height: 86px;
+  padding: 16px 18px;
+}
+
+.compact-war-room .compact-stat strong {
+  color: #111827;
+  font-size: 25px;
+}
+
+.compact-war-room .compact-stat span {
+  color: #667085;
+}
+
+.compact-war-room .compact-grid {
+  grid-template-columns: 0.86fr 1.14fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.compact-war-room .compact-grid .compact-card {
+  padding: 22px;
+}
+
+.compact-war-room .compact-case,
+.compact-war-room .compact-points > div {
+  background: rgba(248, 250, 252, 0.92);
+  border-color: rgba(15, 23, 42, 0.07);
+}
+
+.compact-war-room .compact-case:hover {
+  background: #ffffff;
+  border-color: rgba(37, 99, 235, 0.26);
+  transform: translateY(-1px);
+}
+
+.compact-war-room .compact-case strong,
+.compact-war-room .compact-points strong {
+  color: #111827;
+}
+
+.compact-war-room .compact-case small,
+.compact-war-room .compact-points span {
+  color: #667085;
+}
+
+@media (max-width: 1100px) {
+  .compact-war-room .compact-hero,
+  .compact-war-room .compact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-war-room .compact-copy {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .compact-war-room .compact-content {
+    width: min(100% - 32px, 1280px);
+    padding: 32px 0 52px;
+  }
+
+  .compact-war-room .compact-stats,
+  .compact-war-room .compact-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-war-room .compact-title.ant-typography {
+    font-size: 48px !important;
+  }
+}
+
+/* CCF attack path and learning pass */
+.compact-war-room .path-hero {
+  grid-template-columns: minmax(390px, 0.9fr) minmax(620px, 1.1fr);
+}
+
+.compact-war-room .attack-map-card {
+  min-height: 390px;
+  padding: 26px;
+  border: 0;
+  background:
+    linear-gradient(145deg, rgba(255, 251, 247, 0.98), rgba(239, 246, 255, 0.96)),
+    radial-gradient(circle at 86% 18%, rgba(14, 165, 233, 0.16), transparent 30%);
+  box-shadow: 0 30px 90px rgba(31, 41, 55, 0.12);
+}
+
+.attack-map-canvas {
+  position: relative;
+  min-height: 280px;
+  padding: 44px 20px 54px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(92px, 1fr));
+  gap: 14px;
+  align-items: center;
+  overflow: hidden;
+}
+
+.attack-map-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 18px 30px 34px;
+  border-radius: 22px;
+  background:
+    linear-gradient(90deg, rgba(59, 130, 246, 0.06), rgba(45, 212, 191, 0.08), rgba(245, 158, 11, 0.07)),
+    repeating-linear-gradient(90deg, rgba(15, 23, 42, 0.05) 0 1px, transparent 1px 72px);
+  opacity: 0.9;
+}
+
+.attack-map-line {
+  position: absolute;
+  left: 66px;
+  right: 66px;
+  top: 50%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #60a5fa, #22d3ee, #f59e0b, #22c55e);
+  box-shadow: 0 0 0 7px rgba(59, 130, 246, 0.06);
+}
+
+.attack-node {
+  position: relative;
+  z-index: 1;
+  min-height: 132px;
+  padding: 14px 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+}
+
+.attack-node::after {
+  content: "";
+  position: absolute;
+  right: -18px;
+  top: 50%;
+  width: 18px;
+  height: 2px;
+  background: rgba(37, 99, 235, 0.34);
+}
+
+.attack-node:last-of-type::after {
+  display: none;
+}
+
+.attack-node-index {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.attack-node-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+}
+
+.attack-node strong {
+  color: #111827;
+  font-size: 16px;
+}
+
+.attack-node small {
+  color: #667085;
+  line-height: 1.4;
+}
+
+.attack-node-blue .attack-node-icon { background: #3b82f6; }
+.attack-node-cyan .attack-node-icon { background: #0891b2; }
+.attack-node-red .attack-node-icon { background: #ef4444; }
+.attack-node-amber .attack-node-icon { background: #f59e0b; }
+.attack-node-green .attack-node-icon { background: #16a34a; }
+
+.attack-callout {
+  position: absolute;
+  z-index: 2;
+  min-height: 32px;
+  padding: 7px 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #475569;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.attack-callout-left {
+  left: 26px;
+  top: 8px;
+}
+
+.attack-callout-right {
+  right: 26px;
+  bottom: 10px;
+}
+
+.compact-war-room .ccf-grid {
+  grid-template-columns: 0.7fr 1.3fr;
+}
+
+.learning-card {
+  min-height: 310px;
+}
+
+.vuln-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.vuln-card {
+  min-height: 120px;
+  padding: 13px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(255, 255, 255, 0.98));
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.vuln-card strong {
+  color: #111827;
+  font-size: 15px;
+}
+
+.vuln-card span {
+  color: #667085;
+  line-height: 1.45;
+  font-size: 13px;
+}
+
+.vuln-card small {
+  margin-top: auto;
+  color: #2563eb;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.study-loop-card {
+  padding: 20px 22px;
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(420px, 1fr);
+  gap: 22px;
+  align-items: center;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.06);
+}
+
+.study-loop-copy {
+  display: flex;
+  gap: 12px;
+  color: #2563eb;
+}
+
+.study-loop-copy strong {
+  display: block;
+  color: #111827;
+  font-size: 17px;
+}
+
+.study-loop-copy span {
+  display: block;
+  margin-top: 5px;
+  color: #667085;
+  line-height: 1.55;
+}
+
+.study-loop-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.study-loop-steps span {
+  min-height: 48px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: rgba(239, 246, 255, 0.88);
+  color: #1d4ed8;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+@media (max-width: 1100px) {
+  .compact-war-room .path-hero,
+  .compact-war-room .ccf-grid,
+  .study-loop-card {
+    grid-template-columns: 1fr;
+  }
+
+  .attack-map-canvas {
+    grid-template-columns: 1fr;
+    padding: 46px 16px 48px;
+  }
+
+  .attack-map-line,
+  .attack-node::after {
+    display: none;
+  }
+
+  .vuln-card-grid,
+  .study-loop-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .vuln-card-grid,
+  .study-loop-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .attack-callout {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    justify-content: center;
+  }
+}
+
+/* CCF vulnerability cards refinement */
+.compact-war-room .refined-learning-card {
+  min-height: 360px;
+}
+
+.vuln-library {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(420px, 1.25fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.vuln-selector {
+  display: grid;
+  gap: 9px;
+}
+
+.vuln-selector .vuln-card {
+  width: 100%;
+  min-height: 74px;
+  padding: 12px 13px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.82);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.vuln-selector .vuln-card:hover {
+  background: #ffffff;
+  border-color: rgba(37, 99, 235, 0.22);
+  transform: translateY(-1px);
+}
+
+.vuln-selector .vuln-card-active {
+  background: #ffffff;
+  border-color: rgba(37, 99, 235, 0.42);
+  box-shadow: inset 3px 0 0 #2563eb, 0 10px 28px rgba(37, 99, 235, 0.08);
+}
+
+.vuln-selector .vuln-card strong {
+  display: block;
+  color: #111827;
+  font-size: 14px;
+}
+
+.vuln-selector .vuln-card span {
+  display: block;
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.vuln-detail-panel {
+  min-height: 100%;
+  padding: 18px;
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.vuln-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2563eb;
+}
+
+.vuln-detail-title strong {
+  color: #111827;
+  font-size: 18px;
+}
+
+.vuln-detail-panel p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.62;
+}
+
+.vuln-detail-grid {
+  margin-top: auto;
+  display: grid;
+  gap: 9px;
+}
+
+.vuln-detail-grid div {
+  padding: 11px 12px;
+  border-radius: 8px;
+  background: rgba(239, 246, 255, 0.78);
+}
+
+.vuln-detail-grid span {
+  display: block;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.vuln-detail-grid strong {
+  display: block;
+  margin-top: 4px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.48;
+}
+
+@media (max-width: 900px) {
+  .vuln-library {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* CCF bilingual readability pass */
+.bi-en,
+.nav-en,
+.dual-heading small,
+.attack-node strong small,
+.attack-node small span,
+.compact-stat span small,
+.vuln-card strong small,
+.vuln-detail-title strong small,
+.study-loop-steps small {
+  display: block;
+  margin-top: 2px;
+  color: #8492a6;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.nav-en {
+  display: inline;
+  margin-left: 4px;
+  font-size: 11px;
+}
+
+.dual-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dual-heading strong {
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.compact-war-room .compact-subtitle-title.ant-typography {
+  max-width: 760px;
+  font-size: clamp(30px, 3.1vw, 42px) !important;
+}
+
+.compact-war-room .compact-desc.ant-typography {
+  max-width: 700px;
+  color: #475569 !important;
+}
+
+.compact-war-room .compact-desc .bi-en {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #7b8798;
+}
+
+.attack-node strong small {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.attack-node small span {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.attack-callout span {
+  margin-left: 2px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.compact-stat span small {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.vuln-selector .vuln-card strong small {
+  margin-top: 1px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.vuln-detail-title strong small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.vuln-detail-panel p .bi-en {
+  margin-top: 8px;
+  color: #7b8798;
+  font-size: 12px;
+}
+
+.study-loop-copy .bi-en {
+  margin-top: 5px;
+  color: #7b8798;
+  font-size: 12px;
+}
+
+.study-loop-steps small {
+  color: #60a5fa;
+  font-size: 11px;
+}

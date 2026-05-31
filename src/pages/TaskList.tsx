@@ -11,12 +11,11 @@ import {
   Play,
   RefreshCcw,
   Square,
-  Trash2,
   Undo2,
   XCircle,
 } from "lucide-react";
 import DappContextButton from "../components/DappContextButton";
-import { archiveTask, cancelTask, createTask, deleteTask, listDapps, listTasks, unarchiveTask } from "../services/api";
+import { archiveTask, cancelTask, createTask, listDapps, listTasks, unarchiveTask } from "../services/api";
 import { DappCatalogItem, Task, TaskCreateRequest, TaskStatus } from "../types";
 
 const { Header, Content } = Layout;
@@ -53,7 +52,7 @@ function isRunnableTask(status: TaskStatus) {
 }
 
 const TaskList: React.FC = () => {
-  const { message, modal } = AntdApp.useApp();
+  const { message } = AntdApp.useApp();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedDapps, setSelectedDapps] = useState<string[]>([]);
@@ -140,24 +139,6 @@ const TaskList: React.FC = () => {
     } catch (error: unknown) {
       message.error(getErrorMessage(error, "Failed to cancel task"));
     }
-  };
-
-  const handleDelete = (task: Task) => {
-    modal.confirm({
-      title: "Delete analysis record?",
-      content: `This will remove the saved task record for ${task.dapp_name}.`,
-      okText: "Delete",
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await deleteTask(task.task_id);
-          message.success("Task record deleted");
-          await fetchTasks();
-        } catch (error: unknown) {
-          message.error(getErrorMessage(error, "Failed to delete task"));
-        }
-      },
-    });
   };
 
   const handleArchive = async (task: Task) => {
@@ -266,12 +247,7 @@ const TaskList: React.FC = () => {
               Archive
             </Button>
           )}
-          {!isRunnableTask(record.status) ? (
-            <Button size="small" icon={<Trash2 size={14} />} danger onClick={() => handleDelete(record)}>
-              Delete
-            </Button>
-          ) : null}
-        </Space>
+       </Space>
       ),
     },
   ];
@@ -448,3 +424,4 @@ const TaskList: React.FC = () => {
 };
 
 export default TaskList;
+
