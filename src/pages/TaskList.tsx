@@ -17,6 +17,7 @@ import {
 import DappContextButton from "../components/DappContextButton";
 import { archiveTask, cancelTask, createTask, listDapps, listTasks, unarchiveTask } from "../services/api";
 import { DappCatalogItem, Task, TaskCreateRequest, TaskStatus } from "../types";
+import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
 
@@ -255,14 +256,17 @@ const TaskList: React.FC = () => {
   return (
     <Layout className="app-shell">
       <Header className="topbar">
-        <div className="topbar-brand">
-          <Typography.Text className="brand-kicker">Multi-Agent Security Analysis</Typography.Text>
-          <Typography.Title level={3} className="topbar-title">
-            TracePilot Dashboard
-          </Typography.Title>
-          <Typography.Text type="secondary" className="topbar-subtitle">
-            Live trace debugging, persisted evidence, and reproducible audit runs.
-          </Typography.Text>
+        <div className="topbar-brand workbench-brand">
+          <span className="workbench-brand-mark"><img src={riskPilotLogo} alt="TracePilot logo" /></span>
+          <div>
+            <Typography.Text className="brand-kicker">TracePilot Workbench</Typography.Text>
+            <Typography.Title level={3} className="topbar-title">
+              Task Library
+            </Typography.Title>
+            <Typography.Text type="secondary" className="topbar-subtitle">
+              Cached reports, live runs, and reproducible case records.
+            </Typography.Text>
+          </div>
         </div>
         <Space>
           <Button icon={<RefreshCcw size={15} />} onClick={fetchTasks}>

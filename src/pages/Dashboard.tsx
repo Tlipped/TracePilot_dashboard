@@ -29,6 +29,7 @@ import {
   TaskStatus,
 } from "../types";
 import { modeLabel, t } from "../utils/i18n";
+import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
 
@@ -429,9 +430,10 @@ const Dashboard: React.FC = () => {
       <Header className="topbar">
         <Space size={12}>
           <Button icon={<ArrowLeft size={16} />} onClick={() => navigate("/")} />
+          <span className="workbench-brand-mark compact"><img src={riskPilotLogo} alt="TracePilot logo" /></span>
           <div>
             <Typography.Title level={5} style={{ margin: 0 }}>
-              TracePilot Analysis
+              {task?.dapp_name ? `${task.dapp_name} Review` : "Review Workbench"}
             </Typography.Title>
             <Typography.Text type="secondary" className="text-mono">
               {taskId?.slice(0, 8)}...

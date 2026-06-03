@@ -7,15 +7,22 @@ import {
   CheckCircle2,
   Coins,
   Database,
+  ExternalLink,
   GitBranch,
+  KeyRound,
   Library,
   Play,
-  Radar,
+  Repeat2,
+  Scale,
   ShieldCheck,
+  Signature,
+  TrendingUp,
   WalletCards,
+  Zap,
 } from "lucide-react";
 import { listDapps, listTasks } from "../services/api";
 import { DappCatalogItem, Task, TaskStatus } from "../types";
+import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
 
@@ -42,78 +49,82 @@ const vulnerabilityLessons = [
   {
     titleZh: "预言机操纵",
     titleEn: "Oracle Manipulation",
-    beginnerHook: "先记住一句话：如果协议用一个很容易被临时推高/压低的价格做决策，攻击者就能在同一笔交易里先改价格，再薅协议。",
+    icon: TrendingUp,
+    beginnerHook: "如果协议用一个容易被临时推高或压低的价格做决策，攻击者就能在同一笔交易里先改价格，再薅协议。",
     mentalModel: "把 AMM 池想成一个临时秤。秤上的代币比例会影响价格，如果池子很浅，攻击者用大额 swap 就能短暂把秤拨歪。脆弱协议如果刚好相信这个秤，就会算错抵押、兑换或赎回价值。",
-    attackSteps: [
-      "借入闪电贷，获得足够大的临时资金。",
-      "对低流动性池子做大额 swap，短暂扭曲价格。",
-      "调用受害协议中依赖该价格的函数，例如 borrow、redeem、mint。",
-      "反向交易恢复价格，归还闪电贷，留下套利收益。",
-    ],
-    traceChecklist: [
-      "获利动作前是否有异常大额 swap。",
-      "同一交易内 reserve、price、exchange rate 是否剧烈变化。",
-      "受害合约是否直接读取 AMM spot price。",
-      "利润是否来自被错误估值的借款、铸造或赎回。",
-    ],
-    practice: "学习路径：先看 DeFiHackLabs 中的 price/oracle 类攻击复现，再用 TracePilot 对照交易调用和资金流。",
+    attackSteps: ["借入闪电贷，获得足够大的临时资金。", "对低流动性池子做大额 swap，短暂扭曲价格。", "调用受害协议中依赖该价格的函数，例如 borrow、redeem、mint。", "反向交易恢复价格，归还闪电贷，留下套利收益。"],
+    traceChecklist: ["获利动作前是否有异常大额 swap。", "同一交易内 reserve、price、exchange rate 是否剧烈变化。", "受害合约是否直接读取 AMM spot price。", "利润是否来自被错误估值的借款、铸造或赎回。"],
+    practice: "先看 DeFiHackLabs 中 price/oracle 类攻击复现，再用 TracePilot 对照交易调用和资金流。",
   },
   {
     titleZh: "重入攻击",
     titleEn: "Reentrancy",
-    beginnerHook: "先记住一句话：合约还没把账记完，就把控制权交给了别人，别人趁机又回来重复领钱。",
+    icon: Repeat2,
+    beginnerHook: "合约还没把账记完，就把控制权交给别人；别人趁机又回来，重复领钱。",
     mentalModel: "把协议想成柜台。正常流程应该是先登记余额减少，再把钱转出去。重入漏洞的问题是柜台先把钱递出去，攻击者拿到钱的一瞬间又冲回柜台，说自己余额还在。",
-    attackSteps: [
-      "攻击合约调用 withdraw、claim 或 callback 类函数。",
-      "受害合约先进行外部转账或回调。",
-      "攻击合约在回调里再次调用受害函数。",
-      "受害合约仍读取旧余额，导致重复提现。",
-    ],
-    traceChecklist: [
-      "调用树中是否出现同一函数/同一合约的嵌套调用。",
-      "外部 call 是否发生在余额扣减之前。",
-      "同一地址是否多次收到资产转出。",
-      "是否缺少 reentrancy guard 或状态锁。",
-    ],
-    practice: "学习路径：先做 Ethernaut Reentrance 关卡，再看 DeFiHackLabs 真实重入案例。",
+    attackSteps: ["攻击合约调用 withdraw、claim 或 callback 类函数。", "受害合约先进行外部转账或回调。", "攻击合约在回调里再次调用受害函数。", "受害合约仍读取旧余额，导致重复提现。"],
+    traceChecklist: ["调用树中是否出现同一函数或同一合约的嵌套调用。", "外部 call 是否发生在余额扣减之前。", "同一地址是否多次收到资产转出。", "是否缺少 reentrancy guard 或状态锁。"],
+    practice: "先做 Ethernaut Reentrance 关卡，再看 DeFiHackLabs 真实重入案例。",
   },
   {
     titleZh: "会计偏移",
     titleEn: "Accounting Drift",
-    beginnerHook: "先记住一句话：协议账本里记录的份额/汇率，和真实资产余额对不上，攻击者把这个差价变成收益。",
+    icon: Scale,
+    beginnerHook: "协议账本里记录的份额或汇率，和真实资产余额对不上，攻击者把这个差价变成收益。",
     mentalModel: "很多金库会用 share 表示你拥有多少份资产。问题出在 asset 和 share 的换算，如果有人能改变真实余额却不改变份额，或者利用舍入边界，就会让兑换比例失真。",
-    attackSteps: [
-      "把池子或金库推到极端状态，例如低份额、低余额或高汇率。",
-      "通过 donation、mint、redeem 或 borrow 制造账面偏差。",
-      "在错误汇率下兑换、赎回或借款。",
-      "把内部账本偏差兑现成真实资产。",
-    ],
-    traceChecklist: [
-      "asset balance、share supply、exchange rate 是否突然跳变。",
-      "关键函数前后是否出现 donation 或非标准转账。",
-      "计算中是否存在向下/向上舍入导致的边界收益。",
-      "协议是否缺少最小流动性或汇率变化限制。",
-    ],
-    practice: "学习路径：重点整理 vault、lending、share price 类案例，把每次攻击前后的不变量写出来。",
+    attackSteps: ["把池子或金库推到极端状态，例如低份额、低余额或高汇率。", "通过 donation、mint、redeem 或 borrow 制造账面偏差。", "在错误汇率下兑换、赎回或借款。", "把内部账本偏差兑现成真实资产。"],
+    traceChecklist: ["asset balance、share supply、exchange rate 是否突然跳变。", "关键函数前后是否出现 donation 或非标准转账。", "计算中是否存在向下或向上舍入导致的边界收益。", "协议是否缺少最小流动性或汇率变化限制。"],
+    practice: "重点整理 vault、lending、share price 类案例，把攻击前后的不变量写出来。",
   },
   {
     titleZh: "权限控制缺陷",
     titleEn: "Access Control",
-    beginnerHook: "先记住一句话：不该有钥匙的人打开了管理员门。",
-    mentalModel: "升级、铸币、暂停、设置预言机、修改策略都属于高危权限。如果函数没有检查调用者身份，或者初始化/签名逻辑有洞，攻击者就不需要复杂数学，直接改规则。",
-    attackSteps: [
-      "找到缺少 onlyOwner/role/signature 检查的敏感函数。",
-      "直接调用特权分支，或初始化未初始化合约。",
-      "修改价格源、策略地址、铸币权限或资金出口。",
-      "转移资产或让协议进入攻击者控制的状态。",
-    ],
-    traceChecklist: [
-      "调用者是否真的拥有 owner/role 权限。",
-      "函数是否会修改全局参数或资金控制权。",
-      "签名是否校验 nonce、deadline、chain id。",
-      "代理合约或初始化函数是否被二次初始化。",
-    ],
-    practice: "学习路径：先把 Ethernaut 中 owner、delegatecall、privacy、preservation 类关卡做完，再回看真实权限事故。",
+    icon: KeyRound,
+    beginnerHook: "不该有钥匙的人打开了管理员门。",
+    mentalModel: "升级、铸币、暂停、设置预言机、修改策略都属于高危权限。如果函数没有检查调用者身份，或者初始化/签名逻辑有洞，攻击者不需要复杂数学，直接改规则。",
+    attackSteps: ["找到缺少 onlyOwner、role 或 signature 检查的敏感函数。", "直接调用特权分支，或初始化未初始化合约。", "修改价格源、策略地址、铸币权限或资金出口。", "转移资产或让协议进入攻击者控制的状态。"],
+    traceChecklist: ["调用者是否真的拥有 owner/role 权限。", "函数是否会修改全局参数或资金控制权。", "签名是否校验 nonce、deadline、chain id。", "代理合约或初始化函数是否被二次初始化。"],
+    practice: "先做 Ethernaut 中 owner、delegatecall、preservation 类关卡，再回看真实权限事故。",
+  },
+  {
+    titleZh: "闪电贷放大",
+    titleEn: "Flash Loan Amplifier",
+    icon: Zap,
+    beginnerHook: "闪电贷本身不是漏洞，它像放大镜，把很小的协议假设错误放大成一次可盈利攻击。",
+    mentalModel: "攻击者不用自带巨额本金，只要在同一笔交易里借钱、利用漏洞、还钱即可。真正危险的不是借钱，而是协议允许临时资金改变价格、份额、投票权或清算条件。",
+    attackSteps: ["从借贷协议借入大量临时资产。", "用临时资产改变目标协议的关键状态。", "在状态被扭曲时执行获利动作。", "还清闪电贷，把剩余资产作为利润带走。"],
+    traceChecklist: ["交易开头是否有 flashLoan、borrow、swap 类资金入口。", "借入资产是否被用于影响价格、流动性或抵押状态。", "获利和归还是否发生在同一笔交易。", "如果去掉闪电贷，漏洞是否仍然存在但规模变小。"],
+    practice: "把 DeFiHackLabs 中带 flashloan 的案例按“借入 -> 放大 -> 获利 -> 归还”四步重画一遍。",
+  },
+  {
+    titleZh: "签名重放",
+    titleEn: "Signature Replay",
+    icon: Signature,
+    beginnerHook: "一张旧授权如果没有过期、没有 nonce、没有链 ID 约束，攻击者可能拿它重复办事。",
+    mentalModel: "签名像一张支票。安全支票要写收款人、金额、日期、编号和适用银行。如果少了编号或适用范围，别人可能复印这张支票，到别处或再次使用。",
+    attackSteps: ["收集用户或管理员曾经签过的授权消息。", "检查签名是否缺少 nonce、deadline、domain separator 或 chainId。", "在同一合约、另一条链或另一份代理合约中复用签名。", "触发 permit、claim、withdraw 或 admin action。"],
+    traceChecklist: ["签名参数里是否有 nonce/deadline/chainId。", "nonce 是否真的被消费并递增。", "domain separator 是否绑定合约地址和链。", "同一签名哈希是否多次出现。"],
+    practice: "先补 EIP-712、permit、nonce 概念，再看签名授权类攻击复现。",
+  },
+  {
+    titleZh: "精度与舍入错误",
+    titleEn: "Precision / Rounding",
+    icon: Scale,
+    beginnerHook: "链上没有小数，所有小数都靠整数缩放模拟；舍入方向错了，就可能把零头变成利润。",
+    mentalModel: "协议在计算份额、利息、手续费时经常做乘除法。每次除法都要舍入，向上舍入给谁、向下舍入给谁，会决定长期或边界情况下谁占便宜。",
+    attackSteps: ["找到金额很小、份额很少或汇率极端的边界状态。", "重复执行 mint/redeem/swap，让舍入误差累积。", "利用精度损失让协议少扣、多发或错误判断阈值。", "把累计误差兑换成真实资产。"],
+    traceChecklist: ["关键计算是否有除法、缩放因子或 decimal 转换。", "攻击交易是否重复执行同类小额操作。", "份额、余额或债务是否出现不成比例变化。", "代码是否明确使用向上或向下舍入。"],
+    practice: "把 vault share、AMM swap、fee accounting 的公式手算一遍，再对照 trace 中的实际数值。",
+  },
+  {
+    titleZh: "业务逻辑漏洞",
+    titleEn: "Business Logic",
+    icon: AlertTriangle,
+    beginnerHook: "代码没有报错，但协议规则本身被绕过了。",
+    mentalModel: "很多 DeFi 攻击不是传统 bug，而是流程设计有洞：先后顺序不对、状态检查漏了、假设用户会诚实操作、或者多个模块组合后产生了意外路径。",
+    attackSteps: ["找到协议文档或正常业务流程中的关键约束。", "构造一个不按正常顺序走的交易路径。", "让某个检查在旧状态、错误状态或缺失状态下通过。", "利用通过后的状态执行获利动作。"],
+    traceChecklist: ["攻击路径是否绕过了正常 deposit/withdraw/settle 顺序。", "是否存在先使用后验证、先转账后结算的流程。", "多个合约组合时是否丢失了某个前置条件。", "最终利润是否来自规则漏洞而不是单行代码错误。"],
+    practice: "读案例时先画正常流程，再画攻击流程，两条路径差异就是漏洞入口。",
   },
 ];
 
@@ -124,6 +135,11 @@ function getCaseLabel(item: DappCatalogItem, task?: Task) {
   const cause = item.cause || item.root_cause || item.platform || "链上风险";
   return `${txText} / ${cause}`;
 }
+
+const learningLinks = [
+  { label: "Ethernaut", href: "https://ethernaut.openzeppelin.com/", desc: "Solidity / EVM 闯关练习" },
+  { label: "DeFiHackLabs", href: "https://github.com/SunWeb3Sec/DeFiHackLabs", desc: "真实 DeFi 攻击复现" },
+];
 
 const LandingWarRoom: React.FC = () => {
   const navigate = useNavigate();
@@ -190,7 +206,7 @@ const LandingWarRoom: React.FC = () => {
     <Layout className="landing-v2">
       <Header className="landing-v2-nav">
         <button className="landing-brand" type="button" onClick={() => navigate("/") }>
-          <span className="landing-brand-mark"><Radar size={18} /></span>
+          <span className="landing-brand-mark"><img src={riskPilotLogo} alt="TracePilot logo" /></span>
           <span><strong>TracePilot</strong><small>Exploit review cockpit</small></span>
         </button>
         <Space size={10} className="landing-nav-actions">
@@ -202,9 +218,9 @@ const LandingWarRoom: React.FC = () => {
 
       <Content className="landing-v2-content">
         <section className="landing-stage">
-          <div className="stage-watermark">TP</div>
+          <div className="stage-watermark"><img src={riskPilotLogo} alt="" aria-hidden="true" /></div>
           <div className="stage-copy">
-            <Tag className="stage-chip">链上攻击复盘 / Agent 证据链</Tag>
+            <Tag className="stage-chip">链上攻击复盘 / 证据链审查</Tag>
             <Typography.Title className="stage-title">TracePilot</Typography.Title>
             <Typography.Title level={2} className="stage-subtitle">把一笔被盗交易，复盘成可解释的攻击路径。</Typography.Title>
             <Typography.Paragraph className="stage-desc">
@@ -213,7 +229,7 @@ const LandingWarRoom: React.FC = () => {
             <div className="stage-facts">
               <span><strong>{catalog.length}</strong> 演示案例</span>
               <span><strong>{completedCount || "缓存"}</strong> 历史报告</span>
-              <span><strong>4</strong> 漏洞教程</span>
+              <span><strong>{vulnerabilityLessons.length}</strong> 漏洞教程</span>
             </div>
           </div>
 
@@ -258,24 +274,38 @@ const LandingWarRoom: React.FC = () => {
         </section>
 
         <section className="tutorial-section" id="vuln-tutorial">
-          <div className="section-kicker">
-            <strong>漏洞新手教程</strong>
-            <span>不是背术语，而是按“背景直觉 → 攻击步骤 → 链上证据 → 练习路径”学习。</span>
+          <div className="section-kicker tutorial-kicker">
+            <div>
+              <strong>漏洞新手教程</strong>
+              <span>不是背术语，而是按“背景直觉 → 攻击步骤 → 链上证据 → 练习路径”学习。</span>
+            </div>
+            <div className="learning-links">
+              {learningLinks.map((link) => (
+                <a key={link.href} href={link.href} target="_blank" rel="noreferrer">
+                  <span><strong>{link.label}</strong><small>{link.desc}</small></span>
+                  <ExternalLink size={14} />
+                </a>
+              ))}
+            </div>
           </div>
           <div className="tutorial-board">
             <div className="tutorial-list">
-              {vulnerabilityLessons.map((item) => (
-                <button
-                  className={`tutorial-tab ${item.titleEn === selectedVuln.titleEn ? "tutorial-tab-active" : ""}`}
-                  key={item.titleEn}
-                  onClick={() => setActiveVuln(item.titleEn)}
-                  type="button"
-                >
-                  <strong>{item.titleZh}</strong>
-                  <small>{item.titleEn}</small>
-                  <span>{item.beginnerHook}</span>
-                </button>
-              ))}
+              {vulnerabilityLessons.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    className={`tutorial-tab ${item.titleEn === selectedVuln.titleEn ? "tutorial-tab-active" : ""}`}
+                    key={item.titleEn}
+                    onClick={() => setActiveVuln(item.titleEn)}
+                    type="button"
+                  >
+                    <span className="tutorial-tab-icon"><Icon size={16} /></span>
+                    <strong>{item.titleZh}</strong>
+                    <small>{item.titleEn}</small>
+                    <span>{item.beginnerHook}</span>
+                  </button>
+                );
+              })}
             </div>
 
             <article className="tutorial-detail">
