@@ -4035,3 +4035,57 @@
     max-height: none;
   }
 }
+
+.knowledge-source {
+  align-self: center;
+  padding: 7px 10px;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tutorial-bottom-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) 1.15fr;
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.tutorial-note,
+.tutorial-patch {
+  padding: 14px 15px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.tutorial-note span {
+  display: block;
+  margin-bottom: 8px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tutorial-note p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.65;
+}
+
+.tutorial-patch {
+  margin-top: 0;
+}
+
+.tutorial-patch > span {
+  color: #047857;
+}
+
+@media (max-width: 900px) {
+  .tutorial-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}

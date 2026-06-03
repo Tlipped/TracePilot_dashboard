@@ -326,3 +326,29 @@ export interface AutomatedReviewResponse {
   next_actions: string[];
   llm_review_agent_used: boolean;
 }
+
+export interface KnowledgePracticeSource {
+  name: string;
+  url: string;
+  hint?: string;
+}
+
+export interface VulnerabilityTypeKnowledge {
+  id: string;
+  name_zh: string;
+  name_en: string;
+  category?: string;
+  one_liner?: string;
+  mental_model?: string;
+  why_it_happens?: string[];
+  attack_steps?: string[];
+  trace_signals?: string[];
+  repair_hints?: string[];
+  practice_sources?: KnowledgePracticeSource[];
+  tracepilot_usage?: string;
+}
+
+export interface VulnerabilityKnowledgeResponse {
+  total: number;
+  items: VulnerabilityTypeKnowledge[];
+}

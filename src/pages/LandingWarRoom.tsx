@@ -20,8 +20,9 @@ import {
   WalletCards,
   Zap,
 } from "lucide-react";
-import { listDapps, listTasks } from "../services/api";
-import { DappCatalogItem, Task, TaskStatus } from "../types";
+import type { LucideIcon } from "lucide-react";
+import { listDapps, listTasks, listVulnerabilityKnowledge } from "../services/api";
+import { DappCatalogItem, Task, TaskStatus, VulnerabilityTypeKnowledge } from "../types";
 import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
@@ -44,8 +45,55 @@ const attackPath = [
   { zh: "状态偏移", en: "State Drift", desc: "价格或余额失真", icon: GitBranch, tone: "amber" },
   { zh: "获利出口", en: "Profit", desc: "兑换、赎回、转移", icon: Coins, tone: "green" },
 ];
+type VulnerabilityLesson = {
+  titleZh: string;
+  titleEn: string;
+  icon: LucideIcon;
+  beginnerHook: string;
+  mentalModel: string;
+  attackSteps: string[];
+  traceChecklist: string[];
+  repairHints?: string[];
+  practice: string;
+};
 
-const vulnerabilityLessons = [
+const vulnerabilityIconMap: Record<string, LucideIcon> = {
+  oracle_manipulation: TrendingUp,
+  reentrancy: Repeat2,
+  accounting_drift: Scale,
+  access_control: KeyRound,
+  flash_loan_amplifier: Zap,
+  signature_replay: Signature,
+  precision_rounding: Scale,
+  business_logic: AlertTriangle,
+};
+
+function nonEmptyList(primary?: string[], fallback?: string[]) {
+  if (primary && primary.length > 0) return primary;
+  if (fallback && fallback.length > 0) return fallback;
+  return [];
+}
+
+function toVulnerabilityLesson(item: VulnerabilityTypeKnowledge): VulnerabilityLesson {
+  const practice = item.practice_sources && item.practice_sources.length > 0
+    ? item.practice_sources
+        .map((source) => `${source.name}${source.hint ? `：${source.hint}` : ""}`)
+        .join(" / ")
+    : item.tracepilot_usage || "结合真实攻击复盘，在 TracePilot 中对照交易、调用和证据链。";
+
+  return {
+    titleZh: item.name_zh,
+    titleEn: item.name_en,
+    icon: vulnerabilityIconMap[item.id] ?? Library,
+    beginnerHook: item.one_liner || item.tracepilot_usage || item.name_zh,
+    mentalModel: item.mental_model || item.one_liner || item.tracepilot_usage || "先理解协议相信了什么，再看攻击者如何打破这个假设。",
+    attackSteps: nonEmptyList(item.attack_steps, item.why_it_happens),
+    traceChecklist: nonEmptyList(item.trace_signals, item.repair_hints),
+    repairHints: item.repair_hints ?? [],
+    practice,
+  };
+}
+const fallbackVulnerabilityLessons: VulnerabilityLesson[] = [
   {
     titleZh: "预言机操纵",
     titleEn: "Oracle Manipulation",
@@ -136,6 +184,12 @@ function getCaseLabel(item: DappCatalogItem, task?: Task) {
   return `${txText} / ${cause}`;
 }
 
+
+const defaultPatchHints = [
+  "先写清楚漏洞成立的不变量，例如价格不能只看单点、余额扣减必须早于外部调用。",
+  "把检查放在最小修复点上，避免直接禁用正常入口或破坏 ABI / storage layout。",
+  "用原始 PoC、变体 PoC 和历史正常交易一起回归，确认不是只让脚本 revert。",
+];
 const learningLinks = [
   { label: "Ethernaut", href: "https://ethernaut.openzeppelin.com/", desc: "Solidity / EVM 闯关练习" },
   { label: "DeFiHackLabs", href: "https://github.com/SunWeb3Sec/DeFiHackLabs", desc: "真实 DeFi 攻击复现" },
@@ -146,7 +200,9 @@ const LandingWarRoom: React.FC = () => {
   const { message } = AntdApp.useApp();
   const [catalog, setCatalog] = useState<DappCatalogItem[]>(fallbackCatalog);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [activeVuln, setActiveVuln] = useState(vulnerabilityLessons[0].titleEn);
+  const [vulnerabilityLessons, setVulnerabilityLessons] = useState<VulnerabilityLesson[]>(fallbackVulnerabilityLessons);
+  const [activeVuln, setActiveVuln] = useState(fallbackVulnerabilityLessons[0].titleEn);
+  const [knowledgeSource, setKnowledgeSource] = useState<"api" | "fallback">("fallback");
 
   useEffect(() => {
     let cancelled = false;
@@ -163,6 +219,17 @@ const LandingWarRoom: React.FC = () => {
         if (!cancelled) setTasks(items);
       })
       .catch(() => setTasks([]));
+
+    listVulnerabilityKnowledge()
+      .then((response) => {
+        if (cancelled) return;
+        const lessons = response.items.map(toVulnerabilityLesson).filter((item) => item.attackSteps.length > 0);
+        if (lessons.length === 0) return;
+        setVulnerabilityLessons(lessons);
+        setKnowledgeSource("api");
+        setActiveVuln((current) => lessons.some((item) => item.titleEn === current) ? current : lessons[0].titleEn);
+      })
+      .catch(() => setKnowledgeSource("fallback"));
 
     return () => {
       cancelled = true;
@@ -186,7 +253,7 @@ const LandingWarRoom: React.FC = () => {
 
   const selectedVuln = useMemo(
     () => vulnerabilityLessons.find((item) => item.titleEn === activeVuln) ?? vulnerabilityLessons[0],
-    [activeVuln],
+    [activeVuln, vulnerabilityLessons],
   );
 
   const openCachedDemo = useCallback(
@@ -280,6 +347,7 @@ const LandingWarRoom: React.FC = () => {
               <span>不是背术语，而是按“背景直觉 → 攻击步骤 → 链上证据 → 练习路径”学习。</span>
             </div>
             <div className="learning-links">
+              <span className="knowledge-source">{knowledgeSource === "api" ? "知识库同步" : "本地内容"}</span>
               {learningLinks.map((link) => (
                 <a key={link.href} href={link.href} target="_blank" rel="noreferrer">
                   <span><strong>{link.label}</strong><small>{link.desc}</small></span>
@@ -329,6 +397,16 @@ const LandingWarRoom: React.FC = () => {
                 <div className="tutorial-block">
                   <span>3. TracePilot 怎么查</span>
                   <ol>{selectedVuln.traceChecklist.map((step) => <li key={step}>{step}</li>)}</ol>
+                </div>
+              </div>
+              <div className="tutorial-bottom-grid">
+                <div className="tutorial-note">
+                  <span>PoC 是什么</span>
+                  <p>PoC（Proof of Concept）就是“最小攻击复现”：用一段脚本或一笔交易证明漏洞真的能被触发。看 PoC 不是为了照抄攻击，而是为了确认漏洞成立需要哪些前提。</p>
+                </div>
+                <div className="tutorial-block tutorial-patch">
+                  <span>4. 一般怎么打补丁</span>
+                  <ol>{(selectedVuln.repairHints?.length ? selectedVuln.repairHints : defaultPatchHints).map((step) => <li key={step}>{step}</li>)}</ol>
                 </div>
               </div>
               <div className="tutorial-practice">

@@ -10,6 +10,7 @@ import {
   Task,
   TaskCreateRequest,
   TaskLogPageResponse,
+  VulnerabilityKnowledgeResponse,
 } from "../types";
 
 export const api = axios.create({
@@ -28,6 +29,11 @@ export async function listDapps(): Promise<DappCatalogResponse> {
   return response.data;
 }
 
+
+export async function listVulnerabilityKnowledge(): Promise<VulnerabilityKnowledgeResponse> {
+  const response = await api.get<VulnerabilityKnowledgeResponse>("/api/knowledge/vulnerabilities");
+  return response.data;
+}
 export async function getTask(taskId: string): Promise<Task> {
   const response = await api.get<Task>(`/api/tasks/${taskId}`);
   return response.data;
