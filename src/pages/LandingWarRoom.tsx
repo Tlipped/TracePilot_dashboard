@@ -27,6 +27,7 @@ import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
 
+// 首页缓存演示案例在这里改；名称需要和后端 /api/dapps 返回的 DApp name 一致。
 const demoCases = ["ApeCoin (APE)", "BNO", "SushiSwap"];
 
 const fallbackCatalog: DappCatalogItem[] = demoCases.map((name) => ({
@@ -269,6 +270,10 @@ const LandingWarRoom: React.FC = () => {
     [message, navigate, taskByDapp],
   );
 
+  const scrollToSection = useCallback((sectionId: string) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   return (
     <Layout className="landing-v2">
       <Header className="landing-v2-nav">
@@ -294,9 +299,9 @@ const LandingWarRoom: React.FC = () => {
               面向 DeFi 攻击事件审查：从交易事实出发，追踪关键调用、资金流和状态变化，定位被打破的协议假设，并输出证据链与修复方向。
             </Typography.Paragraph>
             <div className="stage-facts">
-              <span><strong>{catalog.length}</strong> 演示案例</span>
-              <span><strong>{completedCount || "缓存"}</strong> 历史报告</span>
-              <span><strong>{vulnerabilityLessons.length}</strong> 漏洞教程</span>
+              <button type="button" onClick={() => scrollToSection("demo-cases")}><strong>{catalog.length}</strong> 演示案例</button>
+              <button type="button" onClick={() => navigate("/tasks")}><strong>{completedCount || "缓存"}</strong> 历史报告</button>
+              <button type="button" onClick={() => scrollToSection("vuln-tutorial")}><strong>{vulnerabilityLessons.length}</strong> 漏洞教程</button>
             </div>
           </div>
 
@@ -319,7 +324,7 @@ const LandingWarRoom: React.FC = () => {
           </div>
         </section>
 
-        <section className="demo-row" aria-label="缓存演示案例">
+        <section className="demo-row" id="demo-cases" aria-label="缓存演示案例">
           <div className="section-kicker">
             <strong>缓存演示案例</strong>
             <span>直接打开已跑好的报告，不重新启动后端任务。</span>

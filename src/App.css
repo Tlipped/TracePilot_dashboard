@@ -4089,3 +4089,27 @@
     grid-template-columns: 1fr;
   }
 }
+.stage-facts button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #172033;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.stage-facts button:hover {
+  border-color: rgba(38, 126, 255, 0.36);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.16);
+  transform: translateY(-1px);
+}
+
+.stage-facts button strong {
+  margin-right: 6px;
+  color: #0f172a;
+  font-size: 18px;
+}
+

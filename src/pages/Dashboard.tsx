@@ -15,7 +15,7 @@ import LogStream from "../components/LogStream";
 import LearningGuidePanel from "../components/LearningGuidePanel";
 import MacroAnalysisPanel from "../components/MacroAnalysisPanel";
 import StructuredReport from "../components/StructuredReport";
-import { getAutomatedReview, getMacroAnalysis, getTask } from "../services/api";
+import { getAutomatedReview, getMacroAnalysis, getTask, getTaskLogs } from "../services/api";
 import WebSocketService from "../services/WebSocketService";
 import {
   LanguageMode,
@@ -84,14 +84,16 @@ const Dashboard: React.FC = () => {
   const [automatedReview, setAutomatedReview] = useState<AutomatedReviewResponse | null>(null);
 
   const refreshTask = useCallback(async () => {
-    if (!taskId) return;
+    if (!taskId) return null;
     try {
       setLoadingTask(true);
       const nextTask = await getTask(taskId);
       setTask(nextTask);
       setErrorMsg("");
+      return nextTask;
     } catch {
       setErrorMsg("Failed to fetch task status.");
+      return null;
     } finally {
       setLoadingTask(false);
     }
@@ -101,8 +103,11 @@ const Dashboard: React.FC = () => {
     mountedRef.current = true;
     if (!taskId) return;
 
-    refreshTask();
-    setEvents(WebSocketService.getHistory());
+    let cancelled = false;
+    WebSocketService.disconnect();
+    WebSocketService.clearHistory();
+    setEvents([]);
+    setWsStatus(null);
 
     const handleConnect = () => {
       setErrorMsg("");
@@ -153,12 +158,34 @@ const Dashboard: React.FC = () => {
       }
     };
 
-    WebSocketService.subscribe(handleEvent);
-    WebSocketService.subscribeStatus(handleStatus);
-    WebSocketService.connect(taskId, handleConnect, handleError);
-    setWsStatus(WebSocketService.getConnectionState());
+    const initializeTaskView = async () => {
+      const nextTask = await refreshTask();
+      if (cancelled || !mountedRef.current || !nextTask) return;
+
+      if (isTerminalTask(nextTask.status)) {
+        try {
+          const page = await getTaskLogs(taskId, { limit: 5000 });
+          if (!cancelled && mountedRef.current) {
+            setEvents(page.events);
+            setWsStatus(null);
+          }
+        } catch {
+          if (!cancelled && mountedRef.current) setErrorMsg("Failed to fetch persisted task logs.");
+        }
+        return;
+      }
+
+      setEvents(WebSocketService.getHistory());
+      WebSocketService.subscribe(handleEvent);
+      WebSocketService.subscribeStatus(handleStatus);
+      WebSocketService.connect(taskId, handleConnect, handleError);
+      setWsStatus(WebSocketService.getConnectionState());
+    };
+
+    initializeTaskView();
 
     return () => {
+      cancelled = true;
       mountedRef.current = false;
       WebSocketService.unsubscribe(handleEvent);
       WebSocketService.unsubscribeStatus(handleStatus);

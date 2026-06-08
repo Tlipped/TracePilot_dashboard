@@ -7,6 +7,7 @@ import {
   Archive,
   CheckCircle2,
   Eye,
+  Home,
   ListChecks,
   Play,
   RefreshCcw,
@@ -269,6 +270,9 @@ const TaskList: React.FC = () => {
           </div>
         </div>
         <Space>
+          <Button icon={<Home size={15} />} onClick={() => navigate("/")}>
+            首页
+          </Button>
           <Button icon={<RefreshCcw size={15} />} onClick={fetchTasks}>
             Refresh
           </Button>
