@@ -4934,3 +4934,141 @@ body[data-appearance="dark"] .landing-v2 .stage-facts button strong,
 body[data-appearance="dark"] .stage-facts button strong {
   color: #f8fafc !important;
 }
+
+/* Report tab spacing and scroll repairs */
+.learning-timeline {
+  padding-bottom: 8px;
+}
+
+.learning-timeline .ant-timeline-item-content {
+  overflow: visible;
+}
+
+.learning-timeline .ant-timeline-item-last .ant-timeline-item-content {
+  min-height: 76px;
+}
+
+.learning-guide-panel .learning-card {
+  height: auto !important;
+  min-height: 0;
+  overflow: visible;
+}
+
+.learning-guide-panel .learning-card + .learning-card {
+  margin-top: 2px;
+}
+
+.learning-guide-panel .learning-card:has(.learning-timeline) {
+  min-height: 540px;
+}
+
+.agent-consistency-card {
+  max-height: 100%;
+  overflow-y: auto;
+  padding-right: 14px;
+}
+
+.analysis-center .ant-tabs-tabpane > .agent-consistency-card,
+.report-section-list > .agent-consistency-card {
+  min-height: min-content;
+}
+
+.consistency-check-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.consistency-check-card {
+  padding: 10px;
+}
+
+.consistency-check-title {
+  margin-bottom: 6px;
+}
+
+.consistency-check-title p {
+  line-height: 1.42;
+}
+
+.consistency-check-card ul {
+  max-height: 116px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.evidence-intelligence-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.evidence-health-grid {
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+}
+
+.evidence-score-card {
+  min-height: 108px;
+}
+
+.evidence-metric-strip {
+  grid-template-columns: repeat(4, minmax(118px, 1fr));
+  align-self: stretch;
+}
+
+.evidence-metric-strip span {
+  min-height: 62px;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.evidence-section-bars {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.evidence-section-bar {
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.evidence-section-bar-head {
+  min-height: 42px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.evidence-section-bar-head > .ant-typography {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-primary);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.evidence-section-tags {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  max-width: 150px;
+}
+
+.evidence-section-tags .ant-tag {
+  margin-inline-end: 0;
+  font-weight: 750;
+}
+
+.evidence-risk-row {
+  margin-top: 0;
+}
+
+@media (max-width: 1180px) {
+  .evidence-health-grid,
+  .evidence-metric-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .evidence-score-card {
+    grid-column: 1 / -1;
+  }
+}

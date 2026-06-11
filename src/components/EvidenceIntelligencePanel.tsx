@@ -95,9 +95,9 @@ const EvidenceIntelligencePanel: React.FC<EvidenceIntelligencePanelProps> = ({ s
       <div className="evidence-section-bars">
         {sectionHealth.map((section) => (
           <div className="evidence-section-bar" key={section.key}>
-            <div>
-              <Typography.Text>{section.title}</Typography.Text>
-              <Space size={4}>
+            <div className="evidence-section-bar-head">
+              <Typography.Text strong>{section.title}</Typography.Text>
+              <Space size={4} wrap className="evidence-section-tags">
                 <Tag color={scoreColor(section.health.label)}>{section.health.label}</Tag>
                 <Tag>{section.health.total} evidence</Tag>
               </Space>
