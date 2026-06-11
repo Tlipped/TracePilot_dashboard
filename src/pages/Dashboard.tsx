@@ -65,6 +65,23 @@ function getDefaultMainTab(mode: ProductViewMode) {
   return "report";
 }
 
+const PERSISTED_LOG_PAGE_SIZE = 1000;
+const MAX_PERSISTED_LOG_PAGES = 5;
+
+async function fetchPersistedTaskEvents(taskId: string) {
+  let cursor: number | null = null;
+  let events: LogMessage[] = [];
+
+  for (let pageIndex = 0; pageIndex < MAX_PERSISTED_LOG_PAGES; pageIndex += 1) {
+    const page = await getTaskLogs(taskId, { limit: PERSISTED_LOG_PAGE_SIZE, before_id: cursor });
+    events = [...page.events, ...events];
+    if (!page.has_more || !page.next_before_id) break;
+    cursor = page.next_before_id;
+  }
+
+  return events;
+}
+
 const Dashboard: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
@@ -164,13 +181,13 @@ const Dashboard: React.FC = () => {
 
       if (isTerminalTask(nextTask.status)) {
         try {
-          const page = await getTaskLogs(taskId, { limit: 5000 });
+          const persistedEvents = await fetchPersistedTaskEvents(taskId);
           if (!cancelled && mountedRef.current) {
-            setEvents(page.events);
+            setEvents(persistedEvents);
             setWsStatus(null);
           }
         } catch {
-          if (!cancelled && mountedRef.current) setErrorMsg("Failed to fetch persisted task logs.");
+          if (!cancelled && mountedRef.current) setErrorMsg("Failed to fetch persisted task logs. Please check /api/tasks/{task_id}/logs.");
         }
         return;
       }
@@ -458,7 +475,7 @@ const Dashboard: React.FC = () => {
         <Space size={12}>
           <Button icon={<ArrowLeft size={16} />} onClick={() => navigate("/tasks")} title="返回任务控制台" />
           <Button icon={<Home size={16} />} onClick={() => navigate("/")} title="返回首页" />
-          <span className="workbench-brand-mark compact"><img src={riskPilotLogo} alt="TracePilot logo" /></span>
+          <span className="workbench-brand-mark compact"><img src={riskPilotLogo} alt="RiskPilot logo" /></span>
           <div>
             <Typography.Title level={5} style={{ margin: 0 }}>
               {task?.dapp_name ? `${task.dapp_name} Review` : "Review Workbench"}
