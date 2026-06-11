@@ -28,7 +28,7 @@ import riskPilotLogo from "../assets/riskpilot_logo.png";
 const { Header, Content } = Layout;
 
 // 首页缓存演示案例在这里改；名称需要和后端 /api/dapps 返回的 DApp name 一致。
-const demoCases = ["ApeCoin (APE)", "BNO", "SushiSwap"];
+const demoCases = ["ApeCoin (APE)", "SushiSwap", "Balancer"];
 
 const fallbackCatalog: DappCatalogItem[] = demoCases.map((name) => ({
   name,

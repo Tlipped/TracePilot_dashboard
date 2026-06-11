@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, Layout, Segmented, Space, Spin, Tabs, Tag, Typography } from "antd";
-import { Activity, ArrowLeft, Bot, FileText, FolderOpen, ListTree, RefreshCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
+import { Activity, ArrowLeft, Bot, FileText, FolderOpen, Home, ListTree, RefreshCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
 import { AGENT_NAMES } from "../constants/agents";
 import AgentFileLogs from "../components/AgentFileLogs";
@@ -456,7 +456,8 @@ const Dashboard: React.FC = () => {
     <Layout className="app-shell">
       <Header className="topbar">
         <Space size={12}>
-          <Button icon={<ArrowLeft size={16} />} onClick={() => navigate("/")} />
+          <Button icon={<ArrowLeft size={16} />} onClick={() => navigate("/tasks")} title="返回任务控制台" />
+          <Button icon={<Home size={16} />} onClick={() => navigate("/")} title="返回首页" />
           <span className="workbench-brand-mark compact"><img src={riskPilotLogo} alt="TracePilot logo" /></span>
           <div>
             <Typography.Title level={5} style={{ margin: 0 }}>
