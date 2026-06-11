@@ -1134,6 +1134,40 @@
   margin-top: 16px;
 }
 
+.learning-timeline .ant-timeline-item {
+  min-height: 78px;
+  padding-bottom: 24px;
+}
+
+.learning-timeline .ant-timeline-item-last {
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.learning-timeline .ant-timeline-item-head-custom {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: transparent;
+  transform: translate(-50%, 0);
+}
+
+.learning-timeline .ant-timeline-item-tail {
+  top: 34px;
+  border-inline-start-color: var(--border);
+}
+
+.learning-timeline .ant-timeline-item-content {
+  min-height: 58px;
+  margin-inline-start: 36px;
+  padding-top: 1px;
+  color: var(--text-primary);
+}
+
+.learning-timeline .ant-timeline-item-content .markdown-content {
+  margin-top: 6px;
+}
+
 .learning-step-dot {
   width: 28px;
   height: 28px;
