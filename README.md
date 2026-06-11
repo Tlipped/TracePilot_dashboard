@@ -1,6 +1,6 @@
-﻿# TracePilot Dashboard
+# RiskPilot Dashboard
 
-TracePilot Dashboard 是 TracePilot 多智能体 DApp 漏洞定位系统的前端工作台。它用于创建分析任务、观察 Agent 状态、查看实时/历史日志，并把最终结果组织成结构化审计报告、学习导览和可复现证据视图。
+RiskPilot Dashboard 是 RiskPilot 多智能体 DApp 漏洞定位系统的前端工作台。它用于创建分析任务、观察 Agent 状态、查看实时/历史日志，并把最终结果组织成结构化审计报告、学习导览和可复现证据视图。
 
 这个前端的目标不是简单渲染 Markdown，而是把长链 Agent 分析过程做成可观察、可复盘、可导出、可演示的工程化平台。
 
@@ -35,7 +35,7 @@ TracePilot Dashboard 是 TracePilot 多智能体 DApp 漏洞定位系统的前�
 ## 目录结构
 
 ```text
-TracePilot-dashboard/
+RiskPilot-dashboard/
 ├── src/
 │   ├── components/
 │   │   ├── AgentFileLogs.tsx         # Agent 文件日志查看
@@ -88,7 +88,7 @@ TracePilot-dashboard/
 | --- | --- |
 | Node.js | 18+，推荐 20+ |
 | npm | 9+ |
-| 后端服务 | TracePilot Backend，默认 `http://localhost:8000` |
+| 后端服务 | RiskPilot Backend，默认 `http://localhost:8000` |
 
 ## 快速开始
 
@@ -97,7 +97,7 @@ TracePilot-dashboard/
 前端依赖后端 REST API 和 WebSocket。请先在后端仓库启动服务：
 
 ```bash
-cd ../TracePilot-backend
+cd ../RiskPilot-backend
 docker-compose up --build
 ```
 
@@ -110,7 +110,7 @@ http://localhost:8000/docs
 ### 2. 安装前端依赖
 
 ```bash
-cd ../TracePilot-dashboard
+cd ../RiskPilot-dashboard
 npm install
 ```
 
@@ -134,10 +134,10 @@ VITE_BACKEND_WS_URL=ws://localhost:8000
 如果后端上线到 HTTPS 域名，例如：
 
 ```env
-VITE_BACKEND_HTTP_URL=https://tracepilot-api.example.com
+VITE_BACKEND_HTTP_URL=https://riskpilot-api.example.com
 ```
 
-前端会自动将 WebSocket 地址推导为 `wss://tracepilot-api.example.com`。旧变量 `VITE_API_BASE_URL` 和 `VITE_WS_BASE_URL` 仍兼容，但新项目建议使用 `VITE_BACKEND_HTTP_URL` 和 `VITE_BACKEND_WS_URL`。
+前端会自动将 WebSocket 地址推导为 `wss://riskpilot-api.example.com`。旧变量 `VITE_API_BASE_URL` 和 `VITE_WS_BASE_URL` 仍兼容，但新项目建议使用 `VITE_BACKEND_HTTP_URL` 和 `VITE_BACKEND_WS_URL`。
 
 ### 4. 启动开发服务
 
@@ -153,7 +153,7 @@ http://localhost:5173
 
 ## 从零跑通一个任务
 
-1. 打开首页 `TracePilot Dashboard`。
+1. 打开首页 `RiskPilot Dashboard`。
 2. 点击 `New Task`。
 3. 选择一个 DApp，例如 `SushiSwap` 或 `Audius`。
 4. 提交任务后会自动进入任务详情页。
@@ -285,6 +285,6 @@ Raw Mode 的 `LogStream` 使用虚拟滚动，只渲染可视区域附近的日�
 
 - [工程化可观测性与报告导出说明](./AGENT_OBSERVABILITY_INTERVIEW_NOTES.md)
 - [前端重设计计划](./FRONTEND_REDESIGN_PLAN.md)
-- 后端：[工程化技术决策记录](../TracePilot-backend/md/TracePilot工程化技术决策记录.md)
+- 后端：[工程化技术决策记录](../RiskPilot-backend/md/RiskPilot工程化技术决策记录.md)
 
 

@@ -28,7 +28,7 @@ const Briefing: React.FC = () => {
       <Header className="war-room-nav">
         <Space size={10}>
           <Button icon={<ArrowLeft size={16} />} onClick={() => navigate("/")} />
-          <Typography.Text className="war-room-brand">TracePilot Briefing</Typography.Text>
+          <Typography.Text className="war-room-brand">RiskPilot Briefing</Typography.Text>
         </Space>
         <Space>
           <Button onClick={() => navigate("/tasks")}>Tasks</Button>
@@ -38,9 +38,9 @@ const Briefing: React.FC = () => {
       <Content className="briefing-content">
         <section className="briefing-hero">
           <Tag className="hero-chip" icon={<Sparkles size={13} />}>On-chain risk governance / Agent Skill / Human App</Tag>
-          <Typography.Title>TracePilot: evidence-backed exploit localization agent</Typography.Title>
+          <Typography.Title>RiskPilot: evidence-backed exploit localization agent</Typography.Title>
           <Typography.Paragraph>
-            TracePilot turns exploit review into a reproducible workflow: collect on-chain facts, inspect traces, locate vulnerable logic, and present a reviewable evidence chain.
+            RiskPilot turns exploit review into a reproducible workflow: collect on-chain facts, inspect traces, locate vulnerable logic, and present a reviewable evidence chain.
           </Typography.Paragraph>
         </section>
 
@@ -82,7 +82,7 @@ const Briefing: React.FC = () => {
         </section>
 
         <section className="briefing-pitch">
-          <div><Bot size={28} /><strong>Positioning</strong><span>TracePilot is a reviewable on-chain risk analysis workflow, not just a report generator.</span></div>
+          <div><Bot size={28} /><strong>Positioning</strong><span>RiskPilot is a reviewable on-chain risk analysis workflow, not just a report generator.</span></div>
           <div><Braces size={28} /><strong>Stack</strong><span>FastAPI, React, WebSocket logs, Postgres persistence, multi-agent analysis, and Skill API.</span></div>
           <div><Wrench size={28} /><strong>Next</strong><span>Add vulnerability knowledge base, similar-case retrieval, error classification, and cached demos.</span></div>
           <div><CheckCircle2 size={28} /><strong>Trust</strong><span>Separate tool facts, transaction evidence, and model inference to reduce hallucination risk.</span></div>

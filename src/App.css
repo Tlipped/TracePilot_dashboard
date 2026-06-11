@@ -4113,3 +4113,701 @@
   font-size: 18px;
 }
 
+/* Global light/dark appearance pass */
+.app-root {
+  min-height: 100vh;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+}
+
+.appearance-toggle.ant-btn {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 80;
+  min-height: 42px;
+  padding: 0 15px;
+  border-radius: 999px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 750;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+}
+
+body[data-appearance="light"] .appearance-toggle.ant-btn {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+}
+
+body[data-appearance="light"] .appearance-toggle.ant-btn:hover {
+  border-color: rgba(37, 99, 235, 0.34) !important;
+  color: #2563eb !important;
+}
+
+body[data-appearance="dark"] .appearance-toggle.ant-btn {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+  color: #e5e7eb !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+}
+
+body[data-appearance="dark"] .appearance-toggle.ant-btn:hover {
+  border-color: rgba(56, 189, 248, 0.58) !important;
+  color: #7dd3fc !important;
+}
+
+body[data-appearance="light"] .app-shell {
+  background:
+    radial-gradient(circle at 88% 8%, rgba(56, 189, 248, 0.1), transparent 25%),
+    radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.07), transparent 24%),
+    linear-gradient(180deg, #f7f9fc 0%, #f8fafc 56%, #ffffff 100%) !important;
+  color: #0f172a;
+}
+
+body[data-appearance="light"] .app-shell .topbar {
+  min-height: 74px;
+  background: rgba(247, 249, 252, 0.92) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+  color: #0f172a !important;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+}
+
+body[data-appearance="light"] .app-shell .topbar::after {
+  left: 22px;
+  right: 22px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #22c55e, transparent 68%);
+}
+
+body[data-appearance="light"] .app-shell .brand-kicker {
+  color: #2563eb !important;
+}
+
+body[data-appearance="light"] .app-shell .topbar-title,
+body[data-appearance="light"] .app-shell .topbar h1,
+body[data-appearance="light"] .app-shell .topbar h2,
+body[data-appearance="light"] .app-shell .topbar h3,
+body[data-appearance="light"] .app-shell .topbar h4,
+body[data-appearance="light"] .app-shell .topbar h5,
+body[data-appearance="light"] .app-shell .topbar .ant-typography:not(.ant-typography-secondary):not(.text-mono) {
+  color: #0f172a !important;
+}
+
+body[data-appearance="light"] .app-shell .topbar-subtitle,
+body[data-appearance="light"] .app-shell .topbar .ant-typography-secondary,
+body[data-appearance="light"] .app-shell .topbar .text-mono {
+  color: #64748b !important;
+}
+
+body[data-appearance="light"] .app-shell .topbar .ant-btn:not(.ant-btn-primary) {
+  background: rgba(255, 255, 255, 0.76) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+}
+
+body[data-appearance="light"] .app-shell .topbar .ant-btn:not(.ant-btn-primary):hover {
+  border-color: rgba(37, 99, 235, 0.32) !important;
+  color: #2563eb !important;
+}
+
+body[data-appearance="light"] .app-shell .topbar .ant-tag {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+  color: #334155 !important;
+}
+
+body[data-appearance="light"] .task-list-page,
+body[data-appearance="light"] .dashboard-layout {
+  color: #0f172a;
+}
+
+body[data-appearance="light"] .metric-card,
+body[data-appearance="light"] .table-card,
+body[data-appearance="light"] .agent-nav,
+body[data-appearance="light"] .stream-panel,
+body[data-appearance="light"] .timeline-panel,
+body[data-appearance="light"] .inspector-panel,
+body[data-appearance="light"] .structured-report-panel,
+body[data-appearance="light"] .attack-replay-panel,
+body[data-appearance="light"] .macro-panel,
+body[data-appearance="light"] .learning-guide-panel {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.07);
+}
+
+body[data-appearance="light"] .metric-icon {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(37, 99, 235, 0.06);
+}
+
+body[data-appearance="light"] .metric-value,
+body[data-appearance="light"] .log-event-body,
+body[data-appearance="light"] .panel-header h1,
+body[data-appearance="light"] .panel-header h2,
+body[data-appearance="light"] .panel-header h3,
+body[data-appearance="light"] .panel-header h4,
+body[data-appearance="light"] .panel-header h5,
+body[data-appearance="light"] .table-toolbar h1,
+body[data-appearance="light"] .table-toolbar h2,
+body[data-appearance="light"] .table-toolbar h3,
+body[data-appearance="light"] .table-toolbar h4,
+body[data-appearance="light"] .table-toolbar h5,
+body[data-appearance="light"] .ant-typography {
+  color: #0f172a;
+}
+
+body[data-appearance="light"] .metric-label,
+body[data-appearance="light"] .agent-row,
+body[data-appearance="light"] .agent-row-meta,
+body[data-appearance="light"] .message-type,
+body[data-appearance="light"] .tool-hint,
+body[data-appearance="light"] .control-event,
+body[data-appearance="light"] .ant-typography-secondary {
+  color: #64748b !important;
+}
+
+body[data-appearance="light"] .table-toolbar,
+body[data-appearance="light"] .panel-header,
+body[data-appearance="light"] .stream-toolbar,
+body[data-appearance="light"] .agent-summary {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+body[data-appearance="light"] .task-overview,
+body[data-appearance="light"] .case-catalog-preview,
+body[data-appearance="light"] .control-event {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+body[data-appearance="light"] .agent-row:hover,
+body[data-appearance="light"] .agent-row.selected {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+body[data-appearance="light"] .log-event {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.76);
+  color: #475569;
+}
+
+body[data-appearance="light"] .log-event:hover {
+  border-color: rgba(37, 99, 235, 0.25);
+  background: #ffffff;
+}
+
+body[data-appearance="light"] .log-event.level-warning {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+body[data-appearance="light"] .log-event.level-error {
+  background: rgba(239, 68, 68, 0.07);
+}
+
+body[data-appearance="light"] .agent-tag,
+body[data-appearance="light"] .level-tag {
+  border-color: rgba(15, 23, 42, 0.1);
+  background: rgba(248, 250, 252, 0.9);
+  color: #475569;
+}
+
+body[data-appearance="light"] .app-shell .view-mode-switcher {
+  border-color: rgba(37, 99, 235, 0.16) !important;
+  background: rgba(239, 246, 255, 0.86) !important;
+}
+
+body[data-appearance="light"] .app-shell .view-mode-label {
+  color: #475569 !important;
+}
+
+body[data-appearance="light"] .app-shell .view-mode-switcher .ant-segmented,
+body[data-appearance="light"] .app-shell .topbar .ant-segmented {
+  background: rgba(255, 255, 255, 0.88) !important;
+}
+
+body[data-appearance="light"] .app-shell .topbar .ant-segmented-item-label {
+  color: #334155 !important;
+}
+
+body[data-appearance="light"] .app-shell .topbar .ant-segmented-item-selected {
+  background: rgba(37, 99, 235, 0.1) !important;
+}
+
+body[data-appearance="light"] .app-shell .topbar .ant-segmented-item-selected .ant-segmented-item-label {
+  color: #0f172a !important;
+}
+
+body[data-appearance="light"] .ant-card {
+  background: rgba(255, 255, 255, 0.84) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+body[data-appearance="light"] .ant-table-thead > tr > th {
+  background: #f8fafc !important;
+  border-bottom-color: rgba(15, 23, 42, 0.08) !important;
+  color: #475569 !important;
+}
+
+body[data-appearance="light"] .ant-table-tbody > tr > td {
+  border-bottom-color: rgba(15, 23, 42, 0.07) !important;
+  color: #0f172a !important;
+}
+
+body[data-appearance="light"] .ant-table-tbody > tr:hover > td {
+  background: rgba(37, 99, 235, 0.05) !important;
+}
+
+body[data-appearance="light"] .ant-pagination,
+body[data-appearance="light"] .ant-select,
+body[data-appearance="light"] .ant-select-selection-item,
+body[data-appearance="light"] .ant-select-selection-placeholder {
+  color: #0f172a;
+}
+
+body[data-appearance="light"] .ant-select-selector,
+body[data-appearance="light"] .ant-input,
+body[data-appearance="light"] .ant-input-affix-wrapper {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+}
+
+body[data-appearance="light"] .ant-modal-content {
+  background: #ffffff !important;
+  color: #0f172a;
+}
+
+body[data-appearance="light"] .ant-modal-header {
+  background: transparent !important;
+}
+
+body[data-appearance="light"] .ant-modal-title {
+  color: #0f172a !important;
+}
+
+body[data-appearance="dark"] .app-shell {
+  background:
+    radial-gradient(circle at 82% 8%, rgba(37, 99, 235, 0.12), transparent 24%),
+    linear-gradient(180deg, #0b1220 0%, #0b0f14 52%, #070b10 100%) !important;
+  color: #e5e7eb;
+}
+
+body[data-appearance="dark"] .app-shell .topbar {
+  min-height: 82px;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 32, 0.96)) !important;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.18) !important;
+  color: #e5e7eb !important;
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.22);
+}
+
+body[data-appearance="dark"] .app-shell .topbar::after {
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 0;
+  background: linear-gradient(90deg, #2563eb 0%, #22c55e 34%, rgba(34, 197, 94, 0) 72%);
+}
+
+body[data-appearance="dark"] .app-shell .topbar-title,
+body[data-appearance="dark"] .app-shell .topbar h1,
+body[data-appearance="dark"] .app-shell .topbar h2,
+body[data-appearance="dark"] .app-shell .topbar h3,
+body[data-appearance="dark"] .app-shell .topbar h4,
+body[data-appearance="dark"] .app-shell .topbar h5,
+body[data-appearance="dark"] .app-shell .topbar .ant-typography:not(.ant-typography-secondary):not(.text-mono) {
+  color: #e5e7eb !important;
+}
+
+body[data-appearance="dark"] .app-shell .topbar-subtitle,
+body[data-appearance="dark"] .app-shell .topbar .ant-typography-secondary,
+body[data-appearance="dark"] .app-shell .topbar .text-mono {
+  color: #94a3b8 !important;
+}
+
+body[data-appearance="dark"] .app-shell .brand-kicker {
+  color: #38bdf8 !important;
+}
+
+body[data-appearance="dark"] .workbench-brand-mark {
+  background: linear-gradient(135deg, #1d4ed8, #0f172a) !important;
+  border-color: rgba(56, 189, 248, 0.22);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+}
+
+body[data-appearance="dark"] .app-shell .topbar .ant-btn:not(.ant-btn-primary) {
+  background: rgba(15, 23, 42, 0.72) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+  color: #e5e7eb !important;
+}
+
+body[data-appearance="dark"] .app-shell .topbar .ant-btn:not(.ant-btn-primary):hover {
+  border-color: rgba(56, 189, 248, 0.5) !important;
+  color: #7dd3fc !important;
+}
+
+body[data-appearance="dark"] .app-shell .topbar .ant-tag {
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  background: rgba(15, 23, 42, 0.68) !important;
+  color: #cbd5e1 !important;
+}
+
+body[data-appearance="dark"] .app-shell .topbar .ant-tag-success,
+body[data-appearance="dark"] .app-shell .topbar .ant-tag-green {
+  background: rgba(22, 163, 74, 0.15) !important;
+  border-color: rgba(34, 197, 94, 0.24) !important;
+  color: #4ade80 !important;
+}
+
+body[data-appearance="dark"] .app-shell .view-mode-switcher {
+  border-color: rgba(56, 189, 248, 0.18) !important;
+  background: rgba(15, 23, 42, 0.72) !important;
+}
+
+body[data-appearance="dark"] .app-shell .view-mode-label {
+  color: #cbd5e1 !important;
+}
+
+body[data-appearance="dark"] .app-shell .view-mode-switcher .ant-segmented,
+body[data-appearance="dark"] .app-shell .topbar .ant-segmented {
+  background: rgba(2, 6, 23, 0.5) !important;
+}
+
+body[data-appearance="dark"] .app-shell .topbar .ant-segmented-item-label {
+  color: #cbd5e1 !important;
+}
+
+body[data-appearance="dark"] .app-shell .topbar .ant-segmented-item-selected {
+  background: rgba(56, 189, 248, 0.18) !important;
+}
+
+body[data-appearance="dark"] .app-shell .topbar .ant-segmented-item-selected .ant-segmented-item-label {
+  color: #f8fafc !important;
+}
+
+body[data-appearance="dark"] .landing-v2.ant-layout,
+body[data-appearance="dark"] .landing-v2 {
+  background:
+    radial-gradient(circle at 80% 8%, rgba(56, 189, 248, 0.13), transparent 25%),
+    radial-gradient(circle at 12% 20%, rgba(37, 99, 235, 0.1), transparent 24%),
+    linear-gradient(180deg, #0b1220 0%, #0b0f14 54%, #070b10 100%) !important;
+  color: #e5e7eb !important;
+}
+
+body[data-appearance="dark"] .landing-v2 .ant-layout-content,
+body[data-appearance="dark"] .landing-v2-content {
+  color: #e5e7eb !important;
+}
+
+body[data-appearance="dark"] .landing-v2-nav {
+  border-bottom-color: rgba(56, 189, 248, 0.16) !important;
+  background: rgba(11, 18, 32, 0.92) !important;
+}
+
+body[data-appearance="dark"] .landing-brand strong,
+body[data-appearance="dark"] .stage-title.ant-typography,
+body[data-appearance="dark"] .stage-subtitle.ant-typography,
+body[data-appearance="dark"] .path-node strong,
+body[data-appearance="dark"] .stage-facts strong,
+body[data-appearance="dark"] .section-kicker strong,
+body[data-appearance="dark"] .demo-case-pill strong,
+body[data-appearance="dark"] .tutorial-title strong,
+body[data-appearance="dark"] .tutorial-tab strong,
+body[data-appearance="dark"] .tutorial-note span,
+body[data-appearance="dark"] .learning-links strong,
+body[data-appearance="dark"] .stage-facts button strong {
+  color: #f8fafc !important;
+}
+
+body[data-appearance="dark"] .landing-brand small,
+body[data-appearance="dark"] .stage-desc.ant-typography,
+body[data-appearance="dark"] .stage-facts span,
+body[data-appearance="dark"] .path-node em,
+body[data-appearance="dark"] .path-node small,
+body[data-appearance="dark"] .path-note,
+body[data-appearance="dark"] .section-kicker span,
+body[data-appearance="dark"] .demo-case-pill small,
+body[data-appearance="dark"] .tutorial-tab span,
+body[data-appearance="dark"] .tutorial-block p,
+body[data-appearance="dark"] .tutorial-block li,
+body[data-appearance="dark"] .tutorial-note p,
+body[data-appearance="dark"] .learning-links small,
+body[data-appearance="dark"] .knowledge-source {
+  color: #94a3b8 !important;
+}
+
+body[data-appearance="dark"] .landing-nav-actions .ant-btn-text {
+  color: #cbd5e1 !important;
+}
+
+body[data-appearance="dark"] .landing-nav-actions .ant-btn-text:hover {
+  color: #7dd3fc !important;
+  background: rgba(56, 189, 248, 0.08) !important;
+}
+
+body[data-appearance="dark"] .stage-chip.ant-tag {
+  background: rgba(56, 189, 248, 0.12) !important;
+  color: #7dd3fc !important;
+}
+
+body[data-appearance="dark"] .attack-path-visual,
+body[data-appearance="dark"] .path-node,
+body[data-appearance="dark"] .path-note,
+body[data-appearance="dark"] .stage-facts span,
+body[data-appearance="dark"] .stage-facts button,
+body[data-appearance="dark"] .learning-links a,
+body[data-appearance="dark"] .tutorial-note,
+body[data-appearance="dark"] .tutorial-patch,
+body[data-appearance="dark"] .knowledge-source {
+  border-color: rgba(148, 163, 184, 0.16) !important;
+  background: rgba(15, 23, 42, 0.72) !important;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.22);
+}
+
+body[data-appearance="dark"] .attack-path-visual::before {
+  border-color: rgba(148, 163, 184, 0.12);
+  background: repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.08) 0 1px, transparent 1px 76px);
+}
+
+body[data-appearance="dark"] .stage-watermark {
+  opacity: 0.08;
+}
+
+@media (max-width: 640px) {
+  .appearance-toggle.ant-btn {
+    right: 14px;
+    bottom: 14px;
+    min-height: 40px;
+    padding: 0 12px;
+  }
+}
+
+/* Appearance contrast repair for report and tutorial surfaces */
+body[data-appearance="light"] .report-actions,
+body[data-appearance="light"] .product-summary-card,
+body[data-appearance="light"] .key-transaction-card,
+body[data-appearance="light"] .evidence-intelligence-card,
+body[data-appearance="light"] .evidence-score-card,
+body[data-appearance="light"] .evidence-metric-strip span,
+body[data-appearance="light"] .evidence-section-bar,
+body[data-appearance="light"] .agent-consistency-card,
+body[data-appearance="light"] .agent-consistency-score,
+body[data-appearance="light"] .agent-consistency-shared,
+body[data-appearance="light"] .consistency-check-card,
+body[data-appearance="light"] .report-section-card,
+body[data-appearance="light"] .raw-report-card,
+body[data-appearance="light"] .learning-card,
+body[data-appearance="light"] .macro-metric-card,
+body[data-appearance="light"] .macro-card,
+body[data-appearance="light"] .macro-tx-row,
+body[data-appearance="light"] .macro-role-card,
+body[data-appearance="light"] .attack-phase-card,
+body[data-appearance="light"] .evidence-item,
+body[data-appearance="light"] .evidence-score-row,
+body[data-appearance="light"] .insight-metrics > div,
+body[data-appearance="light"] .insight-card,
+body[data-appearance="light"] .file-log-row,
+body[data-appearance="light"] .file-log-viewer,
+body[data-appearance="light"] .task-detail-list {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #0f172a !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+}
+
+body[data-appearance="light"] .learning-hero,
+body[data-appearance="light"] .evidence-intelligence-card,
+body[data-appearance="light"] .agent-consistency-card {
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, 0.86), rgba(255, 255, 255, 0.94)) !important;
+}
+
+body[data-appearance="light"] .structured-report-panel,
+body[data-appearance="light"] .structured-report-panel .ant-typography,
+body[data-appearance="light"] .agent-insights-panel,
+body[data-appearance="light"] .agent-insights-panel .ant-typography,
+body[data-appearance="light"] .macro-panel,
+body[data-appearance="light"] .macro-panel .ant-typography,
+body[data-appearance="light"] .learning-guide-panel,
+body[data-appearance="light"] .learning-guide-panel .ant-typography,
+body[data-appearance="light"] .attack-replay-panel,
+body[data-appearance="light"] .attack-replay-panel .ant-typography,
+body[data-appearance="light"] .inspector-panel,
+body[data-appearance="light"] .inspector-panel .ant-typography {
+  color: #0f172a !important;
+}
+
+body[data-appearance="light"] .structured-report-panel .ant-typography-secondary,
+body[data-appearance="light"] .macro-subtitle,
+body[data-appearance="light"] .key-transaction-action,
+body[data-appearance="light"] .patch-summary p,
+body[data-appearance="light"] .consistency-check-title p,
+body[data-appearance="light"] .consistency-check-card ul,
+body[data-appearance="light"] .attack-phase-description,
+body[data-appearance="light"] .macro-tx-meta,
+body[data-appearance="light"] .macro-role-card p,
+body[data-appearance="light"] .markdown-content p,
+body[data-appearance="light"] .markdown-content li,
+body[data-appearance="light"] .file-log-row small {
+  color: #475569 !important;
+}
+
+body[data-appearance="light"] .markdown-content h1,
+body[data-appearance="light"] .markdown-content h2,
+body[data-appearance="light"] .markdown-content h3,
+body[data-appearance="light"] .markdown-content h4,
+body[data-appearance="light"] .markdown-content strong,
+body[data-appearance="light"] .macro-metric-card span,
+body[data-appearance="light"] .insight-metrics strong,
+body[data-appearance="light"] .file-log-row span {
+  color: #0f172a !important;
+}
+
+body[data-appearance="light"] .evidence-content,
+body[data-appearance="light"] .markdown-content pre,
+body[data-appearance="light"] .file-log-viewer pre {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+body[data-appearance="light"] .markdown-content code {
+  background: rgba(37, 99, 235, 0.08) !important;
+  color: #1d4ed8 !important;
+}
+
+body[data-appearance="dark"] .structured-report-panel,
+body[data-appearance="dark"] .structured-report-panel .ant-typography,
+body[data-appearance="dark"] .agent-insights-panel,
+body[data-appearance="dark"] .agent-insights-panel .ant-typography,
+body[data-appearance="dark"] .macro-panel,
+body[data-appearance="dark"] .macro-panel .ant-typography,
+body[data-appearance="dark"] .learning-guide-panel,
+body[data-appearance="dark"] .learning-guide-panel .ant-typography,
+body[data-appearance="dark"] .attack-replay-panel,
+body[data-appearance="dark"] .attack-replay-panel .ant-typography,
+body[data-appearance="dark"] .inspector-panel,
+body[data-appearance="dark"] .inspector-panel .ant-typography {
+  color: #e5e7eb !important;
+}
+
+body[data-appearance="dark"] .structured-report-panel .ant-typography-secondary,
+body[data-appearance="dark"] .macro-subtitle,
+body[data-appearance="dark"] .key-transaction-action,
+body[data-appearance="dark"] .patch-summary p,
+body[data-appearance="dark"] .consistency-check-title p,
+body[data-appearance="dark"] .consistency-check-card ul,
+body[data-appearance="dark"] .attack-phase-description,
+body[data-appearance="dark"] .macro-tx-meta,
+body[data-appearance="dark"] .macro-role-card p,
+body[data-appearance="dark"] .markdown-content p,
+body[data-appearance="dark"] .markdown-content li,
+body[data-appearance="dark"] .file-log-row small {
+  color: #cbd5e1 !important;
+}
+
+body[data-appearance="dark"] .markdown-content h1,
+body[data-appearance="dark"] .markdown-content h2,
+body[data-appearance="dark"] .markdown-content h3,
+body[data-appearance="dark"] .markdown-content h4,
+body[data-appearance="dark"] .markdown-content strong,
+body[data-appearance="dark"] .macro-metric-card span,
+body[data-appearance="dark"] .insight-metrics strong,
+body[data-appearance="dark"] .file-log-row span {
+  color: #f8fafc !important;
+}
+
+body[data-appearance="dark"] .tutorial-board {
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.88) !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+body[data-appearance="dark"] .tutorial-list {
+  border-right-color: rgba(148, 163, 184, 0.16);
+  background: rgba(2, 6, 23, 0.34);
+}
+
+body[data-appearance="dark"] .tutorial-detail {
+  background:
+    radial-gradient(circle at 78% 12%, rgba(56, 189, 248, 0.08), transparent 30%),
+    rgba(11, 18, 32, 0.84);
+}
+
+body[data-appearance="dark"] .tutorial-tab {
+  color: #e5e7eb;
+}
+
+body[data-appearance="dark"] .tutorial-tab:hover,
+body[data-appearance="dark"] .tutorial-tab-active {
+  border-color: rgba(56, 189, 248, 0.34);
+  background: rgba(30, 41, 59, 0.74) !important;
+}
+
+body[data-appearance="dark"] .tutorial-tab strong,
+body[data-appearance="dark"] .tutorial-title strong,
+body[data-appearance="dark"] .tutorial-note span {
+  color: #f8fafc !important;
+}
+
+body[data-appearance="dark"] .tutorial-tab small,
+body[data-appearance="dark"] .tutorial-tab span,
+body[data-appearance="dark"] .tutorial-title small,
+body[data-appearance="dark"] .tutorial-note p {
+  color: #cbd5e1 !important;
+}
+
+body[data-appearance="dark"] .tutorial-hook {
+  background: rgba(37, 99, 235, 0.16) !important;
+  color: #dbeafe !important;
+}
+
+body[data-appearance="dark"] .tutorial-block > span {
+  color: #60a5fa !important;
+}
+
+body[data-appearance="dark"] .tutorial-block p,
+body[data-appearance="dark"] .tutorial-block li {
+  color: #cbd5e1 !important;
+}
+
+body[data-appearance="dark"] .tutorial-note,
+body[data-appearance="dark"] .tutorial-patch {
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  background: rgba(30, 41, 59, 0.86) !important;
+  color: #e5e7eb !important;
+}
+
+body[data-appearance="dark"] .tutorial-practice {
+  background: rgba(22, 163, 74, 0.14) !important;
+  color: #bbf7d0 !important;
+}
+
+body[data-appearance="light"] .tutorial-board {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+body[data-appearance="light"] .tutorial-detail,
+body[data-appearance="light"] .tutorial-list {
+  background: transparent;
+}
+
+body[data-appearance="light"] .tutorial-tab strong,
+body[data-appearance="light"] .tutorial-title strong,
+body[data-appearance="light"] .tutorial-note span {
+  color: #0f172a !important;
+}
+
+body[data-appearance="light"] .tutorial-tab span,
+body[data-appearance="light"] .tutorial-block p,
+body[data-appearance="light"] .tutorial-block li,
+body[data-appearance="light"] .tutorial-note p {
+  color: #475569 !important;
+}

@@ -18,6 +18,34 @@
   --font-mono: "JetBrains Mono", "Fira Code", Consolas, monospace;
 }
 
+body[data-appearance="light"] {
+  --bg-deep: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: #f8fafc;
+  --bg-elevated: #eef4fb;
+  --accent: #2563eb;
+  --accent-2: #0891b2;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border: #dbe4f0;
+  --border-active: #93c5fd;
+}
+
+body[data-appearance="dark"] {
+  --bg-deep: #0b0f14;
+  --bg-surface: #111827;
+  --bg-card: #162033;
+  --bg-elevated: #1e293b;
+  --accent: #38bdf8;
+  --accent-2: #2dd4bf;
+  --text-primary: #e5e7eb;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: #263244;
+  --border-active: #3b4a60;
+}
+
 *,
 *::before,
 *::after {
@@ -40,6 +68,14 @@ body {
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body[data-appearance="light"] {
+  background: #f8fafc;
+}
+
+body[data-appearance="dark"] {
+  background: #0b0f14;
 }
 
 button,

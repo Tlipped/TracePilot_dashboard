@@ -1,8 +1,8 @@
-﻿# TracePilot Dashboard 工程化改造方案
+# RiskPilot Dashboard 工程化改造方案
 
 ## 1. 结论
 
-建议不重新开新项目，直接在 `TracePilot-dashboard` 上改造。
+建议不重新开新项目，直接在 `RiskPilot-dashboard` 上改造。
 
 现有前端已经具备 React + TypeScript + Vite + Ant Design + WebSocket + ReactMarkdown 的基础能力，且已经接入后端 `/api/tasks`、`/ws/{task_id}` 和任务详情页面。当前主要问题不是技术栈选错，而是信息架构、日志渲染、任务状态复原、智能体状态表达还比较粗糙。因此更适合做一次 dashboard v2 改造，而不是推倒重来。
 

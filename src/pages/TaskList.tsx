@@ -258,9 +258,9 @@ const TaskList: React.FC = () => {
     <Layout className="app-shell">
       <Header className="topbar">
         <div className="topbar-brand workbench-brand">
-          <span className="workbench-brand-mark"><img src={riskPilotLogo} alt="TracePilot logo" /></span>
+          <span className="workbench-brand-mark"><img src={riskPilotLogo} alt="RiskPilot logo" /></span>
           <div>
-            <Typography.Text className="brand-kicker">TracePilot Workbench</Typography.Text>
+            <Typography.Text className="brand-kicker">RiskPilot Workbench</Typography.Text>
             <Typography.Title level={3} className="topbar-title">
               Task Library
             </Typography.Title>

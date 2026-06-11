@@ -236,12 +236,12 @@ function downloadText(filename: string, content: string, mimeType: string) {
 }
 
 function safeName(value?: string) {
-  return (value || "tracepilot").replace(/[\\/:*?"<>|\s]+/g, "_");
+  return (value || "riskpilot").replace(/[\\/:*?"<>|\s]+/g, "_");
 }
 
 function buildMarkdownExport(task: Task, sections: ReportSection[], agentSummaries: AgentExportSummary[]) {
   const lines = [
-    `# TracePilot Audit Report - ${task.dapp_name}`,
+    `# RiskPilot Audit Report - ${task.dapp_name}`,
     "",
     "## Task Metadata",
     "",
