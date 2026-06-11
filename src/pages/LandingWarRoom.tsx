@@ -177,6 +177,10 @@ const fallbackVulnerabilityLessons: VulnerabilityLesson[] = [
   },
 ];
 
+function normalizeCaseName(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
 function getCaseLabel(item: DappCatalogItem, task?: Task) {
   if (task?.status === TaskStatus.COMPLETED) return "已完成分析 / Cached report";
   if (task?.status === TaskStatus.RUNNING) return "正在分析 / Running";
@@ -240,8 +244,13 @@ const LandingWarRoom: React.FC = () => {
   const taskByDapp = useMemo(() => {
     const map = new Map<string, Task>();
     for (const name of demoCases) {
-      const sameName = tasks.filter((task) => task.dapp_name === name && !task.archived);
-      const preferred = sameName.find((task) => task.status === TaskStatus.COMPLETED) ?? sameName[0];
+      const targetName = normalizeCaseName(name);
+      const sameName = tasks.filter((task) => normalizeCaseName(task.dapp_name) === targetName);
+      const preferred =
+        sameName.find((task) => task.status === TaskStatus.COMPLETED && !task.archived) ??
+        sameName.find((task) => task.status === TaskStatus.COMPLETED) ??
+        sameName.find((task) => !task.archived) ??
+        sameName[0];
       if (preferred) map.set(name, preferred);
     }
     return map;
