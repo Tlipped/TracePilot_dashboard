@@ -4935,6 +4935,39 @@ body[data-appearance="dark"] .stage-facts button strong {
   color: #f8fafc !important;
 }
 
+/* Detail header vertical rhythm */
+.app-shell .topbar {
+  line-height: normal !important;
+}
+
+.review-topbar-main.ant-space {
+  min-height: 48px;
+  align-items: center;
+}
+
+.review-topbar-main .ant-space-item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.review-title-block {
+  min-height: 46px;
+  padding-top: 3px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.review-title.ant-typography {
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+.review-title-block .text-mono {
+  line-height: 1.15;
+}
+
 /* Report tab spacing and scroll repairs */
 .learning-timeline {
   padding-bottom: 8px;

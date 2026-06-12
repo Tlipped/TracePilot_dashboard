@@ -472,12 +472,12 @@ const Dashboard: React.FC = () => {
   return (
     <Layout className="app-shell">
       <Header className="topbar">
-        <Space size={12}>
+        <Space size={12} className="review-topbar-main">
           <Button icon={<ArrowLeft size={16} />} onClick={() => navigate("/tasks")} title="返回任务控制台" />
           <Button icon={<Home size={16} />} onClick={() => navigate("/")} title="返回首页" />
           <span className="workbench-brand-mark compact"><img src={riskPilotLogo} alt="RiskPilot logo" /></span>
-          <div>
-            <Typography.Title level={5} style={{ margin: 0 }}>
+          <div className="review-title-block">
+            <Typography.Title level={5} className="review-title">
               {task?.dapp_name ? `${task.dapp_name} Review` : "Review Workbench"}
             </Typography.Title>
             <Typography.Text type="secondary" className="text-mono">
