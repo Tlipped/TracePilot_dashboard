@@ -99,8 +99,8 @@ const LearningGuidePanel: React.FC<LearningGuidePanelProps> = ({ task, macro, la
             <Typography.Text strong>{isZh ? `${title} 学习导览` : `${title} Learning Guide`}</Typography.Text>
             <Typography.Text type="secondary" className="macro-subtitle">
               {isZh
-                ? "把案例背景、攻击阶段和 RiskPilot 的宏观/微观分析串起来，适合演示和教学。"
-                : "Connect incident context, attack stages, and RiskPilot macro/micro analysis for explanation."}
+                ? "把案例背景、攻击阶段和 AttackPilot 的宏观/微观分析串起来，适合演示和教学。"
+                : "Connect incident context, attack stages, and AttackPilot macro/micro analysis for explanation."}
             </Typography.Text>
           </div>
         </Space>

@@ -80,7 +80,7 @@ function toVulnerabilityLesson(item: VulnerabilityTypeKnowledge): VulnerabilityL
     ? item.practice_sources
         .map((source) => `${source.name}${source.hint ? `：${source.hint}` : ""}`)
         .join(" / ")
-    : item.tracepilot_usage || "结合真实攻击复盘，在 RiskPilot 中对照交易、调用和证据链。";
+    : item.tracepilot_usage || "结合真实攻击复盘，在 AttackPilot 中对照交易、调用和证据链。";
 
   return {
     titleZh: item.name_zh,
@@ -103,7 +103,7 @@ const fallbackVulnerabilityLessons: VulnerabilityLesson[] = [
     mentalModel: "把 AMM 池想成一个临时秤。秤上的代币比例会影响价格，如果池子很浅，攻击者用大额 swap 就能短暂把秤拨歪。脆弱协议如果刚好相信这个秤，就会算错抵押、兑换或赎回价值。",
     attackSteps: ["借入闪电贷，获得足够大的临时资金。", "对低流动性池子做大额 swap，短暂扭曲价格。", "调用受害协议中依赖该价格的函数，例如 borrow、redeem、mint。", "反向交易恢复价格，归还闪电贷，留下套利收益。"],
     traceChecklist: ["获利动作前是否有异常大额 swap。", "同一交易内 reserve、price、exchange rate 是否剧烈变化。", "受害合约是否直接读取 AMM spot price。", "利润是否来自被错误估值的借款、铸造或赎回。"],
-    practice: "先看 DeFiHackLabs 中 price/oracle 类攻击复现，再用 RiskPilot 对照交易调用和资金流。",
+    practice: "先看 DeFiHackLabs 中 price/oracle 类攻击复现，再用 AttackPilot 对照交易调用和资金流。",
   },
   {
     titleZh: "重入攻击",
@@ -288,7 +288,7 @@ const LandingWarRoom: React.FC = () => {
       <Header className="landing-v2-nav">
         <button className="landing-brand" type="button" onClick={() => navigate("/") }>
           <span className="landing-brand-mark"><img src={riskPilotLogo} alt="RiskPilot logo" /></span>
-          <span><strong>RiskPilot</strong><small>Exploit review cockpit</small></span>
+          <span><strong>AttackPilot</strong><small>Exploit review cockpit</small></span>
         </button>
         <Space size={10} className="landing-nav-actions">
           <Button type="text" onClick={() => navigate("/tasks")}>任务库</Button>
@@ -302,7 +302,7 @@ const LandingWarRoom: React.FC = () => {
           <div className="stage-watermark"><img src={riskPilotLogo} alt="" aria-hidden="true" /></div>
           <div className="stage-copy">
             <Tag className="stage-chip">链上攻击复盘 / 证据链审查</Tag>
-            <Typography.Title className="stage-title">RiskPilot</Typography.Title>
+            <Typography.Title className="stage-title">AttackPilot</Typography.Title>
             <Typography.Title level={2} className="stage-subtitle">把一笔被盗交易，复盘成可解释的攻击路径。</Typography.Title>
             <Typography.Paragraph className="stage-desc">
               面向 DeFi 攻击事件审查：从交易事实出发，追踪关键调用、资金流和状态变化，定位被打破的协议假设，并输出证据链与修复方向。
@@ -409,7 +409,7 @@ const LandingWarRoom: React.FC = () => {
                   <ol>{selectedVuln.attackSteps.map((step) => <li key={step}>{step}</li>)}</ol>
                 </div>
                 <div className="tutorial-block">
-                  <span>3. RiskPilot 怎么查</span>
+                  <span>3. AttackPilot 怎么查</span>
                   <ol>{selectedVuln.traceChecklist.map((step) => <li key={step}>{step}</li>)}</ol>
                 </div>
               </div>
