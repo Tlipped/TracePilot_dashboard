@@ -348,6 +348,47 @@ export interface VulnerabilityTypeKnowledge {
   tracepilot_usage?: string;
 }
 
+export interface TxReviewRequest {
+  tx_hash: string;
+  chain?: string;
+}
+
+export interface TxReviewEvidence {
+  type: string;
+  title: string;
+  content: string;
+  source: string;
+}
+
+export interface TxReviewMatchedCase {
+  name: string;
+  case_id?: string | null;
+  dataset_file?: string | null;
+  source?: string | null;
+  matched_hash: string;
+  platform?: string | null;
+  time?: string | null;
+  cause?: string | null;
+  root_cause?: string | null;
+  loss?: string | null;
+  report_link?: string | null;
+  vulnerability_type_ids: string[];
+  transaction_count?: number | null;
+}
+
+export interface TxReviewResponse {
+  tx_hash: string;
+  chain: string;
+  risk_level: "high" | "medium" | "low" | "unknown" | string;
+  tx_type: "known_attack_case" | "unreviewed_transaction" | string;
+  summary: string;
+  signals: string[];
+  evidence: TxReviewEvidence[];
+  matched_cases: TxReviewMatchedCase[];
+  recommend_deep_analysis: boolean;
+  deep_analysis_ready: boolean;
+}
+
 export interface VulnerabilityKnowledgeResponse {
   total: number;
   items: VulnerabilityTypeKnowledge[];

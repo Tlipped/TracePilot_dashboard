@@ -10,6 +10,8 @@ import {
   Task,
   TaskCreateRequest,
   TaskLogPageResponse,
+  TxReviewRequest,
+  TxReviewResponse,
   VulnerabilityKnowledgeResponse,
 } from "../types";
 
@@ -32,6 +34,11 @@ export async function listDapps(): Promise<DappCatalogResponse> {
 
 export async function listVulnerabilityKnowledge(): Promise<VulnerabilityKnowledgeResponse> {
   const response = await api.get<VulnerabilityKnowledgeResponse>("/api/knowledge/vulnerabilities");
+  return response.data;
+}
+
+export async function reviewTransaction(payload: TxReviewRequest): Promise<TxReviewResponse> {
+  const response = await api.post<TxReviewResponse>("/api/tx-review", payload);
   return response.data;
 }
 export async function getTask(taskId: string): Promise<Task> {

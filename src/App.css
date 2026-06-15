@@ -3247,6 +3247,7 @@
   bottom: 18px;
 }
 
+.tx-review-section,
 .demo-row,
 .tutorial-section {
   margin-top: 34px;
@@ -3269,6 +3270,129 @@
 .section-kicker span {
   color: #64748b;
   line-height: 1.5;
+}
+
+.tx-review-kicker {
+  align-items: center;
+}
+
+.tx-review-mode.ant-tag {
+  margin: 0;
+  padding: 5px 10px;
+  border-color: rgba(37, 99, 235, 0.14);
+  background: rgba(239, 246, 255, 0.74);
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.tx-review-panel {
+  padding: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 20px 58px rgba(15, 23, 42, 0.06);
+}
+
+.tx-review-input-row {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.tx-review-input.ant-input-affix-wrapper {
+  min-height: 40px;
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(248, 250, 252, 0.86);
+}
+
+.tx-review-empty,
+.tx-review-next {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.84);
+  color: #475569;
+  line-height: 1.6;
+}
+
+.tx-review-result {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.32fr);
+  gap: 12px;
+}
+
+.tx-review-result-main,
+.tx-review-grid,
+.tx-review-match {
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.tx-review-result-main {
+  grid-column: 1 / -1;
+  padding: 14px;
+}
+
+.tx-review-result-main strong,
+.tx-review-result-main small {
+  display: block;
+}
+
+.tx-review-result-main strong {
+  margin-top: 8px;
+  color: #0f172a;
+  line-height: 1.55;
+}
+
+.tx-review-result-main small {
+  margin-top: 6px;
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  overflow-wrap: anywhere;
+}
+
+.tx-review-grid {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.tx-review-grid span,
+.tx-review-match span {
+  display: block;
+  margin-bottom: 8px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.tx-review-grid ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.tx-review-match {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.tx-review-match strong {
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.tx-review-match small {
+  color: #64748b;
+  line-height: 1.45;
 }
 
 .demo-case-row {
@@ -3469,6 +3593,9 @@
   }
 
   .attack-path-visual,
+  .tx-review-input-row,
+  .tx-review-result,
+  .tx-review-grid,
   .demo-case-row,
   .tutorial-columns {
     grid-template-columns: 1fr;
@@ -3641,6 +3768,7 @@
   color: #334155 !important;
 }
 
+.tx-review-section,
 .demo-row,
 .tutorial-section {
   margin-top: 42px;

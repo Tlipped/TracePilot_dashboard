@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { App as AntdApp, Button, Layout, Space, Tag, Typography } from "antd";
+import { App as AntdApp, Button, Input, Layout, Space, Tag, Typography } from "antd";
 import {
   AlertTriangle,
   BookOpen,
@@ -14,6 +14,7 @@ import {
   Play,
   Repeat2,
   Scale,
+  Search,
   ShieldCheck,
   Signature,
   TrendingUp,
@@ -21,8 +22,8 @@ import {
   Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { listDapps, listTasks, listVulnerabilityKnowledge } from "../services/api";
-import { DappCatalogItem, Task, TaskStatus, VulnerabilityTypeKnowledge } from "../types";
+import { listDapps, listTasks, listVulnerabilityKnowledge, reviewTransaction } from "../services/api";
+import { DappCatalogItem, Task, TaskStatus, TxReviewResponse, VulnerabilityTypeKnowledge } from "../types";
 import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
@@ -200,6 +201,8 @@ const learningLinks = [
   { label: "DeFiHackLabs", href: "https://github.com/SunWeb3Sec/DeFiHackLabs", desc: "真实 DeFi 攻击复现" },
 ];
 
+const sampleAttackHash = "0xeb8c3bebed11e2e4fcd30cbfc2fb3c55c4ca166003c7f7d319e78eaab9747098";
+
 const LandingWarRoom: React.FC = () => {
   const navigate = useNavigate();
   const { message } = AntdApp.useApp();
@@ -208,6 +211,9 @@ const LandingWarRoom: React.FC = () => {
   const [vulnerabilityLessons, setVulnerabilityLessons] = useState<VulnerabilityLesson[]>(fallbackVulnerabilityLessons);
   const [activeVuln, setActiveVuln] = useState(fallbackVulnerabilityLessons[0].titleEn);
   const [knowledgeSource, setKnowledgeSource] = useState<"api" | "fallback">("fallback");
+  const [txHash, setTxHash] = useState(sampleAttackHash);
+  const [txReview, setTxReview] = useState<TxReviewResponse | null>(null);
+  const [txReviewLoading, setTxReviewLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -268,7 +274,13 @@ const LandingWarRoom: React.FC = () => {
 
   const openCachedDemo = useCallback(
     (dappName: string) => {
-      const task = taskByDapp.get(dappName);
+      const targetName = normalizeCaseName(dappName);
+      const task =
+        taskByDapp.get(dappName) ??
+        tasks.find((item) => normalizeCaseName(item.dapp_name) === targetName && item.status === TaskStatus.COMPLETED && !item.archived) ??
+        tasks.find((item) => normalizeCaseName(item.dapp_name) === targetName && item.status === TaskStatus.COMPLETED) ??
+        tasks.find((item) => normalizeCaseName(item.dapp_name) === targetName && !item.archived) ??
+        tasks.find((item) => normalizeCaseName(item.dapp_name) === targetName);
       if (!task) {
         message.warning("这个案例还没有缓存任务，请先到任务库查看已有报告，或手动启动一次分析。");
         navigate("/tasks");
@@ -276,8 +288,32 @@ const LandingWarRoom: React.FC = () => {
       }
       navigate(`/tasks/${task.task_id}`);
     },
-    [message, navigate, taskByDapp],
+    [message, navigate, taskByDapp, tasks],
   );
+
+  const handleTxReview = useCallback(async () => {
+    const value = txHash.trim();
+    if (!value) {
+      message.warning("先粘贴一笔交易 Hash。");
+      return;
+    }
+
+    setTxReviewLoading(true);
+    try {
+      const result = await reviewTransaction({ tx_hash: value, chain: "ethereum" });
+      setTxReview(result);
+      if (result.tx_type === "known_attack_case") {
+        message.success("命中本地攻击案例库，可以直接查看复盘结果。");
+      } else {
+        message.info("未命中本地攻击库，需要进一步链上取证。");
+      }
+    } catch (error) {
+      const detail = (error as { response?: { data?: { detail?: string } } }).response?.data?.detail;
+      message.error(detail || "交易 Hash 审查失败，请检查后端服务。");
+    } finally {
+      setTxReviewLoading(false);
+    }
+  }, [message, txHash]);
 
   const scrollToSection = useCallback((sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -291,6 +327,7 @@ const LandingWarRoom: React.FC = () => {
           <span><strong>AttackPilot</strong><small>Exploit review cockpit</small></span>
         </button>
         <Space size={10} className="landing-nav-actions">
+          <Button type="text" onClick={() => scrollToSection("tx-review")}>交易审查</Button>
           <Button type="text" onClick={() => navigate("/tasks")}>任务库</Button>
           <Button type="text" onClick={() => document.getElementById("vuln-tutorial")?.scrollIntoView({ behavior: "smooth" })}>漏洞教程</Button>
           <Button type="primary" icon={<Play size={15} />} onClick={() => openCachedDemo("ApeCoin (APE)")}>查看缓存 Demo</Button>
@@ -330,6 +367,73 @@ const LandingWarRoom: React.FC = () => {
             })}
             <div className="path-note path-note-left"><CheckCircle2 size={15} /> 只看关键调用分支</div>
             <div className="path-note path-note-right"><ShieldCheck size={15} /> 区分工具事实与模型推理</div>
+          </div>
+        </section>
+
+        <section className="tx-review-section" id="tx-review" aria-label="交易 Hash 审查">
+          <div className="section-kicker tx-review-kicker">
+            <div>
+              <strong>交易 Hash 审查</strong>
+              <span>从一笔交易开始，先判断是否命中真实攻击案例库，再决定是否进入深度取证。</span>
+            </div>
+            <Tag className="tx-review-mode">本地案例库 + 知识索引</Tag>
+          </div>
+
+          <div className="tx-review-panel">
+            <div className="tx-review-input-row">
+              <Input
+                className="tx-review-input"
+                value={txHash}
+                onChange={(event) => setTxHash(event.target.value)}
+                onPressEnter={handleTxReview}
+                placeholder="粘贴 Ethereum 交易 Hash，例如 0x..."
+                allowClear
+              />
+              <Button type="primary" icon={<Search size={15} />} loading={txReviewLoading} onClick={handleTxReview}>
+                审查攻击线索
+              </Button>
+              <Button type="text" onClick={() => setTxHash(sampleAttackHash)}>填入演示 Hash</Button>
+            </div>
+
+            {txReview ? (
+              <div className="tx-review-result">
+                <div className="tx-review-result-main">
+                  <Tag color={txReview.risk_level === "high" ? "red" : "gold"}>
+                    {txReview.tx_type === "known_attack_case" ? "已知攻击案例" : "待链上取证"}
+                  </Tag>
+                  <strong>{txReview.summary}</strong>
+                  <small>{txReview.tx_hash}</small>
+                </div>
+
+                <div className="tx-review-grid">
+                  <div>
+                    <span>审查信号</span>
+                    <ul>{txReview.signals.map((signal) => <li key={signal}>{signal}</li>)}</ul>
+                  </div>
+                  <div>
+                    <span>证据来源</span>
+                    <ul>{txReview.evidence.map((item) => <li key={`${item.type}-${item.title}`}>{item.title}：{item.source}</li>)}</ul>
+                  </div>
+                </div>
+
+                {txReview.matched_cases.length > 0 ? (
+                  <div className="tx-review-match">
+                    <span>命中案例</span>
+                    <strong>{txReview.matched_cases[0].name}</strong>
+                    <small>{txReview.matched_cases[0].cause || txReview.matched_cases[0].root_cause || "真实链上攻击案例"}</small>
+                    <Button size="small" onClick={() => openCachedDemo(txReview.matched_cases[0].name)}>打开复盘工作区</Button>
+                  </div>
+                ) : (
+                  <div className="tx-review-next">
+                    下一步应接入实时链上取证：拉取交易详情、trace、事件日志、资金变化和合约源码，再交给 Agent 判断是否为攻击。
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="tx-review-empty">
+                这个入口是 AttackPilot 的低门槛开始：评委或用户不用先知道 DApp 名，只要给出一笔交易，系统先做案例库分诊。
+              </div>
+            )}
           </div>
         </section>
 
