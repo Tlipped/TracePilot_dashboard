@@ -3316,6 +3316,13 @@
   line-height: 1.6;
 }
 
+.tx-review-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .tx-review-result {
   margin-top: 14px;
   display: grid;
@@ -3393,6 +3400,12 @@
 .tx-review-match small {
   color: #64748b;
   line-height: 1.45;
+}
+
+.tx-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .demo-case-row {
@@ -3651,6 +3664,11 @@
     top: auto;
     bottom: auto;
     justify-content: center;
+  }
+
+  .tx-review-next {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

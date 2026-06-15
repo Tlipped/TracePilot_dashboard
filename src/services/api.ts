@@ -41,6 +41,12 @@ export async function reviewTransaction(payload: TxReviewRequest): Promise<TxRev
   const response = await api.post<TxReviewResponse>("/api/tx-review", payload);
   return response.data;
 }
+
+export async function startTransactionDeepAnalysis(payload: TxReviewRequest): Promise<Task> {
+  const response = await api.post<Task>("/api/tx-review/deep-analysis", payload);
+  return response.data;
+}
+
 export async function getTask(taskId: string): Promise<Task> {
   const response = await api.get<Task>(`/api/tasks/${taskId}`);
   return response.data;

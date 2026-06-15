@@ -22,13 +22,13 @@ import {
   Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { listDapps, listTasks, listVulnerabilityKnowledge, reviewTransaction } from "../services/api";
+import { listDapps, listTasks, listVulnerabilityKnowledge, reviewTransaction, startTransactionDeepAnalysis } from "../services/api";
 import { DappCatalogItem, Task, TaskStatus, TxReviewResponse, VulnerabilityTypeKnowledge } from "../types";
 import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
 
-// 首页缓存演示案例在这里改；名称需要和后端 /api/dapps 返回的 DApp name 一致。
+// 首页缓存案例在这里改；名称需要和后端 /api/dapps 返回的 DApp name 一致。
 const demoCases = ["ApeCoin (APE)", "SushiSwap", "Balancer"];
 
 const fallbackCatalog: DappCatalogItem[] = demoCases.map((name) => ({
@@ -214,6 +214,7 @@ const LandingWarRoom: React.FC = () => {
   const [txHash, setTxHash] = useState(sampleAttackHash);
   const [txReview, setTxReview] = useState<TxReviewResponse | null>(null);
   const [txReviewLoading, setTxReviewLoading] = useState(false);
+  const [deepAnalysisLoading, setDeepAnalysisLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -315,6 +316,26 @@ const LandingWarRoom: React.FC = () => {
     }
   }, [message, txHash]);
 
+  const handleStartDeepAnalysis = useCallback(async () => {
+    const value = txHash.trim();
+    if (!value) {
+      message.warning("先粘贴一笔交易 Hash。");
+      return;
+    }
+
+    setDeepAnalysisLoading(true);
+    try {
+      const task = await startTransactionDeepAnalysis({ tx_hash: value, chain: "ethereum" });
+      message.success("深度分析任务已启动。");
+      navigate(`/tasks/${task.task_id}`);
+    } catch (error) {
+      const detail = (error as { response?: { data?: { detail?: string } } }).response?.data?.detail;
+      message.error(detail || "启动深度分析失败，请检查后端服务。");
+    } finally {
+      setDeepAnalysisLoading(false);
+    }
+  }, [message, navigate, txHash]);
+
   const scrollToSection = useCallback((sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
@@ -330,7 +351,7 @@ const LandingWarRoom: React.FC = () => {
           <Button type="text" onClick={() => scrollToSection("tx-review")}>交易审查</Button>
           <Button type="text" onClick={() => navigate("/tasks")}>任务库</Button>
           <Button type="text" onClick={() => document.getElementById("vuln-tutorial")?.scrollIntoView({ behavior: "smooth" })}>漏洞教程</Button>
-          <Button type="primary" icon={<Play size={15} />} onClick={() => openCachedDemo("ApeCoin (APE)")}>查看缓存 Demo</Button>
+          <Button type="primary" icon={<Play size={15} />} onClick={() => openCachedDemo("ApeCoin (APE)")}>打开缓存案例</Button>
         </Space>
       </Header>
 
@@ -342,10 +363,10 @@ const LandingWarRoom: React.FC = () => {
             <Typography.Title className="stage-title">AttackPilot</Typography.Title>
             <Typography.Title level={2} className="stage-subtitle">把一笔被盗交易，复盘成可解释的攻击路径。</Typography.Title>
             <Typography.Paragraph className="stage-desc">
-              面向 DeFi 攻击事件审查：从交易事实出发，追踪关键调用、资金流和状态变化，定位被打破的协议假设，并输出证据链与修复方向。
+              从交易事实出发，追踪关键调用、资金流和状态变化，定位被打破的协议假设，并输出证据链与修复方向。
             </Typography.Paragraph>
             <div className="stage-facts">
-              <button type="button" onClick={() => scrollToSection("demo-cases")}><strong>{catalog.length}</strong> 演示案例</button>
+              <button type="button" onClick={() => scrollToSection("demo-cases")}><strong>{catalog.length}</strong> 案例库</button>
               <button type="button" onClick={() => navigate("/tasks")}><strong>{completedCount || "缓存"}</strong> 历史报告</button>
               <button type="button" onClick={() => scrollToSection("vuln-tutorial")}><strong>{vulnerabilityLessons.length}</strong> 漏洞教程</button>
             </div>
@@ -374,7 +395,7 @@ const LandingWarRoom: React.FC = () => {
           <div className="section-kicker tx-review-kicker">
             <div>
               <strong>交易 Hash 审查</strong>
-              <span>从一笔交易开始，先判断是否命中真实攻击案例库，再决定是否进入深度取证。</span>
+              <span>先查攻击案例库；未命中时继续启动链上取证。</span>
             </div>
             <Tag className="tx-review-mode">本地案例库 + 知识索引</Tag>
           </div>
@@ -392,7 +413,7 @@ const LandingWarRoom: React.FC = () => {
               <Button type="primary" icon={<Search size={15} />} loading={txReviewLoading} onClick={handleTxReview}>
                 审查攻击线索
               </Button>
-              <Button type="text" onClick={() => setTxHash(sampleAttackHash)}>填入演示 Hash</Button>
+              <Button type="text" onClick={() => setTxHash(sampleAttackHash)}>填入示例 Hash</Button>
             </div>
 
             {txReview ? (
@@ -421,25 +442,29 @@ const LandingWarRoom: React.FC = () => {
                     <span>命中案例</span>
                     <strong>{txReview.matched_cases[0].name}</strong>
                     <small>{txReview.matched_cases[0].cause || txReview.matched_cases[0].root_cause || "真实链上攻击案例"}</small>
-                    <Button size="small" onClick={() => openCachedDemo(txReview.matched_cases[0].name)}>打开复盘工作区</Button>
+                    <div className="tx-review-actions">
+                      <Button size="small" onClick={() => openCachedDemo(txReview.matched_cases[0].name)}>打开复盘工作区</Button>
+                      <Button size="small" type="primary" loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>重新深度分析</Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="tx-review-next">
-                    下一步应接入实时链上取证：拉取交易详情、trace、事件日志、资金变化和合约源码，再交给 Agent 判断是否为攻击。
+                    <span>未命中本地案例。可拉取交易详情、trace、事件日志、资金变化和合约源码，进入 Agent 深度分析。</span>
+                    <Button size="small" type="primary" loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>启动深度分析</Button>
                   </div>
                 )}
               </div>
             ) : (
               <div className="tx-review-empty">
-                这个入口是 AttackPilot 的低门槛开始：评委或用户不用先知道 DApp 名，只要给出一笔交易，系统先做案例库分诊。
+                输入交易 Hash 后，系统会先查本地攻击库；未命中时可继续创建链上取证任务。
               </div>
             )}
           </div>
         </section>
 
-        <section className="demo-row" id="demo-cases" aria-label="缓存演示案例">
+        <section className="demo-row" id="demo-cases" aria-label="缓存案例">
           <div className="section-kicker">
-            <strong>缓存演示案例</strong>
+            <strong>缓存案例</strong>
             <span>直接打开已跑好的报告，不重新启动后端任务。</span>
           </div>
           <div className="demo-case-row">
