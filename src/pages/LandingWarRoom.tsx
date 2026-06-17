@@ -359,19 +359,122 @@ const LandingWarRoom: React.FC = () => {
         <section className="landing-stage">
           <div className="stage-watermark"><img src={riskPilotLogo} alt="" aria-hidden="true" /></div>
           <div className="stage-copy">
-            <Tag className="stage-chip">链上攻击复盘 / 证据链审查</Tag>
+            <Tag className="stage-chip">链上攻击审查</Tag>
             <Typography.Title className="stage-title">AttackPilot</Typography.Title>
-            <Typography.Title level={2} className="stage-subtitle">把一笔被盗交易，复盘成可解释的攻击路径。</Typography.Title>
+            <Typography.Title level={2} className="stage-subtitle">输入一笔可疑交易，自动复盘攻击路径，定位漏洞原因。</Typography.Title>
             <Typography.Paragraph className="stage-desc">
-              从交易事实出发，追踪关键调用、资金流和状态变化，定位被打破的协议假设，并输出证据链与修复方向。
+              系统会先查已有攻击案例，再根据链上证据启动深度分析。
             </Typography.Paragraph>
             <div className="stage-facts">
-              <button type="button" onClick={() => scrollToSection("demo-cases")}><strong>{catalog.length}</strong> 案例库</button>
+              <button type="button" onClick={() => scrollToSection("quick-cases")}><strong>{catalog.length}</strong> 案例库</button>
               <button type="button" onClick={() => navigate("/tasks")}><strong>{completedCount || "缓存"}</strong> 历史报告</button>
               <button type="button" onClick={() => scrollToSection("vuln-tutorial")}><strong>{vulnerabilityLessons.length}</strong> 漏洞教程</button>
             </div>
           </div>
 
+          <div className="hero-action-panel" id="tx-review" aria-label="交易 Hash 审查">
+            <div className="hero-action-title">
+              <span>开始审查</span>
+              <strong>粘贴交易 Hash</strong>
+            </div>
+            <div className="tx-review-input-row">
+              <Input
+                className="tx-review-input"
+                value={txHash}
+                onChange={(event) => setTxHash(event.target.value)}
+                onPressEnter={handleTxReview}
+                placeholder="Ethereum 交易 Hash，例如 0x..."
+                allowClear
+              />
+              <Button type="primary" icon={<Search size={15} />} loading={txReviewLoading} onClick={handleTxReview}>
+                开始审查
+              </Button>
+            </div>
+            <div className="hero-action-hint">
+              <Button type="link" onClick={() => setTxHash(sampleAttackHash)}>填入示例 Hash</Button>
+              <span>支持命中案例、线索分诊和深度分析任务创建。</span>
+            </div>
+
+            <div className="quick-case-strip" id="quick-cases">
+              <span>快速打开</span>
+              <div>
+                {catalog.slice(0, 3).map((item) => {
+                  const task = taskByDapp.get(item.name);
+                  return (
+                    <button className="quick-case-chip" key={item.name} onClick={() => openCachedDemo(item.name)} type="button">
+                      <strong>{item.name}</strong>
+                      <small>{getCaseLabel(item, task)}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="tx-review-section" aria-label="交易审查结果">
+          <div className="section-kicker tx-review-kicker">
+            <div>
+              <strong>审查结果</strong>
+              <span>系统会把结果整理成下一步队列。</span>
+            </div>
+            <Tag className="tx-review-mode">案例命中 / 链上取证</Tag>
+          </div>
+
+          <div className="tx-review-panel">
+            {txReview ? (
+              <div className="tx-review-result">
+                <div className="tx-review-result-main">
+                  <Tag color={txReview.risk_level === "high" ? "red" : "gold"}>
+                    {txReview.tx_type === "known_attack_case" ? "已知攻击案例" : "待链上取证"}
+                  </Tag>
+                  <strong>{txReview.summary}</strong>
+                  <small>{txReview.tx_hash}</small>
+                </div>
+
+                <div className="tx-review-queue">
+                  <div className="tx-step-card tx-step-primary">
+                    <span>P1</span>
+                    <strong>{txReview.tx_type === "known_attack_case" ? "打开已知案例" : "启动链上取证"}</strong>
+                    <p>
+                      {txReview.tx_type === "known_attack_case"
+                        ? `已命中 ${txReview.matched_cases[0]?.name || "本地攻击案例"}，可以直接查看复盘报告。`
+                        : "本地案例库未命中，需要拉取交易详情、trace、事件日志和资金变化。"}
+                    </p>
+                    {txReview.matched_cases.length > 0 ? (
+                      <div className="tx-review-actions">
+                        <Button size="small" onClick={() => openCachedDemo(txReview.matched_cases[0].name)}>打开复盘工作区</Button>
+                        <Button size="small" type="primary" loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>重新深度分析</Button>
+                      </div>
+                    ) : (
+                      <Button size="small" type="primary" loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>启动深度分析</Button>
+                    )}
+                  </div>
+                  <div className="tx-step-card">
+                    <span>P2</span>
+                    <strong>查看审查信号</strong>
+                    <p>{txReview.signals.slice(0, 3).join(" / ")}</p>
+                  </div>
+                  <div className="tx-step-card">
+                    <span>P3</span>
+                    <strong>核对证据来源</strong>
+                    <p>{txReview.evidence.map((item) => `${item.title}：${item.source}`).join(" / ")}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="tx-review-empty">
+                输入交易 Hash 后，这里会显示案例命中、审查信号和下一步操作。
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="attack-flow-section" aria-label="攻击路径图">
+          <div className="section-kicker">
+            <strong>它如何复盘攻击</strong>
+            <span>从交易入口到获利出口，逐步还原攻击链路。</span>
+          </div>
           <div className="attack-path-visual" aria-label="攻击路径图">
             <div className="path-rail" />
             {attackPath.map((node, index) => {
@@ -386,100 +489,8 @@ const LandingWarRoom: React.FC = () => {
                 </div>
               );
             })}
-            <div className="path-note path-note-left"><CheckCircle2 size={15} /> 只看关键调用分支</div>
-            <div className="path-note path-note-right"><ShieldCheck size={15} /> 区分工具事实与模型推理</div>
-          </div>
-        </section>
-
-        <section className="tx-review-section" id="tx-review" aria-label="交易 Hash 审查">
-          <div className="section-kicker tx-review-kicker">
-            <div>
-              <strong>交易 Hash 审查</strong>
-              <span>先查攻击案例库；未命中时继续启动链上取证。</span>
-            </div>
-            <Tag className="tx-review-mode">本地案例库 + 知识索引</Tag>
-          </div>
-
-          <div className="tx-review-panel">
-            <div className="tx-review-input-row">
-              <Input
-                className="tx-review-input"
-                value={txHash}
-                onChange={(event) => setTxHash(event.target.value)}
-                onPressEnter={handleTxReview}
-                placeholder="粘贴 Ethereum 交易 Hash，例如 0x..."
-                allowClear
-              />
-              <Button type="primary" icon={<Search size={15} />} loading={txReviewLoading} onClick={handleTxReview}>
-                审查攻击线索
-              </Button>
-              <Button type="text" onClick={() => setTxHash(sampleAttackHash)}>填入示例 Hash</Button>
-            </div>
-
-            {txReview ? (
-              <div className="tx-review-result">
-                <div className="tx-review-result-main">
-                  <Tag color={txReview.risk_level === "high" ? "red" : "gold"}>
-                    {txReview.tx_type === "known_attack_case" ? "已知攻击案例" : "待链上取证"}
-                  </Tag>
-                  <strong>{txReview.summary}</strong>
-                  <small>{txReview.tx_hash}</small>
-                </div>
-
-                <div className="tx-review-grid">
-                  <div>
-                    <span>审查信号</span>
-                    <ul>{txReview.signals.map((signal) => <li key={signal}>{signal}</li>)}</ul>
-                  </div>
-                  <div>
-                    <span>证据来源</span>
-                    <ul>{txReview.evidence.map((item) => <li key={`${item.type}-${item.title}`}>{item.title}：{item.source}</li>)}</ul>
-                  </div>
-                </div>
-
-                {txReview.matched_cases.length > 0 ? (
-                  <div className="tx-review-match">
-                    <span>命中案例</span>
-                    <strong>{txReview.matched_cases[0].name}</strong>
-                    <small>{txReview.matched_cases[0].cause || txReview.matched_cases[0].root_cause || "真实链上攻击案例"}</small>
-                    <div className="tx-review-actions">
-                      <Button size="small" onClick={() => openCachedDemo(txReview.matched_cases[0].name)}>打开复盘工作区</Button>
-                      <Button size="small" type="primary" loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>重新深度分析</Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="tx-review-next">
-                    <span>未命中本地案例。可拉取交易详情、trace、事件日志、资金变化和合约源码，进入 Agent 深度分析。</span>
-                    <Button size="small" type="primary" loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>启动深度分析</Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="tx-review-empty">
-                输入交易 Hash 后，系统会先查本地攻击库；未命中时可继续创建链上取证任务。
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="demo-row" id="demo-cases" aria-label="缓存案例">
-          <div className="section-kicker">
-            <strong>缓存案例</strong>
-            <span>直接打开已跑好的报告，不重新启动后端任务。</span>
-          </div>
-          <div className="demo-case-row">
-            {catalog.slice(0, 4).map((item) => {
-              const task = taskByDapp.get(item.name);
-              return (
-                <button className="demo-case-pill" key={item.name} onClick={() => openCachedDemo(item.name)} type="button">
-                  <span>
-                    <strong>{item.name}</strong>
-                    <small>{getCaseLabel(item, task)}</small>
-                  </span>
-                  <Play size={15} />
-                </button>
-              );
-            })}
+            <div className="path-note path-note-left"><CheckCircle2 size={15} /> 聚焦关键调用分支</div>
+            <div className="path-note path-note-right"><ShieldCheck size={15} /> 区分链上事实与模型推理</div>
           </div>
         </section>
 

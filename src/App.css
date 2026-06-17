@@ -3038,7 +3038,7 @@
   position: relative;
   min-height: 520px;
   display: grid;
-  grid-template-columns: minmax(360px, 0.82fr) minmax(560px, 1.18fr);
+  grid-template-columns: minmax(360px, 0.86fr) minmax(520px, 1.14fr);
   gap: 44px;
   align-items: center;
 }
@@ -3110,21 +3110,124 @@
   gap: 10px;
 }
 
-.stage-facts span {
+.stage-facts button {
   min-height: 42px;
   padding: 9px 13px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.62);
   color: #64748b;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.stage-facts button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.22);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .stage-facts strong {
   color: #111827;
   font-size: 18px;
+}
+
+.hero-action-panel {
+  position: relative;
+  z-index: 1;
+  padding: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 246, 255, 0.66));
+  box-shadow: 0 28px 78px rgba(15, 23, 42, 0.1);
+}
+
+.hero-action-title {
+  margin-bottom: 16px;
+}
+
+.hero-action-title span,
+.quick-case-strip > span {
+  display: block;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.hero-action-title strong {
+  display: block;
+  margin-top: 4px;
+  color: #0f172a;
+  font-size: 26px;
+  line-height: 1.15;
+}
+
+.hero-action-hint {
+  min-height: 34px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.hero-action-hint .ant-btn-link {
+  height: auto;
+  padding: 0;
+  font-weight: 800;
+}
+
+.quick-case-strip {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.quick-case-strip > div {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quick-case-chip {
+  min-height: 82px;
+  padding: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #0f172a;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.quick-case-chip:hover {
+  transform: translateY(-2px);
+  border-color: rgba(37, 99, 235, 0.24);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.quick-case-chip strong,
+.quick-case-chip small {
+  display: block;
+}
+
+.quick-case-chip strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.quick-case-chip small {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .attack-path-visual {
@@ -3248,6 +3351,7 @@
 }
 
 .tx-review-section,
+.attack-flow-section,
 .demo-row,
 .tutorial-section {
   margin-top: 34px;
@@ -3324,14 +3428,14 @@
 }
 
 .tx-review-result {
-  margin-top: 14px;
+  margin-top: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.32fr);
-  gap: 12px;
+  gap: 14px;
 }
 
 .tx-review-result-main,
-.tx-review-grid,
+.tx-review-queue,
+.tx-step-card,
 .tx-review-match {
   border: 1px solid rgba(15, 23, 42, 0.07);
   border-radius: 14px;
@@ -3339,7 +3443,6 @@
 }
 
 .tx-review-result-main {
-  grid-column: 1 / -1;
   padding: 14px;
 }
 
@@ -3361,14 +3464,19 @@
   overflow-wrap: anywhere;
 }
 
-.tx-review-grid {
-  padding: 14px;
+.tx-review-queue {
+  padding: 12px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: minmax(280px, 1.2fr) repeat(2, minmax(180px, 0.9fr));
+  gap: 10px;
 }
 
-.tx-review-grid span,
+.tx-step-card {
+  min-height: 156px;
+  padding: 13px;
+}
+
+.tx-step-card span,
 .tx-review-match span {
   display: block;
   margin-bottom: 8px;
@@ -3377,11 +3485,26 @@
   font-weight: 850;
 }
 
-.tx-review-grid ul {
+.tx-step-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 16px;
+}
+
+.tx-step-card p {
   margin: 0;
-  padding-left: 18px;
+  margin-top: 8px;
   color: #475569;
-  line-height: 1.6;
+  line-height: 1.55;
+}
+
+.tx-step-card .ant-btn {
+  margin-top: 12px;
+}
+
+.tx-step-primary {
+  background: rgba(239, 246, 255, 0.82);
+  border-color: rgba(37, 99, 235, 0.18);
 }
 
 .tx-review-match {
@@ -3606,9 +3729,10 @@
   }
 
   .attack-path-visual,
+  .quick-case-strip > div,
   .tx-review-input-row,
   .tx-review-result,
-  .tx-review-grid,
+  .tx-review-queue,
   .demo-case-row,
   .tutorial-columns {
     grid-template-columns: 1fr;
@@ -3667,6 +3791,11 @@
   }
 
   .tx-review-next {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hero-action-hint {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -3753,10 +3882,18 @@
   line-height: 1.72;
 }
 
-.stage-facts span {
+.stage-facts button {
   background: rgba(255, 255, 255, 0.78) !important;
   color: #475569 !important;
   border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.hero-action-panel,
+.quick-case-chip,
+.tx-review-panel,
+.tx-step-card,
+.tx-review-queue {
+  background-color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .attack-path-visual {
@@ -3787,6 +3924,7 @@
 }
 
 .tx-review-section,
+.attack-flow-section,
 .demo-row,
 .tutorial-section {
   margin-top: 42px;
@@ -4693,6 +4831,9 @@ body[data-appearance="dark"] .landing-v2-nav {
 body[data-appearance="dark"] .landing-brand strong,
 body[data-appearance="dark"] .stage-title.ant-typography,
 body[data-appearance="dark"] .stage-subtitle.ant-typography,
+body[data-appearance="dark"] .hero-action-title strong,
+body[data-appearance="dark"] .quick-case-chip strong,
+body[data-appearance="dark"] .tx-step-card strong,
 body[data-appearance="dark"] .path-node strong,
 body[data-appearance="dark"] .stage-facts strong,
 body[data-appearance="dark"] .section-kicker strong,
@@ -4707,7 +4848,10 @@ body[data-appearance="dark"] .stage-facts button strong {
 
 body[data-appearance="dark"] .landing-brand small,
 body[data-appearance="dark"] .stage-desc.ant-typography,
-body[data-appearance="dark"] .stage-facts span,
+body[data-appearance="dark"] .stage-facts button,
+body[data-appearance="dark"] .hero-action-hint,
+body[data-appearance="dark"] .quick-case-chip small,
+body[data-appearance="dark"] .tx-step-card p,
 body[data-appearance="dark"] .path-node em,
 body[data-appearance="dark"] .path-node small,
 body[data-appearance="dark"] .path-note,
@@ -4737,9 +4881,13 @@ body[data-appearance="dark"] .stage-chip.ant-tag {
 }
 
 body[data-appearance="dark"] .attack-path-visual,
+body[data-appearance="dark"] .hero-action-panel,
+body[data-appearance="dark"] .quick-case-chip,
+body[data-appearance="dark"] .tx-review-panel,
+body[data-appearance="dark"] .tx-review-queue,
+body[data-appearance="dark"] .tx-step-card,
 body[data-appearance="dark"] .path-node,
 body[data-appearance="dark"] .path-note,
-body[data-appearance="dark"] .stage-facts span,
 body[data-appearance="dark"] .stage-facts button,
 body[data-appearance="dark"] .learning-links a,
 body[data-appearance="dark"] .tutorial-note,
