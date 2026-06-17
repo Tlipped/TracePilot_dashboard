@@ -3090,8 +3090,8 @@
   max-width: 720px;
   margin: 22px 0 0 !important;
   color: #172033 !important;
-  font-size: clamp(30px, 3vw, 44px) !important;
-  line-height: 1.16 !important;
+  font-size: clamp(28px, 2.55vw, 38px) !important;
+  line-height: 1.2 !important;
   font-weight: 850 !important;
 }
 
@@ -3138,12 +3138,12 @@
 .hero-action-panel {
   position: relative;
   z-index: 1;
-  padding: 22px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 24px;
+  border: 1px solid rgba(30, 64, 175, 0.12);
   border-radius: 18px;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 246, 255, 0.66));
-  box-shadow: 0 28px 78px rgba(15, 23, 42, 0.1);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.95));
+  box-shadow: 0 28px 78px rgba(15, 23, 42, 0.11);
 }
 
 .hero-action-title {
@@ -3153,17 +3153,26 @@
 .hero-action-title span,
 .quick-case-strip > span {
   display: block;
-  color: #2563eb;
+  color: #1d4ed8;
   font-size: 12px;
   font-weight: 900;
 }
 
 .hero-action-title strong {
   display: block;
+  max-width: 460px;
   margin-top: 4px;
   color: #0f172a;
-  font-size: 26px;
-  line-height: 1.15;
+  font-size: 27px;
+  line-height: 1.18;
+}
+
+.hero-action-title p {
+  max-width: 520px;
+  margin: 10px 0 0;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.65;
 }
 
 .hero-action-hint {
@@ -3180,6 +3189,50 @@
   height: auto;
   padding: 0;
   font-weight: 800;
+}
+
+.review-method-strip {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.review-method-strip span {
+  min-height: 62px;
+  padding: 10px 11px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  row-gap: 2px;
+  align-items: center;
+}
+
+.review-method-strip strong {
+  grid-row: 1 / span 2;
+  color: #1d4ed8;
+  font-size: 12px;
+}
+
+.review-method-strip em {
+  color: #0f172a;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.2;
+}
+
+.review-method-strip small {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.3;
 }
 
 .quick-case-strip {
@@ -3405,9 +3458,19 @@
 }
 
 .tx-review-input.ant-input-affix-wrapper {
-  min-height: 40px;
-  border-color: rgba(15, 23, 42, 0.12);
-  background: rgba(248, 250, 252, 0.86);
+  min-height: 46px;
+  border-color: rgba(37, 99, 235, 0.24);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.tx-review-input.ant-input-affix-wrapper input {
+  color: #0f172a;
+}
+
+.tx-review-input.ant-input-affix-wrapper input::placeholder {
+  color: #94a3b8;
 }
 
 .tx-review-empty,
@@ -3784,6 +3847,7 @@
 
   .attack-path-visual,
   .quick-case-strip > div,
+  .review-method-strip,
   .tx-review-input-row,
   .tx-review-result,
   .tx-review-queue,
@@ -3927,8 +3991,8 @@
 
 .stage-subtitle.ant-typography {
   max-width: 620px;
-  font-size: clamp(28px, 2.7vw, 40px) !important;
-  line-height: 1.15 !important;
+  font-size: clamp(27px, 2.45vw, 36px) !important;
+  line-height: 1.2 !important;
 }
 
 .stage-desc.ant-typography {
@@ -3948,6 +4012,7 @@
 .tx-review-panel,
 .tx-step-card,
 .tx-signal-item,
+.review-method-strip span,
 .tx-review-queue {
   background-color: rgba(255, 255, 255, 0.9) !important;
 }
@@ -4888,6 +4953,8 @@ body[data-appearance="dark"] .landing-brand strong,
 body[data-appearance="dark"] .stage-title.ant-typography,
 body[data-appearance="dark"] .stage-subtitle.ant-typography,
 body[data-appearance="dark"] .hero-action-title strong,
+body[data-appearance="dark"] .review-method-strip strong,
+body[data-appearance="dark"] .review-method-strip em,
 body[data-appearance="dark"] .quick-case-chip strong,
 body[data-appearance="dark"] .tx-step-card strong,
 body[data-appearance="dark"] .tx-signal-item strong,
@@ -4907,6 +4974,9 @@ body[data-appearance="dark"] .landing-brand small,
 body[data-appearance="dark"] .stage-desc.ant-typography,
 body[data-appearance="dark"] .stage-facts button,
 body[data-appearance="dark"] .hero-action-hint,
+body[data-appearance="dark"] .hero-action-title p,
+body[data-appearance="dark"] .review-method-strip span,
+body[data-appearance="dark"] .review-method-strip small,
 body[data-appearance="dark"] .quick-case-chip small,
 body[data-appearance="dark"] .tx-step-card p,
 body[data-appearance="dark"] .tx-signal-item p,
@@ -4939,9 +5009,26 @@ body[data-appearance="dark"] .stage-chip.ant-tag {
   color: #7dd3fc !important;
 }
 
+body[data-appearance="dark"] .tx-review-input.ant-input-affix-wrapper {
+  border-color: rgba(56, 189, 248, 0.34) !important;
+  background: rgba(2, 6, 23, 0.86) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28) !important;
+}
+
+body[data-appearance="dark"] .tx-review-input.ant-input-affix-wrapper input {
+  color: #f8fafc !important;
+  background: transparent !important;
+}
+
+body[data-appearance="dark"] .tx-review-input.ant-input-affix-wrapper input::placeholder {
+  color: #94a3b8 !important;
+}
+
 body[data-appearance="dark"] .attack-path-visual,
 body[data-appearance="dark"] .hero-action-panel,
 body[data-appearance="dark"] .quick-case-chip,
+body[data-appearance="dark"] .review-method-strip span,
 body[data-appearance="dark"] .tx-review-panel,
 body[data-appearance="dark"] .tx-review-queue,
 body[data-appearance="dark"] .tx-step-card,

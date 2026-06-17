@@ -375,9 +375,9 @@ const LandingWarRoom: React.FC = () => {
           <div className="stage-copy">
             <Tag className="stage-chip">链上攻击审查</Tag>
             <Typography.Title className="stage-title">AttackPilot</Typography.Title>
-            <Typography.Title level={2} className="stage-subtitle">输入一笔可疑交易，自动复盘攻击路径，定位漏洞原因。</Typography.Title>
+            <Typography.Title level={2} className="stage-subtitle">从交易 Hash 到攻击链路，把链上证据整理成可复核的漏洞定位报告。</Typography.Title>
             <Typography.Paragraph className="stage-desc">
-              系统会先查已有攻击案例，再根据链上证据启动深度分析。
+              输入可疑交易后，系统先检索本地攻击案例，再读取 receipt、trace、合约调用与 token 变化，给出风险线索和深度复盘入口。
             </Typography.Paragraph>
             <div className="stage-facts">
               <button type="button" onClick={() => scrollToSection("quick-cases")}><strong>{catalog.length}</strong> 案例库</button>
@@ -388,8 +388,9 @@ const LandingWarRoom: React.FC = () => {
 
           <div className="hero-action-panel" id="tx-review" aria-label="交易 Hash 审查">
             <div className="hero-action-title">
-              <span>开始审查</span>
-              <strong>粘贴交易 Hash</strong>
+              <span>交易取证入口</span>
+              <strong>输入交易 Hash，开始漏洞审查</strong>
+              <p>面向以太坊攻击复盘：先查是否属于已知案例，再根据链上执行证据判断是否值得进入深度分析。</p>
             </div>
             <div className="tx-review-input-row">
               <Input
@@ -397,16 +398,21 @@ const LandingWarRoom: React.FC = () => {
                 value={txHash}
                 onChange={(event) => setTxHash(event.target.value)}
                 onPressEnter={handleTxReview}
-                placeholder="Ethereum 交易 Hash，例如 0x..."
+                placeholder="输入 Ethereum transaction hash，例如 0x..."
                 allowClear
               />
               <Button type="primary" icon={<Search size={15} />} loading={txReviewLoading} onClick={handleTxReview}>
                 开始审查
               </Button>
             </div>
+            <div className="review-method-strip" aria-label="审查流程">
+              <span><strong>01</strong><em>案例库查重</em><small>识别是否命中已收录攻击</small></span>
+              <span><strong>02</strong><em>链上信号分诊</em><small>检查 trace、调用和资产变化</small></span>
+              <span><strong>03</strong><em>深度复盘任务</em><small>进入 Agent 取证工作流</small></span>
+            </div>
             <div className="hero-action-hint">
               <Button type="link" onClick={() => setTxHash(sampleAttackHash)}>填入示例 Hash</Button>
-              <span>支持命中案例、线索分诊和深度分析任务创建。</span>
+              <span>审查结果是取证线索，不是黑盒判决；每个风险提示都应回到链上证据复核。</span>
             </div>
 
             <div className="quick-case-strip" id="quick-cases">
@@ -430,7 +436,7 @@ const LandingWarRoom: React.FC = () => {
           <div className="section-kicker tx-review-kicker">
             <div>
               <strong>审查结果</strong>
-              <span>系统会把结果整理成下一步队列。</span>
+              <span>先看命中情况与风险信号，再决定是否进入深度复盘。</span>
             </div>
             <Tag className="tx-review-mode">案例命中 / 链上取证</Tag>
           </div>
