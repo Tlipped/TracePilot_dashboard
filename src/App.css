@@ -3507,6 +3507,60 @@
   border-color: rgba(37, 99, 235, 0.18);
 }
 
+.tx-signal-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tx-signal-item {
+  min-height: 150px;
+  padding: 13px;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.tx-signal-item strong,
+.tx-signal-item p,
+.tx-signal-item small {
+  display: block;
+}
+
+.tx-signal-item strong {
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.tx-signal-item p {
+  margin: 7px 0 0;
+  color: #475569;
+  line-height: 1.52;
+}
+
+.tx-signal-item small {
+  margin-top: 8px;
+  color: #64748b;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.tx-signal-high {
+  border-color: rgba(239, 68, 68, 0.18);
+  background: rgba(254, 242, 242, 0.78);
+}
+
+.tx-signal-medium {
+  border-color: rgba(245, 158, 11, 0.2);
+  background: rgba(255, 251, 235, 0.78);
+}
+
+.tx-signal-low {
+  border-color: rgba(34, 197, 94, 0.16);
+  background: rgba(240, 253, 244, 0.72);
+}
+
 .tx-review-match {
   padding: 14px;
   display: flex;
@@ -3733,6 +3787,7 @@
   .tx-review-input-row,
   .tx-review-result,
   .tx-review-queue,
+  .tx-signal-list,
   .demo-case-row,
   .tutorial-columns {
     grid-template-columns: 1fr;
@@ -3892,6 +3947,7 @@
 .quick-case-chip,
 .tx-review-panel,
 .tx-step-card,
+.tx-signal-item,
 .tx-review-queue {
   background-color: rgba(255, 255, 255, 0.9) !important;
 }
@@ -4834,6 +4890,7 @@ body[data-appearance="dark"] .stage-subtitle.ant-typography,
 body[data-appearance="dark"] .hero-action-title strong,
 body[data-appearance="dark"] .quick-case-chip strong,
 body[data-appearance="dark"] .tx-step-card strong,
+body[data-appearance="dark"] .tx-signal-item strong,
 body[data-appearance="dark"] .path-node strong,
 body[data-appearance="dark"] .stage-facts strong,
 body[data-appearance="dark"] .section-kicker strong,
@@ -4852,6 +4909,8 @@ body[data-appearance="dark"] .stage-facts button,
 body[data-appearance="dark"] .hero-action-hint,
 body[data-appearance="dark"] .quick-case-chip small,
 body[data-appearance="dark"] .tx-step-card p,
+body[data-appearance="dark"] .tx-signal-item p,
+body[data-appearance="dark"] .tx-signal-item small,
 body[data-appearance="dark"] .path-node em,
 body[data-appearance="dark"] .path-node small,
 body[data-appearance="dark"] .path-note,
@@ -4886,6 +4945,7 @@ body[data-appearance="dark"] .quick-case-chip,
 body[data-appearance="dark"] .tx-review-panel,
 body[data-appearance="dark"] .tx-review-queue,
 body[data-appearance="dark"] .tx-step-card,
+body[data-appearance="dark"] .tx-signal-item,
 body[data-appearance="dark"] .path-node,
 body[data-appearance="dark"] .path-note,
 body[data-appearance="dark"] .stage-facts button,

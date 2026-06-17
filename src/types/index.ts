@@ -360,6 +360,15 @@ export interface TxReviewEvidence {
   source: string;
 }
 
+export interface TxReviewSignal {
+  id: string;
+  name: string;
+  level: "high" | "medium" | "low" | string;
+  summary: string;
+  evidence: string;
+  confidence: "high" | "medium" | "low" | string;
+}
+
 export interface TxReviewMatchedCase {
   name: string;
   case_id?: string | null;
@@ -383,7 +392,10 @@ export interface TxReviewResponse {
   tx_type: "known_attack_case" | "unreviewed_transaction" | string;
   summary: string;
   signals: string[];
+  signal_details: TxReviewSignal[];
   evidence: TxReviewEvidence[];
+  metrics: Record<string, unknown>;
+  live_observation_status: "ok" | "partial" | "unavailable" | "not_started" | string;
   matched_cases: TxReviewMatchedCase[];
   recommend_deep_analysis: boolean;
   deep_analysis_ready: boolean;

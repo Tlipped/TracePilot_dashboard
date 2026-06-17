@@ -203,6 +203,20 @@ const learningLinks = [
 
 const sampleAttackHash = "0xeb8c3bebed11e2e4fcd30cbfc2fb3c55c4ca166003c7f7d319e78eaab9747098";
 
+function getRiskTagColor(level: string) {
+  if (level === "high") return "red";
+  if (level === "medium") return "orange";
+  if (level === "low") return "green";
+  return "gold";
+}
+
+function getRiskText(level: string) {
+  if (level === "high") return "高风险线索";
+  if (level === "medium") return "可疑线索";
+  if (level === "low") return "低风险/信息";
+  return "待取证";
+}
+
 const LandingWarRoom: React.FC = () => {
   const navigate = useNavigate();
   const { message } = AntdApp.useApp();
@@ -425,8 +439,8 @@ const LandingWarRoom: React.FC = () => {
             {txReview ? (
               <div className="tx-review-result">
                 <div className="tx-review-result-main">
-                  <Tag color={txReview.risk_level === "high" ? "red" : "gold"}>
-                    {txReview.tx_type === "known_attack_case" ? "已知攻击案例" : "待链上取证"}
+                  <Tag color={getRiskTagColor(txReview.risk_level)}>
+                    {txReview.tx_type === "known_attack_case" ? "已知攻击案例" : getRiskText(txReview.risk_level)}
                   </Tag>
                   <strong>{txReview.summary}</strong>
                   <small>{txReview.tx_hash}</small>
@@ -453,7 +467,11 @@ const LandingWarRoom: React.FC = () => {
                   <div className="tx-step-card">
                     <span>P2</span>
                     <strong>查看审查信号</strong>
-                    <p>{txReview.signals.slice(0, 3).join(" / ")}</p>
+                    <p>
+                      {txReview.signal_details?.length
+                        ? txReview.signal_details.slice(0, 3).map((signal) => signal.name).join(" / ")
+                        : txReview.signals.slice(0, 3).join(" / ")}
+                    </p>
                   </div>
                   <div className="tx-step-card">
                     <span>P3</span>
@@ -461,6 +479,19 @@ const LandingWarRoom: React.FC = () => {
                     <p>{txReview.evidence.map((item) => `${item.title}：${item.source}`).join(" / ")}</p>
                   </div>
                 </div>
+
+                {txReview.signal_details?.length > 0 ? (
+                  <div className="tx-signal-list">
+                    {txReview.signal_details.map((signal) => (
+                      <div className={`tx-signal-item tx-signal-${signal.level}`} key={signal.id}>
+                        <Tag color={getRiskTagColor(signal.level)}>{getRiskText(signal.level)}</Tag>
+                        <strong>{signal.name}</strong>
+                        <p>{signal.summary}</p>
+                        <small>{signal.evidence}</small>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div className="tx-review-empty">
