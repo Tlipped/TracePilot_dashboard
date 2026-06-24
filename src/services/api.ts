@@ -3,10 +3,14 @@ import { BACKEND_HTTP_URL } from "../config/appConfig";
 import {
   AgentLogFileResponse,
   AgentLogFilesResponse,
+  AssistantChatRequest,
+  AssistantChatResponse,
   AutomatedReviewResponse,
   DappCatalogResponse,
   FullLogResponse,
   MacroAnalysisResponse,
+  RagSearchRequest,
+  RagSearchResponse,
   Task,
   TaskCreateRequest,
   TaskLogPageResponse,
@@ -44,6 +48,16 @@ export async function reviewTransaction(payload: TxReviewRequest): Promise<TxRev
 
 export async function startTransactionDeepAnalysis(payload: TxReviewRequest): Promise<Task> {
   const response = await api.post<Task>("/api/tx-review/deep-analysis", payload);
+  return response.data;
+}
+
+export async function chatWithAssistant(payload: AssistantChatRequest): Promise<AssistantChatResponse> {
+  const response = await api.post<AssistantChatResponse>("/api/assistant/chat", payload);
+  return response.data;
+}
+
+export async function searchRagKnowledge(payload: RagSearchRequest): Promise<RagSearchResponse> {
+  const response = await api.post<RagSearchResponse>("/api/rag/search", payload);
   return response.data;
 }
 

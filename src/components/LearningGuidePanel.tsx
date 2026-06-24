@@ -4,6 +4,7 @@ import { BookOpen, ExternalLink, GitBranch, Landmark, Route, ShieldAlert, Target
 import { LanguageMode, MacroAnalysisResponse, Task } from "../types";
 import { getDappMetadata, shortHash } from "../utils/dappMetadata";
 import MarkdownRenderer from "./MarkdownRenderer";
+import RagKnowledgePanel from "./RagKnowledgePanel";
 
 interface LearningGuidePanelProps {
   task: Task | null;
@@ -34,6 +35,9 @@ const LearningGuidePanel: React.FC<LearningGuidePanelProps> = ({ task, macro, la
 
   const title = metadata?.name ?? task?.dapp_name ?? "DApp";
   const isZh = language === "zh";
+  const ragQuery = [title, metadata?.cause, metadata?.root_cause, macro?.bug_summary]
+    .filter(Boolean)
+    .join(" ");
   const steps = [
     {
       title: isZh ? "背景理解" : "Context",
@@ -176,6 +180,13 @@ const LearningGuidePanel: React.FC<LearningGuidePanelProps> = ({ task, macro, la
             }))}
           />
         </section>
+
+        <RagKnowledgePanel
+          compact
+          defaultQuery={ragQuery}
+          title={isZh ? "相似案例召回" : "Similar Case Retrieval"}
+          subtitle={isZh ? "从知识库中召回相似漏洞、历史案例和复现材料，辅助理解当前攻击。" : "Retrieve related vulnerabilities, cases, and reproductions from the knowledge base."}
+        />
 
         <section className="learning-card">
           <Space size={8}>

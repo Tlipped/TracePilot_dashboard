@@ -10,6 +10,7 @@ import AgentInsights from "../components/AgentInsights";
 import AgentTimeline from "../components/AgentTimeline";
 import AttackReplayTimeline from "../components/AttackReplayTimeline";
 import DappContextButton from "../components/DappContextButton";
+import ForensicAssistantDrawer from "../components/ForensicAssistantDrawer";
 import LogDetailDrawer from "../components/LogDetailDrawer";
 import LogStream from "../components/LogStream";
 import LearningGuidePanel from "../components/LearningGuidePanel";
@@ -91,6 +92,7 @@ const Dashboard: React.FC = () => {
   const [selectedAgent, setSelectedAgent] = useState<string | "all">("all");
   const [selectedLog, setSelectedLog] = useState<LogMessage | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [wsStatus, setWsStatus] = useState<WebSocket["readyState"] | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [loadingTask, setLoadingTask] = useState(true);
@@ -276,6 +278,19 @@ const Dashboard: React.FC = () => {
   const terminalTask = isTerminalTask(task?.status);
   const connectionLabel = wsOpen ? t(language, "live") : terminalTask ? t(language, "archived") : t(language, "offline");
   const connectionColor = wsOpen ? "success" : terminalTask ? "default" : "error";
+  const activeAgentCount = agentStats.filter((item) => item.total > 0).length;
+  const agentIssueCount = agentStats.filter((item) => item.errors > 0 || item.warnings > 0).length;
+  const systemStatusLabel = task?.status === TaskStatus.RUNNING || wsOpen
+    ? "运行中"
+    : terminalTask
+      ? "已完成"
+      : "待连接";
+  const systemStatusTone = agentIssueCount > 0 ? "warning" : task?.status === TaskStatus.FAILED ? "error" : "healthy";
+  const systemStatusHint = agentIssueCount > 0
+    ? `${agentIssueCount} 个 Agent 有告警或错误`
+    : activeAgentCount > 0
+      ? "所有 Agent 正常运行"
+      : "等待 Agent 输出日志";
 
   const openLog = (log: LogMessage) => {
     setSelectedLog(log);
@@ -515,7 +530,10 @@ const Dashboard: React.FC = () => {
           <Tag icon={wsOpen ? <Wifi size={13} /> : <WifiOff size={13} />} color={connectionColor}>
             {connectionLabel}
           </Tag>
-          <DappContextButton dappName={task?.dapp_name} />
+          <DappContextButton dappName={task?.dapp_name} autoOpenKey={task?.task_id} />
+          <Button icon={<Bot size={15} />} onClick={() => setAssistantOpen(true)}>
+            取证助手
+          </Button>
           <Button icon={<RefreshCcw size={15} />} onClick={refreshTask}>
             {t(language, "refresh")}
           </Button>
@@ -552,7 +570,16 @@ const Dashboard: React.FC = () => {
           </div>
         ) : (
           <div className="workbench-grid">
-            <AgentNavigator stats={agentStats} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} />
+            <AgentNavigator
+              stats={agentStats}
+              selectedAgent={selectedAgent}
+              onSelectAgent={setSelectedAgent}
+              systemStatus={{
+                label: systemStatusLabel,
+                hint: systemStatusHint,
+                tone: systemStatusTone,
+              }}
+            />
 
             <div className="analysis-center">
               <Tabs
@@ -577,6 +604,14 @@ const Dashboard: React.FC = () => {
         log={selectedLog}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+      />
+      <ForensicAssistantDrawer
+        open={assistantOpen}
+        onOpen={() => setAssistantOpen(true)}
+        onClose={() => setAssistantOpen(false)}
+        scope="task"
+        taskId={taskId}
+        title="任务取证助手"
       />
     </Layout>
   );

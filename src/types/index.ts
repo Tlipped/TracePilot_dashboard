@@ -405,3 +405,64 @@ export interface VulnerabilityKnowledgeResponse {
   total: number;
   items: VulnerabilityTypeKnowledge[];
 }
+
+export interface AssistantMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface AssistantChatRequest {
+  scope: "general" | "tx_review" | "task" | "knowledge";
+  question: string;
+  task_id?: string;
+  tx_hash?: string;
+  chain?: string;
+  history?: AssistantMessage[];
+}
+
+export interface AssistantSource {
+  type: string;
+  title: string;
+  source: string;
+  content?: string | null;
+}
+
+export interface AssistantChatResponse {
+  answer: string;
+  scope: string;
+  model: string;
+  sources: AssistantSource[];
+  suggested_questions: string[];
+  used_fallback: boolean;
+}
+
+export interface RagSearchRequest {
+  query: string;
+  top_k?: number;
+  filters?: Record<string, unknown>;
+}
+
+export interface RagSearchItem {
+  id: string;
+  source: string;
+  title: string;
+  content: string;
+  tags: string[];
+  metadata: Record<string, unknown>;
+  score: number;
+  vector_score: number;
+  keyword_score: number;
+}
+
+export interface RagSearchResponse {
+  query: string;
+  total: number;
+  items: RagSearchItem[];
+  index?: {
+    exists?: boolean;
+    chunk_count?: number;
+    updated_at?: string | null;
+    mode?: string;
+    path?: string;
+  };
+}

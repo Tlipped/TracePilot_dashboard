@@ -16,6 +16,11 @@ interface AgentNavigatorProps {
   stats: AgentStats[];
   selectedAgent: string | "all";
   onSelectAgent: (agent: string | "all") => void;
+  systemStatus?: {
+    label: string;
+    hint: string;
+    tone: "healthy" | "warning" | "error";
+  };
 }
 
 function getStatus(stats: AgentStats): "idle" | "running" | "warning" | "error" | "done" {
@@ -35,7 +40,7 @@ function getBadge(status: ReturnType<typeof getStatus>) {
   return "default";
 }
 
-const AgentNavigator: React.FC<AgentNavigatorProps> = ({ stats, selectedAgent, onSelectAgent }) => {
+const AgentNavigator: React.FC<AgentNavigatorProps> = ({ stats, selectedAgent, onSelectAgent, systemStatus }) => {
   const totalLogs = stats.reduce((sum, item) => sum + item.total, 0);
   const activeAgents = stats.filter((item) => item.total > 0).length;
 
@@ -92,6 +97,17 @@ const AgentNavigator: React.FC<AgentNavigatorProps> = ({ stats, selectedAgent, o
           );
         })}
       </div>
+
+      {systemStatus ? (
+        <div className={`agent-system-status agent-system-status-${systemStatus.tone}`}>
+          <span className="agent-system-dot" />
+          <div>
+            <small>系统状态</small>
+            <strong>{systemStatus.label}</strong>
+            <em>{systemStatus.hint}</em>
+          </div>
+        </div>
+      ) : null}
     </aside>
   );
 };

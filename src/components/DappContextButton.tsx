@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button, Descriptions, Drawer, Empty, List, Space, Tag, Typography } from "antd";
 import { ExternalLink, Info } from "lucide-react";
 import { getDappMetadata, shortHash } from "../utils/dappMetadata";
@@ -13,17 +13,23 @@ interface Props {
   size?: "small" | "middle" | "large";
   type?: "link" | "text" | "default" | "primary" | "dashed";
   disabled?: boolean;
+  autoOpenKey?: string | number | null;
 }
 
-const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "default", disabled }) => {
+const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "default", disabled, autoOpenKey }) => {
   const [open, setOpen] = useState(false);
   const metadata = useMemo(() => getDappMetadata(dappName), [dappName]);
   const title = metadata?.name ?? dappName ?? "DApp";
   const references = [
-    { label: "Detection", ...metadata?.detection },
-    { label: "Disclosure", ...metadata?.disclosure },
-    { label: "Report", link: metadata?.report_link },
+    { label: "检测记录", ...metadata?.detection },
+    { label: "公开披露", ...metadata?.disclosure },
+    { label: "复盘报告", link: metadata?.report_link },
   ].filter((item) => item.link);
+
+  useEffect(() => {
+    if (!autoOpenKey || !dappName) return;
+    setOpen(true);
+  }, [autoOpenKey, dappName]);
 
   return (
     <>
@@ -38,7 +44,7 @@ const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "
       </Button>
 
       <Drawer
-        title={`${title} Vulnerability Context`}
+        title={`${title} 案例上下文`}
         open={open}
         onClose={() => setOpen(false)}
         size="large"
@@ -52,18 +58,18 @@ const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "
         {metadata ? (
           <Space orientation="vertical" size={18} style={{ width: "100%" }}>
             <Descriptions bordered column={1} size="small">
-              <Descriptions.Item label="Incident Time">{metadata.time ?? "N/A"}</Descriptions.Item>
-              <Descriptions.Item label="Root Cause">{metadata.root_cause ?? "N/A"}</Descriptions.Item>
-              <Descriptions.Item label="Platform">{metadata.platform ?? "N/A"}</Descriptions.Item>
+              <Descriptions.Item label="事件时间">{metadata.time ?? "N/A"}</Descriptions.Item>
+              <Descriptions.Item label="根因摘要">{metadata.root_cause ?? "N/A"}</Descriptions.Item>
+              <Descriptions.Item label="相关协议">{metadata.platform ?? "N/A"}</Descriptions.Item>
             </Descriptions>
 
             <div>
-              <Typography.Title level={5}>Background</Typography.Title>
-              <Typography.Paragraph>{metadata.report ?? "No background report is available."}</Typography.Paragraph>
+              <Typography.Title level={5}>案情背景</Typography.Title>
+              <Typography.Paragraph>{metadata.report ?? "暂无可用背景报告。"}</Typography.Paragraph>
             </div>
 
             <div>
-              <Typography.Title level={5}>Reference Links</Typography.Title>
+              <Typography.Title level={5}>相关报道与复盘来源</Typography.Title>
               {references.length > 0 ? (
                 <List
                   size="small"
@@ -78,7 +84,7 @@ const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "
                           icon={<ExternalLink size={13} />}
                           onClick={() => openExternal(item.link)}
                         >
-                          Open
+                          打开
                         </Button>,
                       ]}
                     >
@@ -97,16 +103,16 @@ const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "
                   )}
                 />
               ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No reference links" />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无相关链接" />
               )}
             </div>
 
             <div>
-              <Typography.Title level={5}>Attack Transactions</Typography.Title>
+              <Typography.Title level={5}>关联攻击交易</Typography.Title>
               <List
                 size="small"
                 dataSource={metadata.transaction_hash ?? []}
-                locale={{ emptyText: "No transaction hash" }}
+                locale={{ emptyText: "暂无交易 Hash" }}
                 renderItem={(hash) => (
                   <List.Item>
                     <Typography.Text copyable={{ text: hash }} className="text-mono">
@@ -118,7 +124,7 @@ const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "
             </div>
           </Space>
         ) : (
-          <Empty description="No context metadata found for this DApp" />
+          <Empty description="暂无该 DApp 的上下文元数据" />
         )}
       </Drawer>
     </>

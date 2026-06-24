@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { App as AntdApp, Button, Input, Layout, Space, Tag, Typography } from "antd";
 import {
   AlertTriangle,
+  Bot,
   BookOpen,
   CheckCircle2,
   Coins,
@@ -22,6 +23,8 @@ import {
   Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import ForensicAssistantDrawer from "../components/ForensicAssistantDrawer";
+import RagKnowledgePanel from "../components/RagKnowledgePanel";
 import { listDapps, listTasks, listVulnerabilityKnowledge, reviewTransaction, startTransactionDeepAnalysis } from "../services/api";
 import { DappCatalogItem, Task, TaskStatus, TxReviewResponse, VulnerabilityTypeKnowledge } from "../types";
 import riskPilotLogo from "../assets/riskpilot_logo.png";
@@ -202,6 +205,7 @@ const learningLinks = [
 ];
 
 const sampleAttackHash = "0xeb8c3bebed11e2e4fcd30cbfc2fb3c55c4ca166003c7f7d319e78eaab9747098";
+const LAST_TX_REVIEW_HASH_KEY = "attackpilot:last-tx-review-hash";
 
 function getRiskTagColor(level: string) {
   if (level === "high") return "red";
@@ -225,10 +229,17 @@ const LandingWarRoom: React.FC = () => {
   const [vulnerabilityLessons, setVulnerabilityLessons] = useState<VulnerabilityLesson[]>(fallbackVulnerabilityLessons);
   const [activeVuln, setActiveVuln] = useState(fallbackVulnerabilityLessons[0].titleEn);
   const [knowledgeSource, setKnowledgeSource] = useState<"api" | "fallback">("fallback");
-  const [txHash, setTxHash] = useState(sampleAttackHash);
+  const [txHash, setTxHash] = useState(() => {
+    try {
+      return window.localStorage.getItem(LAST_TX_REVIEW_HASH_KEY) || sampleAttackHash;
+    } catch {
+      return sampleAttackHash;
+    }
+  });
   const [txReview, setTxReview] = useState<TxReviewResponse | null>(null);
   const [txReviewLoading, setTxReviewLoading] = useState(false);
   const [deepAnalysisLoading, setDeepAnalysisLoading] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -261,6 +272,14 @@ const LandingWarRoom: React.FC = () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LAST_TX_REVIEW_HASH_KEY, txHash);
+    } catch {
+      // Ignore localStorage failures in private mode or quota pressure.
+    }
+  }, [txHash]);
 
   const taskByDapp = useMemo(() => {
     const map = new Map<string, Task>();
@@ -375,9 +394,9 @@ const LandingWarRoom: React.FC = () => {
           <div className="stage-copy">
             <Tag className="stage-chip">链上攻击审查</Tag>
             <Typography.Title className="stage-title">AttackPilot</Typography.Title>
-            <Typography.Title level={2} className="stage-subtitle">从交易 Hash 到攻击链路，把链上证据整理成可复核的漏洞定位报告。</Typography.Title>
+            <Typography.Title level={2} className="stage-subtitle">从交易 Hash 到可复核的漏洞定位报告</Typography.Title>
             <Typography.Paragraph className="stage-desc">
-              输入可疑交易后，系统先检索本地攻击案例，再读取 receipt、trace、合约调用与 token 变化，给出风险线索和深度复盘入口。
+              输入可疑交易，系统会检索已知案例、读取链上证据，并给出攻击路径、风险线索和复盘入口。
             </Typography.Paragraph>
             <div className="stage-facts">
               <button type="button" onClick={() => scrollToSection("quick-cases")}><strong>{catalog.length}</strong> 案例库</button>
@@ -463,11 +482,11 @@ const LandingWarRoom: React.FC = () => {
                     </p>
                     {txReview.matched_cases.length > 0 ? (
                       <div className="tx-review-actions">
-                        <Button size="small" onClick={() => openCachedDemo(txReview.matched_cases[0].name)}>打开复盘工作区</Button>
-                        <Button size="small" type="primary" loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>重新深度分析</Button>
+                        <Button className="tx-review-action-primary" type="primary" size="middle" onClick={() => openCachedDemo(txReview.matched_cases[0].name)}>打开复盘工作区</Button>
+                        <Button className="tx-review-action-secondary" size="middle" loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>重新深度分析</Button>
                       </div>
                     ) : (
-                      <Button size="small" type="primary" loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>启动深度分析</Button>
+                      <Button className="tx-review-action-primary" size="middle" type="primary" loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>启动深度分析</Button>
                     )}
                   </div>
                   <div className="tx-step-card">
@@ -484,6 +503,16 @@ const LandingWarRoom: React.FC = () => {
                     <strong>核对证据来源</strong>
                     <p>{txReview.evidence.map((item) => `${item.title}：${item.source}`).join(" / ")}</p>
                   </div>
+                </div>
+
+                <div className="tx-assistant-entry">
+                  <div>
+                    <strong>需要解释这笔交易吗？</strong>
+                    <span>让 AI 取证助手基于审查信号、案例库和漏洞知识库回答。</span>
+                  </div>
+                  <Button icon={<Bot size={15} />} onClick={() => setAssistantOpen(true)}>
+                    问问取证助手
+                  </Button>
                 </div>
 
                 {txReview.signal_details?.length > 0 ? (
@@ -506,6 +535,15 @@ const LandingWarRoom: React.FC = () => {
             )}
           </div>
         </section>
+
+        <ForensicAssistantDrawer
+          open={assistantOpen}
+          onOpen={() => setAssistantOpen(true)}
+          onClose={() => setAssistantOpen(false)}
+          scope="tx_review"
+          txHash={txReview?.tx_hash || txHash.trim()}
+          title="交易取证助手"
+        />
 
         <section className="attack-flow-section" aria-label="攻击路径图">
           <div className="section-kicker">
@@ -606,6 +644,14 @@ const LandingWarRoom: React.FC = () => {
               </div>
             </article>
           </div>
+        </section>
+
+        <section className="rag-section" id="knowledge-retrieval">
+          <RagKnowledgePanel
+            defaultQuery={`${selectedVuln.titleEn} ${selectedVuln.titleZh}`}
+            title="知识库相似案例召回"
+            subtitle="输入漏洞现象、函数名或攻击步骤，召回历史案例、漏洞类型和复现材料，辅助判断当前交易像哪一类攻击。"
+          />
         </section>
       </Content>
     </Layout>
