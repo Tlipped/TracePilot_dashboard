@@ -404,7 +404,7 @@ const LandingWarRoom: React.FC = () => {
 
   const handleTxDetect = useCallback(async () => {
     if (!txHashes.length) {
-      message.warning("请先粘贴一笔或多笔 0x 开头的交易 Hash。");
+      message.warning("请先粘贴一笔或多笔 0x 开头的交易哈希。");
       return;
     }
     if (!selectedModules.length) {
@@ -440,7 +440,7 @@ const LandingWarRoom: React.FC = () => {
     const hashes = recommendedTxHashes.length ? recommendedTxHashes : txHashes;
     const value = hashes[0] || txHash.trim();
     if (!value) {
-      message.warning("先粘贴一笔交易 Hash。");
+      message.warning("先粘贴一笔交易哈希。");
       return;
     }
     if (!selectedModules.length) {
@@ -478,7 +478,7 @@ const LandingWarRoom: React.FC = () => {
       <Header className="landing-v2-nav">
         <button className="landing-brand" type="button" onClick={() => navigate("/") }>
           <span className="landing-brand-mark"><img src={riskPilotLogo} alt="RiskPilot logo" /></span>
-          <span><strong>AttackPilot</strong><small>Exploit review cockpit</small></span>
+          <span><strong>AttackPilot</strong><small>攻击复盘工作台</small></span>
         </button>
         <Space size={10} className="landing-nav-actions">
           <Button type="text" onClick={() => scrollToSection("tx-review")}>开始分析</Button>
@@ -489,26 +489,37 @@ const LandingWarRoom: React.FC = () => {
       </Header>
 
       <Content className="landing-v2-content">
-        <section className="landing-stage">
-          <div className="stage-watermark"><img src={riskPilotLogo} alt="" aria-hidden="true" /></div>
+        <section className="landing-stage product-overview-page">
+          <div className="stage-network" aria-hidden="true" />
           <div className="stage-copy">
-            <Tag className="stage-chip">AttackPilot</Tag>
+            <Tag className="stage-chip">链上安全复盘</Tag>
             <Typography.Title className="stage-title">链上攻击复盘平台</Typography.Title>
-            <Typography.Title level={2} className="stage-subtitle">输入交易，自动整理攻击链路和根因证据。</Typography.Title>
+            <Typography.Title level={2} className="stage-subtitle">从交易出发，还原攻击链路、定位根因并生成验证报告。</Typography.Title>
             <Typography.Paragraph className="stage-desc">
-              选择攻击检测、故障定位、知识库召回和补丁验证模块，把链上交易转成可追踪的复盘任务。
+              输入单笔或多笔交易，AttackPilot 会调用多智能体协作完成攻击检测、故障定位、相似案例参考和补丁验证。
             </Typography.Paragraph>
-            <div className="stage-facts">
-              <button type="button" onClick={() => scrollToSection("tx-review")}><strong>1</strong> 粘贴交易</button>
-              <button type="button" onClick={() => scrollToSection("tx-review")}><strong>2</strong> 选择模块</button>
-              <button type="button" onClick={() => scrollToSection("tx-review")}><strong>3</strong> 开始复盘</button>
+            <div className="stage-cta-row">
+              <Button type="primary" size="large" icon={<Play size={16} />} onClick={() => scrollToSection("analysis-workbench")}>
+                开始一次复盘
+              </Button>
+              <Button size="large" onClick={() => openCachedDemo("SushiSwap")}>
+                查看示例案例
+              </Button>
             </div>
           </div>
 
-          <div className="stage-proof-panel" aria-label="为什么需要 AttackPilot">
-            <div className="stage-proof-header">
-              <span>你可以用它做什么</span>
-              <strong>从交易列表到可复查报告。</strong>
+          <div className="stage-brand-visual" aria-label="AttackPilot">
+            <div className="brand-orbit">
+              <img src={riskPilotLogo} alt="" aria-hidden="true" />
+            </div>
+          </div>
+
+          <div className="stage-overview-panel">
+            <div className="stage-metric-list">
+              <span><strong>$3,700,000,000+</strong>近两年公开链上攻击损失规模</span>
+              <span><strong>2,166 起</strong>近两年公开链上攻击事件数量</span>
+              <span><strong>$1,500,000,000</strong>Bybit 单次安全事件损失规模</span>
+              <span><strong>16.7h → 1.36h</strong>人工复盘与 AttackPilot 平均分析耗时对比</span>
             </div>
             <div className="stage-module-grid">
               {capabilityCards.map((module, index) => (
@@ -519,17 +530,23 @@ const LandingWarRoom: React.FC = () => {
                 </div>
               ))}
             </div>
-            <div className="stage-risk-strip">
-              <span><strong>$3,700,000,000+</strong>近两年公开链上攻击损失规模</span>
-              <span><strong>$1,500,000,000</strong>Bybit 单次安全事件损失规模</span>
-              <span><strong>16.7h → 1.36h</strong>人工复盘与 AttackPilot 平均分析耗时对比</span>
-            </div>
+          </div>
+        </section>
+
+        <section className="analysis-workbench-page" id="analysis-workbench">
+          <div className="analysis-page-heading">
+            <span>开始分析 / 工作台</span>
+            <Typography.Title level={2}>开始一次攻击复盘</Typography.Title>
+            <Typography.Paragraph>
+              粘贴交易哈希，选择需要的功能模块，系统会生成攻击路径、根因证据、相似案例和修复验证报告。
+            </Typography.Paragraph>
           </div>
 
-          <div className="hero-action-panel" id="tx-review" aria-label="交易 Hash 审查">
+          <div className="analysis-page-grid">
+          <div className="hero-action-panel" id="tx-review" aria-label="交易哈希审查">
             <div className="hero-action-title">
-              <span>开始体验</span>
-              <strong>输入交易 Hash</strong>
+              <span>交易输入</span>
+              <strong>输入交易哈希</strong>
               <p>一行一笔交易。你可以只填一笔，也可以点“+ 交易”补充同一事件中的多笔交易。</p>
             </div>
             <div className="tx-row-list">
@@ -588,12 +605,34 @@ const LandingWarRoom: React.FC = () => {
             </div>
 
           </div>
+          <aside className="analysis-side-panel">
+            <div className="analysis-output-card">
+              <span>本次将生成</span>
+              <ul>
+                <li><GitBranch size={16} />攻击路径图</li>
+                <li><Search size={16} />根因证据</li>
+                <li><Library size={16} />相似案例参考</li>
+                <li><ShieldCheck size={16} />修复验证报告</li>
+              </ul>
+            </div>
+            <div className="analysis-progress-card">
+              <span>任务进度预览</span>
+              <ol>
+                <li className="active">等待输入</li>
+                <li>链上数据拉取</li>
+                <li>智能体协作分析</li>
+                <li>报告生成</li>
+              </ol>
+            </div>
+          </aside>
+          </div>
         </section>
 
-        <section className="tx-review-section" aria-label="交易审查结果">
+        {(txDetection || txReview) ? (
+        <section className="tx-review-section" aria-label="交易检测结果">
           <div className="section-kicker tx-review-kicker">
             <div>
-              <strong>审查结果</strong>
+              <strong>检测反馈</strong>
               <span>先看命中情况与风险信号，再决定是否进入深度复盘。</span>
             </div>
             <Tag className="tx-review-mode">案例命中 / 链上取证</Tag>
@@ -679,7 +718,7 @@ const LandingWarRoom: React.FC = () => {
                 <div className="tx-assistant-entry">
                   <div>
                     <strong>需要解释这笔交易吗？</strong>
-                    <span>让 AI 取证助手基于审查信号、案例库和漏洞知识库回答。</span>
+                    <span>让智能取证助手基于审查信号、案例库和漏洞知识库回答。</span>
                   </div>
                   <Button icon={<Bot size={15} />} onClick={() => setAssistantOpen(true)}>
                     问问取证助手
@@ -701,11 +740,12 @@ const LandingWarRoom: React.FC = () => {
               </div>
             ) : (
               <div className="tx-review-empty">
-                输入交易 Hash 后，这里会显示案例命中、审查信号和下一步操作。
+                输入交易哈希后，这里会显示案例命中、审查信号和下一步操作。
               </div>
             )}
           </div>
         </section>
+        ) : null}
 
         <ForensicAssistantDrawer
           open={assistantOpen}
