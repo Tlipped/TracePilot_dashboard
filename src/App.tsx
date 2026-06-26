@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ConfigProvider, theme, App as AntdApp, Button, Tooltip } from 'antd';
 import { Moon, Sun } from 'lucide-react';
 import LandingWarRoom from './pages/LandingWarRoom';
+import LearningCenter from './pages/LearningCenter';
 import Briefing from './pages/Briefing';
 import TaskList from './pages/TaskList';
 import Dashboard from './pages/Dashboard';
@@ -88,6 +89,7 @@ function App() {
           <div className={`app-root app-theme-${appearance}`}>
             <Routes>
               <Route path="/" element={<LandingWarRoom />} />
+              <Route path="/learning" element={<LearningCenter />} />
               <Route path="/briefing" element={<Briefing />} />
               <Route path="/tasks" element={<TaskList />} />
               <Route path="/tasks/:taskId" element={<Dashboard />} />

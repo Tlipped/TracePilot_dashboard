@@ -13,6 +13,8 @@ import {
   RagSearchResponse,
   Task,
   TaskCreateRequest,
+  TxDetectRequest,
+  TxDetectResponse,
   TaskLogPageResponse,
   TxReviewRequest,
   TxReviewResponse,
@@ -43,6 +45,11 @@ export async function listVulnerabilityKnowledge(): Promise<VulnerabilityKnowled
 
 export async function reviewTransaction(payload: TxReviewRequest): Promise<TxReviewResponse> {
   const response = await api.post<TxReviewResponse>("/api/tx-review", payload);
+  return response.data;
+}
+
+export async function detectTransactions(payload: TxDetectRequest): Promise<TxDetectResponse> {
+  const response = await api.post<TxDetectResponse>("/api/tx-detect", payload);
   return response.data;
 }
 

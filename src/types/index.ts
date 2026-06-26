@@ -351,6 +351,8 @@ export interface VulnerabilityTypeKnowledge {
 export interface TxReviewRequest {
   tx_hash: string;
   chain?: string;
+  tx_hashes?: string[];
+  modules?: string[];
 }
 
 export interface TxReviewEvidence {
@@ -398,6 +400,39 @@ export interface TxReviewResponse {
   live_observation_status: "ok" | "partial" | "unavailable" | "not_started" | string;
   matched_cases: TxReviewMatchedCase[];
   recommend_deep_analysis: boolean;
+  deep_analysis_ready: boolean;
+}
+
+export interface TxDetectRequest {
+  tx_hashes: string[];
+  chain?: string;
+  modules?: string[];
+}
+
+export interface TxDetectItem {
+  tx_hash: string;
+  risk_level: "high" | "medium" | "low" | "unknown" | string;
+  classification: string;
+  summary: string;
+  signals: string[];
+  signal_details: TxReviewSignal[];
+  metrics: Record<string, unknown>;
+  matched_cases: TxReviewMatchedCase[];
+  live_observation_status: "ok" | "partial" | "unavailable" | "not_started" | string;
+}
+
+export interface TxDetectResponse {
+  chain: string;
+  input_count: number;
+  analyzed_count: number;
+  risk_level: "high" | "medium" | "low" | "unknown" | string;
+  summary: string;
+  modules: string[];
+  recommended_tx_hashes: string[];
+  attack_candidates: TxDetectItem[];
+  auxiliary_candidates: TxDetectItem[];
+  unrelated_candidates: TxDetectItem[];
+  invalid_hashes: string[];
   deep_analysis_ready: boolean;
 }
 

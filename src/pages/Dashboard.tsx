@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Alert, Button, Layout, Segmented, Space, Spin, Tabs, Tag, Typography } from "antd";
+import { Alert, App as AntdApp, Button, Layout, Segmented, Space, Spin, Tabs, Tag, Typography } from "antd";
 import { Activity, ArrowLeft, Bot, FileText, FolderOpen, Home, ListTree, RefreshCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
-import { AGENT_NAMES } from "../constants/agents";
 import AgentFileLogs from "../components/AgentFileLogs";
 import AgentConsistencyPanel from "../components/AgentConsistencyPanel";
 import AgentInsights from "../components/AgentInsights";
 import AgentTimeline from "../components/AgentTimeline";
+import AnalysisLivePanel from "../components/AnalysisLivePanel";
 import AttackReplayTimeline from "../components/AttackReplayTimeline";
 import DappContextButton from "../components/DappContextButton";
 import ForensicAssistantDrawer from "../components/ForensicAssistantDrawer";
@@ -59,7 +59,8 @@ function isTerminalTask(status?: TaskStatus) {
   return status === TaskStatus.COMPLETED || status === TaskStatus.FAILED;
 }
 
-function getDefaultMainTab(mode: ProductViewMode) {
+function getDefaultMainTab(mode: ProductViewMode, running = false) {
+  if (running) return "live";
   if (mode === "learn") return "learning";
   if (mode === "auditor") return "macro";
   if (mode === "raw") return "stream";
@@ -86,7 +87,9 @@ async function fetchPersistedTaskEvents(taskId: string) {
 const Dashboard: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
+  const { message } = AntdApp.useApp();
   const mountedRef = useRef(true);
+  const generatedNoticeRef = useRef({ report: false, macro: false, review: false });
   const [task, setTask] = useState<Task | null>(null);
   const [events, setEvents] = useState<TaskEvent[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string | "all">("all");
@@ -211,9 +214,23 @@ const Dashboard: React.FC = () => {
     };
   }, [refreshTask, taskId]);
 
+  const terminalTask = isTerminalTask(task?.status);
+  const isTaskRunning = task?.status === TaskStatus.RUNNING || (!terminalTask && wsStatus === WebSocket.OPEN);
+  const finalReportText = typeof task?.final_report === "string" ? task.final_report.trim() : "";
+  const hasFinalReport = finalReportText.length > 0;
+  const hasMacroAnalysis = Boolean(macroAnalysis);
+  const hasAutomatedReview = Boolean(automatedReview);
+  const hasReplay = hasFinalReport;
+  const hasLearningGuide = hasFinalReport || hasMacroAnalysis;
+  const hasConsistencyReview = hasFinalReport || hasAutomatedReview;
+
   useEffect(() => {
-    setActiveMainTab(getDefaultMainTab(viewMode));
-  }, [viewMode]);
+    generatedNoticeRef.current = { report: false, macro: false, review: false };
+  }, [taskId]);
+
+  useEffect(() => {
+    setActiveMainTab(getDefaultMainTab(viewMode, isTaskRunning));
+  }, [isTaskRunning, viewMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -255,9 +272,26 @@ const Dashboard: React.FC = () => {
     };
   }, [taskId, task?.status, task?.completed_at]);
 
+  useEffect(() => {
+    if (!taskId) return;
+
+    const notices = generatedNoticeRef.current;
+    if (hasFinalReport && !notices.report) {
+      notices.report = true;
+      message.success("结构化报告已生成，报告和攻击复盘入口已开放。");
+    }
+    if (hasMacroAnalysis && !notices.macro) {
+      notices.macro = true;
+      message.info("宏观分析已生成，可以查看交易角色和资金路径。");
+    }
+    if (hasAutomatedReview && !notices.review) {
+      notices.review = true;
+      message.info("一致性审查已生成，可以核对证据链。");
+    }
+  }, [hasAutomatedReview, hasFinalReport, hasMacroAnalysis, message, taskId]);
+
   const agentStats = useMemo<AgentStats[]>(() => {
     const map = new Map<string, AgentStats>();
-    AGENT_NAMES.forEach((name) => map.set(name, { name, total: 0, errors: 0, warnings: 0 }));
 
     events.forEach((event) => {
       if (!isLogEvent(event)) return;
@@ -270,12 +304,20 @@ const Dashboard: React.FC = () => {
       map.set(event.agent, current);
     });
 
-    return Array.from(map.values());
+    return Array.from(map.values()).sort((a, b) => {
+      const aTime = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+      const bTime = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+      return bTime - aTime || b.total - a.total || a.name.localeCompare(b.name);
+    });
   }, [events]);
+
+  useEffect(() => {
+    if (selectedAgent === "all") return;
+    if (!agentStats.some((item) => item.name === selectedAgent)) setSelectedAgent("all");
+  }, [agentStats, selectedAgent]);
 
   const totalLogs = events.filter(isLogEvent).length;
   const wsOpen = wsStatus === WebSocket.OPEN;
-  const terminalTask = isTerminalTask(task?.status);
   const connectionLabel = wsOpen ? t(language, "live") : terminalTask ? t(language, "archived") : t(language, "offline");
   const connectionColor = wsOpen ? "success" : terminalTask ? "default" : "error";
   const activeAgentCount = agentStats.filter((item) => item.total > 0).length;
@@ -298,6 +340,28 @@ const Dashboard: React.FC = () => {
   };
 
   const mainTabItems = useMemo(() => {
+    const liveTab: MainTabItem = {
+      key: "live",
+      label: (
+        <Space size={6}>
+          <Activity size={14} />
+          {language === "zh" ? "分析现场" : "Live Analysis"}
+        </Space>
+      ),
+      children: (
+        <AnalysisLivePanel
+          task={task}
+          events={events}
+          agentStats={agentStats}
+          selectedAgent={selectedAgent}
+          taskId={taskId}
+          onSelectLog={openLog}
+          onOpenReport={() => setActiveMainTab("report")}
+          onOpenTimeline={() => setActiveMainTab("timeline")}
+        />
+      ),
+    };
+
     const reportTab: MainTabItem = {
       key: "report",
       label: (
@@ -401,6 +465,7 @@ const Dashboard: React.FC = () => {
     };
 
     const tabMap: Record<string, MainTabItem> = {
+      live: liveTab,
       report: reportTab,
       "attack-replay": replayTab,
       learning: learningTab,
@@ -410,13 +475,53 @@ const Dashboard: React.FC = () => {
       timeline: timelineTab,
     };
     const modeOrder: Record<ProductViewMode, string[]> = {
-      report: ["report", "attack-replay", "macro", "consistency", "learning", "stream", "timeline"],
-      learn: ["learning", "attack-replay", "report", "macro", "consistency", "stream", "timeline"],
-      auditor: ["macro", "consistency", "report", "attack-replay", "timeline", "stream", "learning"],
-      raw: ["stream", "timeline", "report", "macro", "consistency", "attack-replay", "learning"],
+      report: isTaskRunning
+        ? ["live", "stream", "timeline", "report", "attack-replay", "macro", "consistency", "learning"]
+        : ["report", "attack-replay", "macro", "consistency", "learning", "stream", "timeline"],
+      learn: isTaskRunning
+        ? ["live", "learning", "stream", "timeline", "attack-replay", "report", "macro", "consistency"]
+        : ["learning", "attack-replay", "report", "macro", "consistency", "stream", "timeline"],
+      auditor: isTaskRunning
+        ? ["live", "macro", "consistency", "stream", "timeline", "report", "attack-replay", "learning"]
+        : ["macro", "consistency", "report", "attack-replay", "timeline", "stream", "learning"],
+      raw: isTaskRunning
+        ? ["live", "stream", "timeline", "report", "macro", "consistency", "attack-replay", "learning"]
+        : ["stream", "timeline", "report", "macro", "consistency", "attack-replay", "learning"],
     };
-    return modeOrder[viewMode].map((key) => tabMap[key]);
-  }, [automatedReview, events, language, macroAnalysis, selectedAgent, task, taskId, viewMode]);
+
+    const availableKeys = new Set(["live", "stream", "timeline"]);
+    if (hasFinalReport) availableKeys.add("report");
+    if (hasReplay) availableKeys.add("attack-replay");
+    if (hasLearningGuide) availableKeys.add("learning");
+    if (hasMacroAnalysis) availableKeys.add("macro");
+    if (hasConsistencyReview) availableKeys.add("consistency");
+
+    return modeOrder[viewMode]
+      .filter((key) => availableKeys.has(key))
+      .map((key) => tabMap[key]);
+  }, [
+    agentStats,
+    automatedReview,
+    events,
+    hasConsistencyReview,
+    hasFinalReport,
+    hasLearningGuide,
+    hasMacroAnalysis,
+    hasReplay,
+    isTaskRunning,
+    language,
+    macroAnalysis,
+    selectedAgent,
+    task,
+    taskId,
+    viewMode,
+  ]);
+
+  useEffect(() => {
+    if (!mainTabItems.some((item) => item.key === activeMainTab)) {
+      setActiveMainTab(String(mainTabItems[0]?.key ?? "live"));
+    }
+  }, [activeMainTab, mainTabItems]);
 
   const inspectorTabItems = useMemo(
     () => [

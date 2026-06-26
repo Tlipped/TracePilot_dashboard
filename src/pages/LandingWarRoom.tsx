@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { App as AntdApp, Button, Input, Layout, Space, Tag, Typography } from "antd";
+import { App as AntdApp, Button, Checkbox, Input, Layout, Space, Tag, Typography } from "antd";
 import {
   AlertTriangle,
   Bot,
@@ -12,6 +12,7 @@ import {
   GitBranch,
   KeyRound,
   Library,
+  Plus,
   Play,
   Repeat2,
   Scale,
@@ -24,9 +25,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ForensicAssistantDrawer from "../components/ForensicAssistantDrawer";
-import RagKnowledgePanel from "../components/RagKnowledgePanel";
-import { listDapps, listTasks, listVulnerabilityKnowledge, reviewTransaction, startTransactionDeepAnalysis } from "../services/api";
-import { DappCatalogItem, Task, TaskStatus, TxReviewResponse, VulnerabilityTypeKnowledge } from "../types";
+import { detectTransactions, listDapps, listTasks, listVulnerabilityKnowledge, startTransactionDeepAnalysis } from "../services/api";
+import { DappCatalogItem, Task, TaskStatus, TxDetectItem, TxDetectResponse, TxReviewResponse, VulnerabilityTypeKnowledge } from "../types";
 import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
@@ -206,6 +206,28 @@ const learningLinks = [
 
 const sampleAttackHash = "0xeb8c3bebed11e2e4fcd30cbfc2fb3c55c4ca166003c7f7d319e78eaab9747098";
 const LAST_TX_REVIEW_HASH_KEY = "attackpilot:last-tx-review-hash";
+const TX_HASH_RE = /0x[a-fA-F0-9]{64}/g;
+
+const workflowModules = [
+  { id: "attack_detection", label: "攻击检测", desc: "先筛出可疑交易" },
+  { id: "fault_localization", label: "故障定位", desc: "定位根因函数" },
+  { id: "rag_retrieval", label: "知识库召回", desc: "匹配相似案例" },
+  { id: "patch_verification", label: "补丁验证", desc: "重放验证修复" },
+];
+
+function parseTxHashes(value: string) {
+  const matches = value.match(TX_HASH_RE) ?? [];
+  return Array.from(new Set(matches.map((item) => item.toLowerCase())));
+}
+
+function detectionItems(response: TxDetectResponse | null): TxDetectItem[] {
+  if (!response) return [];
+  return [
+    ...response.attack_candidates,
+    ...response.auxiliary_candidates,
+    ...response.unrelated_candidates,
+  ];
+}
 
 function getRiskTagColor(level: string) {
   if (level === "high") return "red";
@@ -236,8 +258,17 @@ const LandingWarRoom: React.FC = () => {
       return sampleAttackHash;
     }
   });
-  const [txReview, setTxReview] = useState<TxReviewResponse | null>(null);
-  const [txReviewLoading, setTxReviewLoading] = useState(false);
+  const [txRows, setTxRows] = useState<string[]>(() => {
+    try {
+      return [window.localStorage.getItem(LAST_TX_REVIEW_HASH_KEY) || sampleAttackHash];
+    } catch {
+      return [sampleAttackHash];
+    }
+  });
+  const [selectedModules, setSelectedModules] = useState<string[]>(["attack_detection", "fault_localization", "rag_retrieval"]);
+  const [txDetection, setTxDetection] = useState<TxDetectResponse | null>(null);
+  const [txDetectLoading, setTxDetectLoading] = useState(false);
+  const [txReview] = useState<TxReviewResponse | null>(null);
   const [deepAnalysisLoading, setDeepAnalysisLoading] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
 
@@ -281,6 +312,16 @@ const LandingWarRoom: React.FC = () => {
     }
   }, [txHash]);
 
+  const txHashes = useMemo(() => {
+    const parsed = txRows.flatMap((value) => parseTxHashes(value));
+    return Array.from(new Set(parsed));
+  }, [txRows]);
+
+  const recommendedTxHashes = useMemo(() => {
+    if (txDetection?.recommended_tx_hashes?.length) return txDetection.recommended_tx_hashes;
+    return txHashes;
+  }, [txDetection, txHashes]);
+
   const taskByDapp = useMemo(() => {
     const map = new Map<string, Task>();
     for (const name of demoCases) {
@@ -296,15 +337,37 @@ const LandingWarRoom: React.FC = () => {
     return map;
   }, [tasks]);
 
-  const completedCount = useMemo(
-    () => tasks.filter((task) => task.status === TaskStatus.COMPLETED).length,
-    [tasks],
+  const sushiCase = useMemo(
+    () => catalog.find((item) => normalizeCaseName(item.name) === normalizeCaseName("SushiSwap")),
+    [catalog],
+  );
+
+  const apeCase = useMemo(
+    () => catalog.find((item) => normalizeCaseName(item.name) === normalizeCaseName("ApeCoin (APE)")),
+    [catalog],
   );
 
   const selectedVuln = useMemo(
     () => vulnerabilityLessons.find((item) => item.titleEn === activeVuln) ?? vulnerabilityLessons[0],
     [activeVuln, vulnerabilityLessons],
   );
+
+  const updateTxRow = useCallback((index: number, value: string) => {
+    setTxRows((rows) => rows.map((row, rowIndex) => (rowIndex === index ? value : row)));
+  }, []);
+
+  const addTxRow = useCallback(() => {
+    setTxRows((rows) => [...rows, ""]);
+  }, []);
+
+  const removeTxRow = useCallback((index: number) => {
+    setTxRows((rows) => (rows.length <= 1 ? [""] : rows.filter((_, rowIndex) => rowIndex !== index)));
+  }, []);
+
+  const fillSampleHash = useCallback(() => {
+    setTxRows([sampleAttackHash]);
+    setTxHash(sampleAttackHash);
+  }, []);
 
   const openCachedDemo = useCallback(
     (dappName: string) => {
@@ -325,40 +388,61 @@ const LandingWarRoom: React.FC = () => {
     [message, navigate, taskByDapp, tasks],
   );
 
-  const handleTxReview = useCallback(async () => {
-    const value = txHash.trim();
+  const handleTxDetect = useCallback(async () => {
+    if (!txHashes.length) {
+      message.warning("请先粘贴一笔或多笔 0x 开头的交易 Hash。");
+      return;
+    }
+    if (!selectedModules.length) {
+      message.warning("请至少选择一个分析模块。");
+      return;
+    }
+
+    setTxDetectLoading(true);
+    try {
+      setTxHash(txHashes[0]);
+      const result = await detectTransactions({
+        tx_hashes: txHashes,
+        chain: "ethereum",
+        modules: selectedModules,
+      });
+      setTxDetection(result);
+      if (result.risk_level === "high") {
+        message.success("检测到高风险交易候选，可以进入故障定位。");
+      } else if (result.risk_level === "medium") {
+        message.info("检测到可疑交易，建议结合上下文继续分析。");
+      } else {
+        message.info("暂未发现明显攻击信号，仍可手动启动分析。");
+      }
+    } catch (error) {
+      const detail = (error as { response?: { data?: { detail?: string } } }).response?.data?.detail;
+      message.error(detail || "快速攻击检测失败，请检查后端服务。");
+    } finally {
+      setTxDetectLoading(false);
+    }
+  }, [message, selectedModules, txHashes]);
+
+  const handleStartDeepAnalysis = useCallback(async () => {
+    const hashes = recommendedTxHashes.length ? recommendedTxHashes : txHashes;
+    const value = hashes[0] || txHash.trim();
     if (!value) {
       message.warning("先粘贴一笔交易 Hash。");
       return;
     }
-
-    setTxReviewLoading(true);
-    try {
-      const result = await reviewTransaction({ tx_hash: value, chain: "ethereum" });
-      setTxReview(result);
-      if (result.tx_type === "known_attack_case") {
-        message.success("命中本地攻击案例库，可以直接查看复盘结果。");
-      } else {
-        message.info("未命中本地攻击库，需要进一步链上取证。");
-      }
-    } catch (error) {
-      const detail = (error as { response?: { data?: { detail?: string } } }).response?.data?.detail;
-      message.error(detail || "交易 Hash 审查失败，请检查后端服务。");
-    } finally {
-      setTxReviewLoading(false);
-    }
-  }, [message, txHash]);
-
-  const handleStartDeepAnalysis = useCallback(async () => {
-    const value = txHash.trim();
-    if (!value) {
-      message.warning("先粘贴一笔交易 Hash。");
+    if (!selectedModules.length) {
+      message.warning("请至少选择一个分析模块。");
       return;
     }
 
     setDeepAnalysisLoading(true);
     try {
-      const task = await startTransactionDeepAnalysis({ tx_hash: value, chain: "ethereum" });
+      setTxHash(value);
+      const task = await startTransactionDeepAnalysis({
+        tx_hash: value,
+        tx_hashes: hashes,
+        modules: selectedModules,
+        chain: "ethereum",
+      });
       message.success("深度分析任务已启动。");
       navigate(`/tasks/${task.task_id}`);
     } catch (error) {
@@ -367,11 +451,13 @@ const LandingWarRoom: React.FC = () => {
     } finally {
       setDeepAnalysisLoading(false);
     }
-  }, [message, navigate, txHash]);
+  }, [message, navigate, recommendedTxHashes, selectedModules, txHash, txHashes]);
 
   const scrollToSection = useCallback((sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
+
+  const showSupplementalSections = false;
 
   return (
     <Layout className="landing-v2">
@@ -381,10 +467,10 @@ const LandingWarRoom: React.FC = () => {
           <span><strong>AttackPilot</strong><small>Exploit review cockpit</small></span>
         </button>
         <Space size={10} className="landing-nav-actions">
-          <Button type="text" onClick={() => scrollToSection("tx-review")}>交易审查</Button>
+          <Button type="text" onClick={() => scrollToSection("tx-review")}>开始分析</Button>
           <Button type="text" onClick={() => navigate("/tasks")}>任务库</Button>
-          <Button type="text" onClick={() => document.getElementById("vuln-tutorial")?.scrollIntoView({ behavior: "smooth" })}>漏洞教程</Button>
-          <Button type="primary" icon={<Play size={15} />} onClick={() => openCachedDemo("ApeCoin (APE)")}>打开缓存案例</Button>
+          <Button type="text" onClick={() => navigate("/learning")}>漏洞学习</Button>
+          <Button type="primary" icon={<Play size={15} />} onClick={() => openCachedDemo("SushiSwap")}>查看示例案例</Button>
         </Space>
       </Header>
 
@@ -392,62 +478,102 @@ const LandingWarRoom: React.FC = () => {
         <section className="landing-stage">
           <div className="stage-watermark"><img src={riskPilotLogo} alt="" aria-hidden="true" /></div>
           <div className="stage-copy">
-            <Tag className="stage-chip">链上攻击审查</Tag>
-            <Typography.Title className="stage-title">AttackPilot</Typography.Title>
-            <Typography.Title level={2} className="stage-subtitle">从交易 Hash 到可复核的漏洞定位报告</Typography.Title>
+            <Tag className="stage-chip">AttackPilot</Tag>
+            <Typography.Title className="stage-title">链上攻击复盘平台</Typography.Title>
+            <Typography.Title level={2} className="stage-subtitle">输入交易，自动整理攻击链路和根因证据。</Typography.Title>
             <Typography.Paragraph className="stage-desc">
-              输入可疑交易，系统会检索已知案例、读取链上证据，并给出攻击路径、风险线索和复盘入口。
+              选择攻击检测、故障定位、知识库召回和补丁验证模块，把链上交易转成可追踪的复盘任务。
             </Typography.Paragraph>
             <div className="stage-facts">
-              <button type="button" onClick={() => scrollToSection("quick-cases")}><strong>{catalog.length}</strong> 案例库</button>
-              <button type="button" onClick={() => navigate("/tasks")}><strong>{completedCount || "缓存"}</strong> 历史报告</button>
-              <button type="button" onClick={() => scrollToSection("vuln-tutorial")}><strong>{vulnerabilityLessons.length}</strong> 漏洞教程</button>
+              <button type="button" onClick={() => scrollToSection("tx-review")}><strong>1</strong> 粘贴交易</button>
+              <button type="button" onClick={() => scrollToSection("tx-review")}><strong>2</strong> 选择模块</button>
+              <button type="button" onClick={() => scrollToSection("tx-review")}><strong>3</strong> 开始复盘</button>
+            </div>
+          </div>
+
+          <div className="stage-proof-panel" aria-label="为什么需要 AttackPilot">
+            <div className="stage-proof-header">
+              <span>核心功能模块</span>
+              <strong>从交易列表到可复查报告。</strong>
+            </div>
+            <div className="stage-module-grid">
+              {workflowModules.map((module, index) => (
+                <div className="stage-module-card" key={module.id}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <strong>{module.label}</strong>
+                  <small>{module.desc}</small>
+                </div>
+              ))}
+            </div>
+            <div className="stage-risk-strip">
+              <span><strong>$1,500,000,000</strong>Bybit 单案损失，刷新最大加密资产盗窃纪录</span>
+              <span><strong>$2,200,000,000+</strong>2024 年全球加密攻击盗窃总损失</span>
+              <span><strong>16.7h → 1.36h</strong>从人工复盘到 AttackPilot 平均端到端分析</span>
+              <span><strong>31.08% → 71.14%</strong>Top-1 根因定位召回率提升</span>
             </div>
           </div>
 
           <div className="hero-action-panel" id="tx-review" aria-label="交易 Hash 审查">
             <div className="hero-action-title">
-              <span>交易取证入口</span>
-              <strong>输入交易 Hash，开始漏洞审查</strong>
-              <p>面向以太坊攻击复盘：先查是否属于已知案例，再根据链上执行证据判断是否值得进入深度分析。</p>
+              <span>开始体验</span>
+              <strong>输入交易 Hash</strong>
+              <p>一行一笔交易。你可以只填一笔，也可以点“+ 交易”补充同一事件中的多笔交易。</p>
             </div>
-            <div className="tx-review-input-row">
-              <Input
-                className="tx-review-input"
-                value={txHash}
-                onChange={(event) => setTxHash(event.target.value)}
-                onPressEnter={handleTxReview}
-                placeholder="输入 Ethereum transaction hash，例如 0x..."
-                allowClear
-              />
-              <Button type="primary" icon={<Search size={15} />} loading={txReviewLoading} onClick={handleTxReview}>
-                开始审查
+            <div className="tx-row-list">
+              {txRows.map((value, index) => (
+                <div className="tx-row-item" key={`tx-row-${index}`}>
+                  <span>{index + 1}</span>
+                  <Input
+                    className="tx-review-input"
+                    value={value}
+                    onChange={(event) => updateTxRow(index, event.target.value)}
+                    placeholder="0x..."
+                    allowClear
+                  />
+                  <Button aria-label="删除交易" onClick={() => removeTxRow(index)}>删除</Button>
+                </div>
+              ))}
+              <Button className="tx-add-row-btn" icon={<Plus size={15} />} onClick={addTxRow}>
+                + 交易
               </Button>
             </div>
-            <div className="review-method-strip" aria-label="审查流程">
-              <span><strong>01</strong><em>案例库查重</em><small>识别是否命中已收录攻击</small></span>
-              <span><strong>02</strong><em>链上信号分诊</em><small>检查 trace、调用和资产变化</small></span>
-              <span><strong>03</strong><em>深度复盘任务</em><small>进入 Agent 取证工作流</small></span>
+
+            <div className="workflow-module-box">
+              <span>选择分析模块</span>
+              <Checkbox.Group value={selectedModules} onChange={(value) => setSelectedModules(value.map(String))}>
+                {workflowModules.map((module) => (
+                  <Checkbox value={module.id} key={module.id}>
+                    <strong>{module.label}</strong>
+                    <small>{module.desc}</small>
+                  </Checkbox>
+                ))}
+              </Checkbox.Group>
             </div>
-            <div className="hero-action-hint">
-              <Button type="link" onClick={() => setTxHash(sampleAttackHash)}>填入示例 Hash</Button>
-              <span>审查结果是取证线索，不是黑盒判决；每个风险提示都应回到链上证据复核。</span>
+
+            <div className="hero-action-buttons">
+              <Button className="tx-detect-primary-btn" type="primary" icon={<Search size={15} />} loading={txDetectLoading} onClick={handleTxDetect}>
+                快速攻击检测
+              </Button>
+              <Button loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>
+                直接开始分析
+              </Button>
+              <Button type="link" onClick={fillSampleHash}>填入示例交易</Button>
             </div>
 
             <div className="quick-case-strip" id="quick-cases">
-              <span>快速打开</span>
-              <div>
-                {catalog.slice(0, 3).map((item) => {
-                  const task = taskByDapp.get(item.name);
-                  return (
-                    <button className="quick-case-chip" key={item.name} onClick={() => openCachedDemo(item.name)} type="button">
-                      <strong>{item.name}</strong>
-                      <small>{getCaseLabel(item, task)}</small>
-                    </button>
-                  );
-                })}
+              <span>想先看结果？</span>
+              <div className="quick-case-wide-grid">
+                <button className="quick-case-wide" onClick={() => openCachedDemo("SushiSwap")} type="button">
+                  <strong>SushiSwap</strong>
+                  <small>{sushiCase ? getCaseLabel(sushiCase, taskByDapp.get("SushiSwap")) : "多交易准备 + 路由逻辑缺陷。"}</small>
+                </button>
+                <button className="quick-case-wide" onClick={() => openCachedDemo("ApeCoin (APE)")} type="button">
+                  <strong>ApeCoin (APE)</strong>
+                  <small>{apeCase ? getCaseLabel(apeCase, taskByDapp.get("ApeCoin (APE)")) : "缓存复盘案例，可直接查看分析结果。"}</small>
+                </button>
               </div>
             </div>
+
           </div>
         </section>
 
@@ -461,6 +587,38 @@ const LandingWarRoom: React.FC = () => {
           </div>
 
           <div className="tx-review-panel">
+            {txDetection ? (
+              <div className="tx-detect-result">
+                <div className="tx-detect-summary">
+                  <Tag color={getRiskTagColor(txDetection.risk_level)}>{getRiskText(txDetection.risk_level)}</Tag>
+                  <strong>{txDetection.summary}</strong>
+                  <span>
+                    输入 {txDetection.input_count} 笔，完成检测 {txDetection.analyzed_count} 笔，
+                    推荐进入分析 {txDetection.recommended_tx_hashes.length} 笔
+                  </span>
+                  <div className="tx-detect-summary-actions">
+                    <Button type="primary" icon={<Play size={15} />} loading={deepAnalysisLoading} onClick={handleStartDeepAnalysis}>
+                      开始复盘
+                    </Button>
+                    <Button onClick={() => scrollToSection("tx-review")}>继续补充交易</Button>
+                  </div>
+                </div>
+                <div className="tx-detect-grid">
+                  {detectionItems(txDetection).slice(0, 8).map((item) => (
+                    <article className={`tx-detect-card tx-detect-${item.risk_level}`} key={item.tx_hash}>
+                      <div>
+                        <Tag color={getRiskTagColor(item.risk_level)}>{item.classification}</Tag>
+                        <Typography.Text copyable={{ text: item.tx_hash }} className="text-mono">
+                          {item.tx_hash.slice(0, 10)}...{item.tx_hash.slice(-8)}
+                        </Typography.Text>
+                      </div>
+                      <strong>{item.summary}</strong>
+                      <p>{item.signals.slice(0, 3).join(" / ") || "暂无明显信号"}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {txReview ? (
               <div className="tx-review-result">
                 <div className="tx-review-result-main">
@@ -545,6 +703,7 @@ const LandingWarRoom: React.FC = () => {
           title="交易取证助手"
         />
 
+        {showSupplementalSections ? (
         <section className="attack-flow-section" aria-label="攻击路径图">
           <div className="section-kicker">
             <strong>它如何复盘攻击</strong>
@@ -568,7 +727,9 @@ const LandingWarRoom: React.FC = () => {
             <div className="path-note path-note-right"><ShieldCheck size={15} /> 区分链上事实与模型推理</div>
           </div>
         </section>
+        ) : null}
 
+        {showSupplementalSections ? (
         <section className="tutorial-section" id="vuln-tutorial">
           <div className="section-kicker tutorial-kicker">
             <div>
@@ -645,14 +806,8 @@ const LandingWarRoom: React.FC = () => {
             </article>
           </div>
         </section>
+        ) : null}
 
-        <section className="rag-section" id="knowledge-retrieval">
-          <RagKnowledgePanel
-            defaultQuery={`${selectedVuln.titleEn} ${selectedVuln.titleZh}`}
-            title="知识库相似案例召回"
-            subtitle="输入漏洞现象、函数名或攻击步骤，召回历史案例、漏洞类型和复现材料，辅助判断当前交易像哪一类攻击。"
-          />
-        </section>
       </Content>
     </Layout>
   );
