@@ -208,12 +208,26 @@ const sampleAttackHash = "0xeb8c3bebed11e2e4fcd30cbfc2fb3c55c4ca166003c7f7d319e7
 const LAST_TX_REVIEW_HASH_KEY = "attackpilot:last-tx-review-hash";
 const TX_HASH_RE = /0x[a-fA-F0-9]{64}/g;
 
-const workflowModules = [
-  { id: "attack_detection", label: "攻击检测", desc: "先筛出可疑交易" },
+const capabilityCards = [
+  { id: "attack_detection", label: "筛交易", desc: "从交易列表找可疑入口" },
+  { id: "fault_localization", label: "查根因", desc: "定位漏洞函数和规则问题" },
+  { id: "rag_retrieval", label: "看相似案例", desc: "参考历史攻击和修复模式" },
+  { id: "patch_verification", label: "验补丁", desc: "重放攻击检查修复效果" },
+];
+
+const analysisModules = [
+  { id: "attack_detection", label: "攻击检测", desc: "筛出可疑交易" },
   { id: "fault_localization", label: "故障定位", desc: "定位根因函数" },
-  { id: "rag_retrieval", label: "知识库召回", desc: "匹配相似案例" },
+  { id: "patch_generation", label: "补丁生成", desc: "生成修复建议" },
   { id: "patch_verification", label: "补丁验证", desc: "重放验证修复" },
 ];
+
+function modulesForRequest(modules: string[]) {
+  const expanded = new Set(modules);
+  if (expanded.has("fault_localization")) expanded.add("rag_retrieval");
+  if (expanded.has("patch_verification")) expanded.add("patch_generation");
+  return Array.from(expanded);
+}
 
 function parseTxHashes(value: string) {
   const matches = value.match(TX_HASH_RE) ?? [];
@@ -265,7 +279,7 @@ const LandingWarRoom: React.FC = () => {
       return [sampleAttackHash];
     }
   });
-  const [selectedModules, setSelectedModules] = useState<string[]>(["attack_detection", "fault_localization", "rag_retrieval"]);
+  const [selectedModules, setSelectedModules] = useState<string[]>(["attack_detection", "fault_localization", "patch_generation", "patch_verification"]);
   const [txDetection, setTxDetection] = useState<TxDetectResponse | null>(null);
   const [txDetectLoading, setTxDetectLoading] = useState(false);
   const [txReview] = useState<TxReviewResponse | null>(null);
@@ -404,7 +418,7 @@ const LandingWarRoom: React.FC = () => {
       const result = await detectTransactions({
         tx_hashes: txHashes,
         chain: "ethereum",
-        modules: selectedModules,
+        modules: modulesForRequest(selectedModules),
       });
       setTxDetection(result);
       if (result.risk_level === "high") {
@@ -440,7 +454,7 @@ const LandingWarRoom: React.FC = () => {
       const task = await startTransactionDeepAnalysis({
         tx_hash: value,
         tx_hashes: hashes,
-        modules: selectedModules,
+        modules: modulesForRequest(selectedModules),
         chain: "ethereum",
       });
       message.success("深度分析任务已启动。");
@@ -493,11 +507,11 @@ const LandingWarRoom: React.FC = () => {
 
           <div className="stage-proof-panel" aria-label="为什么需要 AttackPilot">
             <div className="stage-proof-header">
-              <span>核心功能模块</span>
+              <span>你可以用它做什么</span>
               <strong>从交易列表到可复查报告。</strong>
             </div>
             <div className="stage-module-grid">
-              {workflowModules.map((module, index) => (
+              {capabilityCards.map((module, index) => (
                 <div className="stage-module-card" key={module.id}>
                   <span>{String(index + 1).padStart(2, "0")}</span>
                   <strong>{module.label}</strong>
@@ -506,10 +520,9 @@ const LandingWarRoom: React.FC = () => {
               ))}
             </div>
             <div className="stage-risk-strip">
-              <span><strong>$1,500,000,000</strong>Bybit 单案损失，刷新最大加密资产盗窃纪录</span>
-              <span><strong>$2,200,000,000+</strong>2024 年全球加密攻击盗窃总损失</span>
-              <span><strong>16.7h → 1.36h</strong>从人工复盘到 AttackPilot 平均端到端分析</span>
-              <span><strong>31.08% → 71.14%</strong>Top-1 根因定位召回率提升</span>
+              <span><strong>$3,700,000,000+</strong>近两年公开链上攻击损失规模</span>
+              <span><strong>$1,500,000,000</strong>Bybit 单次安全事件损失规模</span>
+              <span><strong>16.7h → 1.36h</strong>人工复盘与 AttackPilot 平均分析耗时对比</span>
             </div>
           </div>
 
@@ -541,7 +554,7 @@ const LandingWarRoom: React.FC = () => {
             <div className="workflow-module-box">
               <span>选择分析模块</span>
               <Checkbox.Group value={selectedModules} onChange={(value) => setSelectedModules(value.map(String))}>
-                {workflowModules.map((module) => (
+                {analysisModules.map((module) => (
                   <Checkbox value={module.id} key={module.id}>
                     <strong>{module.label}</strong>
                     <small>{module.desc}</small>
