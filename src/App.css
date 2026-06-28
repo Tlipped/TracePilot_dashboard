@@ -6056,13 +6056,88 @@ body[data-appearance="dark"] .assistant-composer .ant-input {
     radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.16), transparent 56%),
     rgba(255, 255, 255, 0.54);
   box-shadow: 0 34px 80px rgba(37, 99, 235, 0.16);
+  animation: logoFloat 5.6s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+.brand-orbit::before,
+.brand-orbit::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.brand-orbit::before {
+  inset: 18%;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.28), transparent 64%);
+  filter: blur(14px);
+  opacity: 0.78;
+  animation: logoGlow 5.6s ease-in-out infinite;
+}
+
+.brand-orbit::after {
+  width: 68%;
+  height: 18px;
+  left: 16%;
+  bottom: -20px;
+  background: radial-gradient(ellipse, rgba(15, 23, 42, 0.18), transparent 72%);
+  filter: blur(7px);
+  transform-origin: center;
+  animation: logoShadow 5.6s ease-in-out infinite;
 }
 
 .brand-orbit img {
+  position: relative;
+  z-index: 1;
   width: 170px;
   height: 170px;
   object-fit: contain;
   filter: drop-shadow(0 22px 34px rgba(37, 99, 235, 0.24));
+}
+
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotateX(0deg);
+    box-shadow: 0 34px 80px rgba(37, 99, 235, 0.16);
+  }
+  50% {
+    transform: translateY(-14px) rotateX(2deg);
+    box-shadow: 0 44px 96px rgba(37, 99, 235, 0.22);
+  }
+}
+
+@keyframes logoGlow {
+  0%,
+  100% {
+    opacity: 0.64;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes logoShadow {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: scaleX(0.95);
+  }
+  50% {
+    opacity: 0.28;
+    transform: scaleX(0.78);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-orbit,
+  .brand-orbit::before,
+  .brand-orbit::after {
+    animation: none !important;
+  }
 }
 
 .stage-loss-card {
