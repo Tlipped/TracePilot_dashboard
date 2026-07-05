@@ -6518,6 +6518,21 @@ body[data-appearance="dark"] .tutorial-list {
   background: rgba(2, 6, 23, 0.34);
 }
 
+.case-replay-entry-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+  border-color: rgba(37, 99, 235, 0.34) !important;
+  background: rgba(239, 246, 255, 0.72) !important;
+  color: #1d4ed8 !important;
+  font-weight: 800;
+}
+
+.case-replay-entry-btn:hover {
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+  color: #1e40af !important;
+}
+
 body[data-appearance="dark"] .tutorial-detail {
   background:
     radial-gradient(circle at 78% 12%, rgba(56, 189, 248, 0.08), transparent 30%),

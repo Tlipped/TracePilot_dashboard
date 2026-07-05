@@ -18,6 +18,7 @@ import {
 import DappContextButton from "../components/DappContextButton";
 import { archiveTask, cancelTask, createTask, listDapps, listTasks, unarchiveTask } from "../services/api";
 import { DappCatalogItem, Task, TaskCreateRequest, TaskStatus } from "../types";
+import { formatDurationZh, taskStatusLabel } from "../utils/presentation";
 import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
@@ -36,9 +37,7 @@ function getStatusColor(status: TaskStatus) {
 }
 
 function formatDuration(duration?: number | null) {
-  if (duration == null) return "N/A";
-  if (duration < 60) return `${duration.toFixed(1)}s`;
-  return `${Math.floor(duration / 60)}m ${Math.floor(duration % 60)}s`;
+  return formatDurationZh(duration);
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -71,7 +70,7 @@ const TaskList: React.FC = () => {
       setLoading(true);
       setTasks(await listTasks(archiveFilter !== "active"));
     } catch {
-      message.error("Failed to fetch tasks");
+      message.error("任务列表加载失败");
     } finally {
       setLoading(false);
     }
@@ -95,7 +94,7 @@ const TaskList: React.FC = () => {
       .catch(() => {
         if (cancelled) return;
         setDappCatalog([]);
-        setDappCatalogError("Backend case catalog is unavailable; using bundled frontend metadata.");
+        setDappCatalogError("后端案例目录暂不可用，当前使用前端内置案例信息。");
       })
       .finally(() => {
         if (!cancelled) setDappCatalogLoading(false);
@@ -108,7 +107,7 @@ const TaskList: React.FC = () => {
 
   const handleCreate = async () => {
     if (selectedDapps.length === 0) {
-      message.error("Please select at least one DApp");
+      message.error("请至少选择一个案例");
       return;
     }
 
@@ -119,7 +118,7 @@ const TaskList: React.FC = () => {
         const req: TaskCreateRequest = { dapp_name: dappName };
         created.push(await createTask(req));
       }
-      message.success(`${created.length} task(s) started`);
+      message.success(`已启动 ${created.length} 个复盘任务`);
       setIsModalVisible(false);
       setSelectedDapps([]);
       await fetchTasks();
@@ -127,7 +126,7 @@ const TaskList: React.FC = () => {
         navigate(`/tasks/${created[0].task_id}`);
       }
     } catch (error: unknown) {
-      message.error(getErrorMessage(error, "Failed to create task"));
+      message.error(getErrorMessage(error, "复盘任务创建失败"));
     } finally {
       setLoading(false);
     }
@@ -136,30 +135,30 @@ const TaskList: React.FC = () => {
   const handleCancel = async (task: Task) => {
     try {
       await cancelTask(task.task_id);
-      message.success("Task cancellation requested");
+      message.success("已提交取消任务请求");
       await fetchTasks();
     } catch (error: unknown) {
-      message.error(getErrorMessage(error, "Failed to cancel task"));
+      message.error(getErrorMessage(error, "任务取消失败"));
     }
   };
 
   const handleArchive = async (task: Task) => {
     try {
       await archiveTask(task.task_id);
-      message.success("Task archived");
+      message.success("任务已归档");
       await fetchTasks();
     } catch (error: unknown) {
-      message.error(getErrorMessage(error, "Failed to archive task"));
+      message.error(getErrorMessage(error, "任务归档失败"));
     }
   };
 
   const handleRestore = async (task: Task) => {
     try {
       await unarchiveTask(task.task_id);
-      message.success("Task restored");
+      message.success("任务已恢复");
       await fetchTasks();
     } catch (error: unknown) {
-      message.error(getErrorMessage(error, "Failed to restore task"));
+      message.error(getErrorMessage(error, "任务恢复失败"));
     }
   };
 
@@ -182,7 +181,7 @@ const TaskList: React.FC = () => {
   const dappOptions = useMemo(() => {
     if (dappCatalog.length > 0) {
       return dappCatalog.map((item) => ({
-        label: `${item.name}${item.demo_ready ? " · demo ready" : ""}${item.platform ? ` · ${item.platform}` : ""}`,
+        label: `${item.name}${item.demo_ready ? " · 可直接演示" : ""}${item.platform ? ` · ${item.platform}` : ""}`,
         value: item.name,
       }));
     }
@@ -202,51 +201,51 @@ const TaskList: React.FC = () => {
       render: (name: string) => <Typography.Text strong>{name}</Typography.Text>,
     },
     {
-      title: "Status",
+      title: "状态",
       dataIndex: "status",
       key: "status",
       render: (status: TaskStatus, record) => (
         <Space size={6}>
-          <Tag color={getStatusColor(status)}>{status.toUpperCase()}</Tag>
-          {record.archived ? <Tag>ARCHIVED</Tag> : null}
+          <Tag color={getStatusColor(status)}>{taskStatusLabel(status)}</Tag>
+          {record.archived ? <Tag>已归档</Tag> : null}
         </Space>
       ),
-      filters: Object.values(TaskStatus).map((value) => ({ text: value, value })),
+      filters: Object.values(TaskStatus).map((value) => ({ text: taskStatusLabel(value), value })),
       onFilter: (value, record) => record.status === value,
     },
     {
-      title: "Created",
+      title: "创建时间",
       dataIndex: "created_at",
       key: "created_at",
       render: (value: string) => new Date(value).toLocaleString(),
     },
     {
-      title: "Duration",
+      title: "耗时",
       dataIndex: "duration",
       key: "duration",
       render: (value?: number | null) => formatDuration(value),
     },
     {
-      title: "Action",
+      title: "操作",
       key: "action",
       width: 420,
       render: (_, record) => (
         <Space>
           <Button size="small" icon={<Eye size={14} />} onClick={() => navigate(`/tasks/${record.task_id}`)}>
-            View
+            查看
           </Button>
           <DappContextButton dappName={record.dapp_name} />
           {isRunnableTask(record.status) ? (
             <Button size="small" icon={<Square size={14} />} danger onClick={() => handleCancel(record)}>
-              Cancel
+              取消
             </Button>
           ) : record.archived ? (
             <Button size="small" icon={<Undo2 size={14} />} onClick={() => handleRestore(record)}>
-              Restore
+              恢复
             </Button>
           ) : (
             <Button size="small" icon={<Archive size={14} />} onClick={() => handleArchive(record)}>
-              Archive
+              归档
             </Button>
           )}
        </Space>
@@ -258,14 +257,14 @@ const TaskList: React.FC = () => {
     <Layout className="app-shell">
       <Header className="topbar">
         <div className="topbar-brand workbench-brand">
-          <span className="workbench-brand-mark"><img src={riskPilotLogo} alt="RiskPilot logo" /></span>
+          <span className="workbench-brand-mark"><img src={riskPilotLogo} alt="AttackPilot 标志" /></span>
           <div>
-            <Typography.Text className="brand-kicker">AttackPilot Workbench</Typography.Text>
+            <Typography.Text className="brand-kicker">AttackPilot 任务工作台</Typography.Text>
             <Typography.Title level={3} className="topbar-title">
-              Task Library
+              任务库
             </Typography.Title>
             <Typography.Text type="secondary" className="topbar-subtitle">
-              Cached reports, live runs, and reproducible case records.
+              管理实时任务、历史报告和可复现攻击案例。
             </Typography.Text>
           </div>
         </div>
@@ -274,10 +273,10 @@ const TaskList: React.FC = () => {
             首页
           </Button>
           <Button icon={<RefreshCcw size={15} />} onClick={fetchTasks}>
-            Refresh
+            刷新
           </Button>
           <Button type="primary" icon={<Play size={15} />} onClick={() => setIsModalVisible(true)}>
-            New Task
+            已发生案例复盘
           </Button>
         </Space>
       </Header>
@@ -291,7 +290,7 @@ const TaskList: React.FC = () => {
                   <ListChecks size={22} />
                 </span>
                 <div>
-                  <span className="metric-label">Total Tasks</span>
+                  <span className="metric-label">任务总数</span>
                   <span className="metric-value large">{stats.total}</span>
                 </div>
               </div>
@@ -304,7 +303,7 @@ const TaskList: React.FC = () => {
                   <Activity size={22} />
                 </span>
                 <div>
-                  <span className="metric-label">Running</span>
+                  <span className="metric-label">运行中</span>
                   <span className="metric-value large text-blue">{stats.running}</span>
                 </div>
               </div>
@@ -317,7 +316,7 @@ const TaskList: React.FC = () => {
                   <CheckCircle2 size={22} />
                 </span>
                 <div>
-                  <span className="metric-label">Completed</span>
+                  <span className="metric-label">已完成</span>
                   <span className="metric-value large text-green">{stats.completed}</span>
                 </div>
               </div>
@@ -330,7 +329,7 @@ const TaskList: React.FC = () => {
                   <XCircle size={22} />
                 </span>
                 <div>
-                  <span className="metric-label">Failed</span>
+                  <span className="metric-label">已失败</span>
                   <span className="metric-value large text-red">{stats.failed}</span>
                 </div>
               </div>
@@ -341,27 +340,27 @@ const TaskList: React.FC = () => {
         <Card className="table-card">
           <div className="table-toolbar">
             <div>
-              <Typography.Title level={5}>Tasks</Typography.Title>
-              <Typography.Text type="secondary">Create, resume, and inspect analysis runs.</Typography.Text>
+              <Typography.Title level={5}>复盘任务</Typography.Title>
+              <Typography.Text type="secondary">创建、恢复并查看攻击复盘任务。</Typography.Text>
             </div>
             <Select
               value={archiveFilter}
               onChange={setArchiveFilter}
               options={[
-                { label: "Active tasks", value: "active" },
-                { label: "Archived", value: "archived" },
-                { label: "All records", value: "all" },
+                { label: "当前任务", value: "active" },
+                { label: "已归档", value: "archived" },
+                { label: "全部记录", value: "all" },
               ]}
             />
             <Select
               value={statusFilter}
               onChange={setStatusFilter}
               options={[
-                { label: "All statuses", value: "all" },
-                { label: "Pending", value: TaskStatus.PENDING },
-                { label: "Running", value: TaskStatus.RUNNING },
-                { label: "Completed", value: TaskStatus.COMPLETED },
-                { label: "Failed", value: TaskStatus.FAILED },
+                { label: "全部状态", value: "all" },
+                { label: "等待中", value: TaskStatus.PENDING },
+                { label: "运行中", value: TaskStatus.RUNNING },
+                { label: "已完成", value: TaskStatus.COMPLETED },
+                { label: "已失败", value: TaskStatus.FAILED },
               ]}
             />
           </div>
@@ -377,7 +376,7 @@ const TaskList: React.FC = () => {
       </Content>
 
       <Modal
-        title="New Analysis Task"
+        title="已发生案例复盘"
         open={isModalVisible}
         onOk={handleCreate}
         onCancel={() => {
@@ -388,11 +387,11 @@ const TaskList: React.FC = () => {
         centered
       >
         <Space orientation="vertical" size={8} style={{ width: "100%" }}>
-          <Typography.Text type="secondary">Select one or more DApps to analyze.</Typography.Text>
+          <Typography.Text type="secondary">选择一个或多个已整理攻击案例，系统会为每个案例创建复盘任务。</Typography.Text>
           <Select
             mode="multiple"
             size="large"
-            placeholder="Select DApp(s)"
+            placeholder="选择案例，例如 SushiSwap / ApeCoin"
             style={{ width: "100%" }}
             value={selectedDapps}
             onChange={setSelectedDapps}
@@ -405,20 +404,20 @@ const TaskList: React.FC = () => {
           {selectedDappDetail ? (
             <div className="case-catalog-preview">
               <Space size={6} wrap>
-                {selectedDappDetail.demo_ready ? <Tag color="green">Demo ready</Tag> : <Tag>Raw case</Tag>}
-                {selectedDappDetail.has_processed_analysis ? <Tag color="blue">Macro analysis</Tag> : null}
+                {selectedDappDetail.demo_ready ? <Tag color="green">可直接演示</Tag> : <Tag>原始案例</Tag>}
+                {selectedDappDetail.has_processed_analysis ? <Tag color="blue">已有宏观分析</Tag> : null}
                 {selectedDappDetail.platform ? <Tag>{selectedDappDetail.platform}</Tag> : null}
                 {selectedDappDetail.cause ? <Tag>{selectedDappDetail.cause}</Tag> : null}
               </Space>
               <Typography.Text type="secondary">
-                {selectedDappDetail.transaction_count} transaction(s)
-                {selectedDappDetail.root_cause ? ` · root cause: ${selectedDappDetail.root_cause}` : ""}
+                {selectedDappDetail.transaction_count} 笔交易
+                {selectedDappDetail.root_cause ? ` · 根因：${selectedDappDetail.root_cause}` : ""}
               </Typography.Text>
             </div>
           ) : null}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <Typography.Text type="secondary">
-              View case context while the analysis task is running.
+              可以先查看案例背景知识，再启动复盘任务。
             </Typography.Text>
             <DappContextButton
               dappName={selectedDapps.length === 1 ? selectedDapps[0] : undefined}

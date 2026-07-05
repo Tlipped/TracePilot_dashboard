@@ -1,6 +1,17 @@
 import axios from "axios";
 import { BACKEND_HTTP_URL } from "../config/appConfig";
 import {
+  getDemoAutomatedReview,
+  getDemoFullLog,
+  getDemoMacroAnalysis,
+  getDemoTask,
+  getDemoTaskLogs,
+  getDemoAgentLogFile,
+  getDemoAgentLogFiles,
+  hasDemoSnapshot,
+  listDemoTasks,
+} from "../utils/demoSnapshots";
+import {
   AgentLogFileResponse,
   AgentLogFilesResponse,
   AssistantChatRequest,
@@ -26,10 +37,16 @@ export const api = axios.create({
 });
 
 export async function listTasks(includeArchived = false): Promise<Task[]> {
-  const response = await api.get<Task[]>("/api/tasks", {
-    params: includeArchived ? { include_archived: true } : undefined,
-  });
-  return response.data;
+  try {
+    const response = await api.get<Task[]>("/api/tasks", {
+      params: includeArchived ? { include_archived: true } : undefined,
+    });
+    const remoteIds = new Set(response.data.map((task) => task.task_id));
+    const offlineDemos = listDemoTasks().filter((task) => !remoteIds.has(task.task_id));
+    return [...response.data, ...offlineDemos];
+  } catch {
+    return listDemoTasks();
+  }
 }
 
 export async function listDapps(): Promise<DappCatalogResponse> {
@@ -69,16 +86,24 @@ export async function searchRagKnowledge(payload: RagSearchRequest): Promise<Rag
 }
 
 export async function getTask(taskId: string): Promise<Task> {
+  const demoTask = getDemoTask(taskId);
+  if (demoTask) return demoTask;
   const response = await api.get<Task>(`/api/tasks/${taskId}`);
   return response.data;
 }
 
 export async function getMacroAnalysis(taskId: string): Promise<MacroAnalysisResponse> {
+  const demoMacro = getDemoMacroAnalysis(taskId);
+  if (demoMacro) return demoMacro;
+  if (hasDemoSnapshot(taskId)) throw new Error("Offline demo macro analysis is not available.");
   const response = await api.get<MacroAnalysisResponse>(`/api/tasks/${taskId}/macro-analysis`);
   return response.data;
 }
 
 export async function getAutomatedReview(taskId: string): Promise<AutomatedReviewResponse> {
+  const demoReview = getDemoAutomatedReview(taskId);
+  if (demoReview) return demoReview;
+  if (hasDemoSnapshot(taskId)) throw new Error("Offline demo automated review is not available.");
   const response = await api.get<AutomatedReviewResponse>(`/api/tasks/${taskId}/automated-review`);
   return response.data;
 }
@@ -105,6 +130,8 @@ export async function unarchiveTask(taskId: string): Promise<void> {
 }
 
 export async function getFullLog(taskId: string, logId: string): Promise<FullLogResponse> {
+  const demoLog = await getDemoFullLog(taskId, logId);
+  if (demoLog) return { content: demoLog, source: "cache" };
   const response = await api.get<FullLogResponse>(`/api/task/${taskId}/log/${logId}`);
   return response.data;
 }
@@ -113,11 +140,15 @@ export async function getTaskLogs(
   taskId: string,
   params: { limit?: number; before_id?: number | null } = {},
 ): Promise<TaskLogPageResponse> {
+  const demoLogs = getDemoTaskLogs(taskId, params);
+  if (demoLogs) return demoLogs;
   const response = await api.get<TaskLogPageResponse>(`/api/tasks/${taskId}/logs`, { params });
   return response.data;
 }
 
 export async function listAgentLogFiles(taskId: string): Promise<AgentLogFilesResponse> {
+  const demoFiles = await getDemoAgentLogFiles(taskId);
+  if (demoFiles) return demoFiles;
   const response = await api.get<AgentLogFilesResponse>(`/api/tasks/${taskId}/agent-log-files`);
   return response.data;
 }
@@ -127,6 +158,8 @@ export async function getAgentLogFile(
   fileId: string,
   maxBytes = 2_000_000,
 ): Promise<AgentLogFileResponse> {
+  const demoFile = await getDemoAgentLogFile(taskId, fileId);
+  if (demoFile) return demoFile;
   const response = await api.get<AgentLogFileResponse>(`/api/tasks/${taskId}/agent-log-files/${fileId}`, {
     params: { max_bytes: maxBytes },
   });

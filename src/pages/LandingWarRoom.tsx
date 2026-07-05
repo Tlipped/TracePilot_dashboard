@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { App as AntdApp, Button, Checkbox, Input, Layout, Space, Tag, Typography } from "antd";
+import { App as AntdApp, Button, Checkbox, Input, Layout, Modal, Select, Space, Tag, Typography } from "antd";
 import {
   AlertTriangle,
   Bot,
@@ -24,24 +24,40 @@ import {
   Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import DappContextButton from "../components/DappContextButton";
 import ForensicAssistantDrawer from "../components/ForensicAssistantDrawer";
-import { detectTransactions, listDapps, listTasks, listVulnerabilityKnowledge, startTransactionDeepAnalysis } from "../services/api";
+import { createTask, detectTransactions, listDapps, listTasks, listVulnerabilityKnowledge, startTransactionDeepAnalysis } from "../services/api";
 import { DappCatalogItem, Task, TaskStatus, TxDetectItem, TxDetectResponse, TxReviewResponse, VulnerabilityTypeKnowledge } from "../types";
+import { getDemoTaskIdForDapp } from "../utils/demoSnapshots";
+import { DAPP_CONTEXT_MAP } from "../utils/dappMetadata";
 import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
 
-// 首页缓存案例在这里改；名称需要和后端 /api/dapps 返回的 DApp name 一致。
 const demoCases = ["ApeCoin (APE)", "SushiSwap", "Balancer"];
 
-const fallbackCatalog: DappCatalogItem[] = demoCases.map((name) => ({
-  name,
-  transaction_hash: [],
-  transaction_count: name === "ApeCoin (APE)" ? 1 : 2,
-  raw_file: `${name}.json`,
-  has_processed_analysis: name === "ApeCoin (APE)",
-  demo_ready: true,
-}));
+function toFrontendCase(name: string): DappCatalogItem {
+  const meta = DAPP_CONTEXT_MAP[name];
+  const txHashes = meta?.transaction_hash ?? [];
+  return {
+    name: meta?.name ?? name,
+    cause: meta?.cause ?? null,
+    platform: meta?.platform ?? null,
+    time: meta?.time ?? null,
+    root_cause: meta?.root_cause ?? null,
+    report: meta?.report ?? null,
+    detection: meta?.detection ?? null,
+    disclosure: meta?.disclosure ?? null,
+    report_link: meta?.report_link ?? null,
+    transaction_hash: txHashes,
+    transaction_count: txHashes.length || (name === "ApeCoin (APE)" ? 1 : 3),
+    raw_file: `${name}.json`,
+    has_processed_analysis: true,
+    demo_ready: true,
+  };
+}
+
+const fallbackCatalog: DappCatalogItem[] = demoCases.map(toFrontendCase);
 
 const attackPath = [
   { zh: "攻击者", en: "Attacker", desc: "借入临时资金", icon: WalletCards, tone: "blue" },
@@ -186,8 +202,8 @@ function normalizeCaseName(value: string) {
 }
 
 function getCaseLabel(item: DappCatalogItem, task?: Task) {
-  if (task?.status === TaskStatus.COMPLETED) return "已完成分析 / Cached report";
-  if (task?.status === TaskStatus.RUNNING) return "正在分析 / Running";
+  if (task?.status === TaskStatus.COMPLETED) return "已完成分析 / 缓存报告";
+  if (task?.status === TaskStatus.RUNNING) return "正在分析";
   const txText = item.transaction_count > 0 ? `${item.transaction_count} 笔交易` : "案例";
   const cause = item.cause || item.root_cause || item.platform || "链上风险";
   return `${txText} / ${cause}`;
@@ -285,16 +301,29 @@ const LandingWarRoom: React.FC = () => {
   const [txReview] = useState<TxReviewResponse | null>(null);
   const [deepAnalysisLoading, setDeepAnalysisLoading] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [caseModalOpen, setCaseModalOpen] = useState(false);
+  const [selectedDapps, setSelectedDapps] = useState<string[]>([]);
+  const [caseCreateLoading, setCaseCreateLoading] = useState(false);
+  const [dappCatalogLoading, setDappCatalogLoading] = useState(false);
+  const [dappCatalogError, setDappCatalogError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
+    setDappCatalogLoading(true);
     listDapps()
       .then((response) => {
         if (cancelled) return;
-        const preferred = response.items.filter((item) => demoCases.includes(item.name));
-        setCatalog(preferred.length > 0 ? preferred : response.items.slice(0, 5));
+        setCatalog(response.items);
+        setDappCatalogError("");
       })
-      .catch(() => setCatalog(fallbackCatalog));
+      .catch(() => {
+        if (cancelled) return;
+        setCatalog(fallbackCatalog);
+        setDappCatalogError("后端案例库暂不可用，正在使用前端内置案例。");
+      })
+      .finally(() => {
+        if (!cancelled) setDappCatalogLoading(false);
+      });
 
     listTasks(true)
       .then((items) => {
@@ -361,6 +390,19 @@ const LandingWarRoom: React.FC = () => {
     [catalog],
   );
 
+  const dappOptions = useMemo(() => {
+    const source = catalog.length > 0 ? catalog : fallbackCatalog;
+    return source.map((item) => ({
+      label: `${item.name}${item.demo_ready ? " · 可直接演示" : ""}${item.platform ? ` · ${item.platform}` : ""}`,
+      value: item.name,
+    }));
+  }, [catalog]);
+
+  const selectedDappDetail = useMemo(() => {
+    if (selectedDapps.length !== 1) return null;
+    return catalog.find((item) => item.name === selectedDapps[0]) ?? fallbackCatalog.find((item) => item.name === selectedDapps[0]) ?? null;
+  }, [catalog, selectedDapps]);
+
   const selectedVuln = useMemo(
     () => vulnerabilityLessons.find((item) => item.titleEn === activeVuln) ?? vulnerabilityLessons[0],
     [activeVuln, vulnerabilityLessons],
@@ -384,7 +426,7 @@ const LandingWarRoom: React.FC = () => {
   }, []);
 
   const openCachedDemo = useCallback(
-    (dappName: string) => {
+    async (dappName: string) => {
       const targetName = normalizeCaseName(dappName);
       const task =
         taskByDapp.get(dappName) ??
@@ -392,15 +434,52 @@ const LandingWarRoom: React.FC = () => {
         tasks.find((item) => normalizeCaseName(item.dapp_name) === targetName && item.status === TaskStatus.COMPLETED) ??
         tasks.find((item) => normalizeCaseName(item.dapp_name) === targetName && !item.archived) ??
         tasks.find((item) => normalizeCaseName(item.dapp_name) === targetName);
-      if (!task) {
-        message.warning("这个案例还没有缓存任务，请先到任务库查看已有报告，或手动启动一次分析。");
-        navigate("/tasks");
+      if (task) {
+        navigate(`/tasks/${task.task_id}`);
         return;
       }
-      navigate(`/tasks/${task.task_id}`);
+
+      try {
+        const created = await createTask({ dapp_name: dappName });
+        message.success("已为示例案例创建复盘任务。");
+        navigate(`/tasks/${created.task_id}`);
+      } catch (error) {
+        const demoTaskId = getDemoTaskIdForDapp(dappName);
+        if (demoTaskId) {
+          message.info("后端暂不可用，已打开前端内置缓存案例。");
+          navigate(`/tasks/${demoTaskId}`);
+          return;
+        }
+        const detail = (error as { response?: { data?: { detail?: string } } }).response?.data?.detail;
+        message.error(detail || "暂时无法打开示例案例，请检查后端服务和案例数据。");
+      }
     },
     [message, navigate, taskByDapp, tasks],
   );
+
+  const handleCreateCaseTasks = useCallback(async () => {
+    if (selectedDapps.length === 0) {
+      message.warning("请先选择一个或多个已发生案例。");
+      return;
+    }
+
+    setCaseCreateLoading(true);
+    try {
+      const created: Task[] = [];
+      for (const dappName of selectedDapps) {
+        created.push(await createTask({ dapp_name: dappName }));
+      }
+      message.success(`已启动 ${created.length} 个案例复盘任务。`);
+      setCaseModalOpen(false);
+      setSelectedDapps([]);
+      navigate(created.length === 1 ? `/tasks/${created[0].task_id}` : "/tasks");
+    } catch (error) {
+      const detail = (error as { response?: { data?: { detail?: string } } }).response?.data?.detail;
+      message.error(detail || "启动案例复盘失败，请检查后端服务。");
+    } finally {
+      setCaseCreateLoading(false);
+    }
+  }, [message, navigate, selectedDapps]);
 
   const handleTxDetect = useCallback(async () => {
     if (!txHashes.length) {
@@ -470,6 +549,13 @@ const LandingWarRoom: React.FC = () => {
   const scrollToSection = useCallback((sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
+
+  useEffect(() => {
+    const target = window.location.hash.replace("#", "");
+    if (!target) return;
+    const timer = window.setTimeout(() => scrollToSection(target), 80);
+    return () => window.clearTimeout(timer);
+  }, [scrollToSection]);
 
   const showSupplementalSections = false;
 
@@ -602,6 +688,9 @@ const LandingWarRoom: React.FC = () => {
                   <small>{apeCase ? getCaseLabel(apeCase, taskByDapp.get("ApeCoin (APE)")) : "缓存复盘案例，可直接查看分析结果。"}</small>
                 </button>
               </div>
+              <Button className="case-replay-entry-btn" type="primary" ghost onClick={() => setCaseModalOpen(true)}>
+                选择已发生案例复盘
+              </Button>
             </div>
 
           </div>
@@ -862,6 +951,59 @@ const LandingWarRoom: React.FC = () => {
         ) : null}
 
       </Content>
+      <Modal
+        title="已发生案例复盘"
+        open={caseModalOpen}
+        onOk={handleCreateCaseTasks}
+        onCancel={() => {
+          setCaseModalOpen(false);
+          setSelectedDapps([]);
+        }}
+        okText="开始复盘"
+        cancelText="取消"
+        confirmLoading={caseCreateLoading}
+        centered
+      >
+        <Space direction="vertical" size={8} style={{ width: "100%" }}>
+          <Typography.Text type="secondary">选择一个或多个已整理攻击案例，系统会为每个案例创建复盘任务。</Typography.Text>
+          <Select
+            mode="multiple"
+            size="large"
+            placeholder="选择案例，例如 SushiSwap / ApeCoin"
+            style={{ width: "100%" }}
+            value={selectedDapps}
+            onChange={setSelectedDapps}
+            options={dappOptions}
+            showSearch
+            optionFilterProp="label"
+            loading={dappCatalogLoading}
+          />
+          {dappCatalogError ? <Typography.Text type="warning">{dappCatalogError}</Typography.Text> : null}
+          {selectedDappDetail ? (
+            <div className="case-catalog-preview">
+              <Space size={6} wrap>
+                {selectedDappDetail.demo_ready ? <Tag color="green">可直接演示</Tag> : <Tag>原始案例</Tag>}
+                {selectedDappDetail.has_processed_analysis ? <Tag color="blue">已有宏观分析</Tag> : null}
+                {selectedDappDetail.platform ? <Tag>{selectedDappDetail.platform}</Tag> : null}
+                {selectedDappDetail.cause ? <Tag>{selectedDappDetail.cause}</Tag> : null}
+              </Space>
+              <Typography.Text type="secondary">
+                {selectedDappDetail.transaction_count} 笔交易
+                {selectedDappDetail.root_cause ? ` · 根因：${selectedDappDetail.root_cause}` : ""}
+              </Typography.Text>
+            </div>
+          ) : null}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <Typography.Text type="secondary">
+              可以先查看案例背景知识，再启动复盘任务。
+            </Typography.Text>
+            <DappContextButton
+              dappName={selectedDapps.length === 1 ? selectedDapps[0] : undefined}
+              disabled={selectedDapps.length !== 1}
+            />
+          </div>
+        </Space>
+      </Modal>
     </Layout>
   );
 };
