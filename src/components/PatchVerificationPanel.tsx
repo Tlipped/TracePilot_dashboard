@@ -58,7 +58,7 @@ function buildPatchEvidence(report: string, logs: LogMessage[]): EvidenceItem[] 
   if (reportContext) {
     evidence.push({
       id: "patch-report-context",
-      title: "Report verification context",
+      title: "报告验证片段",
       source: "report",
       content: compactEvidenceText(reportContext, 900),
       full_content: normalizeEvidenceMarkdown(reportContext),
@@ -72,7 +72,7 @@ function buildPatchEvidence(report: string, logs: LogMessage[]): EvidenceItem[] 
     .forEach((log, index) => {
       evidence.push({
         id: `patch-log-${log.log_id ?? index}`,
-        title: `${log.agent} patch evidence`,
+        title: `${log.agent} 补丁证据`,
         source: log.message_type === "tool" ? "tool" : "agent_log",
         agent: log.agent,
         level: log.level,
@@ -101,8 +101,8 @@ function buildSummary(task: Task | null, events: TaskEvent[]): PatchVerification
   if (hasSuccess && !hasFailure) {
     return {
       status: "verified",
-      title: "Patch verification passed",
-      description: "The available report/log evidence indicates that the proposed patch blocked or resisted the replayed attack path.",
+      title: "补丁验证通过",
+      description: "现有报告和日志证据表明，该补丁已阻断重放的攻击路径。",
       score: 92,
       evidence,
     };
@@ -111,8 +111,8 @@ function buildSummary(task: Task | null, events: TaskEvent[]): PatchVerification
   if (hasSuccess && hasFailure) {
     return {
       status: "partial",
-      title: "Patch verification partially supported",
-      description: "The analysis contains both success and failure signals. Review linked evidence before treating the patch as fully verified.",
+      title: "补丁验证部分通过",
+      description: "分析中同时出现成功与失败信号，需要结合关联证据判断修复效果。",
       score: 62,
       evidence,
     };
@@ -121,8 +121,8 @@ function buildSummary(task: Task | null, events: TaskEvent[]): PatchVerification
   if (hasFailure) {
     return {
       status: "failed",
-      title: "Patch verification needs attention",
-      description: "The available evidence includes failure or unresolved verification signals.",
+      title: "补丁验证存在异常",
+      description: "现有证据包含失败或尚未解决的验证信号。",
       score: 34,
       evidence,
     };
@@ -131,8 +131,8 @@ function buildSummary(task: Task | null, events: TaskEvent[]): PatchVerification
   if (hasPatchSignal) {
     return {
       status: "pending",
-      title: "Patch verification evidence is incomplete",
-      description: "Patch-related content exists, but no clear pass/fail signal has been extracted yet.",
+      title: "补丁验证证据不完整",
+      description: "已发现补丁相关内容，但尚未提取到明确的通过或失败信号。",
       score: 48,
       evidence,
     };
@@ -140,8 +140,8 @@ function buildSummary(task: Task | null, events: TaskEvent[]): PatchVerification
 
   return {
     status: "pending",
-    title: "Patch verification pending",
-    description: "No explicit patch replay or verification signal has been extracted yet.",
+    title: "等待补丁验证",
+    description: "暂未提取到明确的补丁重放或验证信号。",
     score: 18,
     evidence,
   };
@@ -171,9 +171,11 @@ const PatchVerificationPanel: React.FC<PatchVerificationPanelProps> = ({ task, e
       <div className="product-summary-head">
         <Space size={8}>
           <Icon size={16} />
-          <Typography.Text strong>Patch Verification</Typography.Text>
+          <Typography.Text strong>补丁验证</Typography.Text>
         </Space>
-        <Tag color={tagColor(summary.status)}>{summary.status}</Tag>
+        <Tag color={tagColor(summary.status)}>
+          {summary.status === "verified" ? "已通过" : summary.status === "partial" ? "部分通过" : summary.status === "failed" ? "异常" : "等待中"}
+        </Tag>
       </div>
 
       <div className="patch-verification-body">
@@ -190,16 +192,16 @@ const PatchVerificationPanel: React.FC<PatchVerificationPanelProps> = ({ task, e
           <Typography.Text strong>{summary.title}</Typography.Text>
           <Typography.Paragraph>{summary.description}</Typography.Paragraph>
           <Space size={8} wrap>
-            <Tag color={summary.evidence.length > 0 ? "cyan" : "default"}>{summary.evidence.length} evidence</Tag>
+            <Tag color={summary.evidence.length > 0 ? "cyan" : "default"}>{summary.evidence.length} 条证据</Tag>
             <Button size="small" icon={<SearchCheck size={14} />} onClick={() => setOpen(true)}>
-              Evidence
+              查看证据
             </Button>
           </Space>
         </div>
       </div>
 
       <EvidenceDrawer
-        title="Patch Verification Evidence"
+        title="补丁验证证据"
         open={open}
         evidence={summary.evidence}
         onClose={() => setOpen(false)}

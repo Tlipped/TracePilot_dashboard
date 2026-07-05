@@ -4,6 +4,7 @@ import { Copy, ExternalLink } from "lucide-react";
 import { getFullLog } from "../services/api";
 import { FullLogResponse, LogMessage, MsgType } from "../types";
 import MarkdownRenderer from "./MarkdownRenderer";
+import { agentDisplayName, logLevelLabel, messageTypeLabel } from "../utils/presentation";
 
 interface LogDetailDrawerProps {
   taskId: string;
@@ -29,7 +30,7 @@ const LogDetailDrawer: React.FC<LogDetailDrawerProps> = ({ taskId, log, open, on
         if (!cancelled) setFullLog(data);
       })
       .catch(() => {
-        if (!cancelled) message.warning("Full log is unavailable; showing streamed content.");
+        if (!cancelled) message.warning("完整日志暂不可用，当前显示实时接收的内容。");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -44,12 +45,12 @@ const LogDetailDrawer: React.FC<LogDetailDrawerProps> = ({ taskId, log, open, on
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(content);
-    message.success("Copied");
+    message.success("已复制");
   };
 
   return (
     <Drawer
-      title="Log Detail"
+      title="日志详情"
       open={open}
       onClose={onClose}
       size="large"
@@ -58,7 +59,7 @@ const LogDetailDrawer: React.FC<LogDetailDrawerProps> = ({ taskId, log, open, on
         <Space>
           {fullLog?.source ? <Tag>{fullLog.source}</Tag> : null}
           <Button icon={<Copy size={14} />} onClick={handleCopy}>
-            Copy
+            复制
           </Button>
         </Space>
       }
@@ -66,23 +67,23 @@ const LogDetailDrawer: React.FC<LogDetailDrawerProps> = ({ taskId, log, open, on
       {!log ? null : (
         <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <Descriptions size="small" column={1} bordered>
-            <Descriptions.Item label="Agent">{log.agent}</Descriptions.Item>
-            <Descriptions.Item label="Level">{log.level}</Descriptions.Item>
-            <Descriptions.Item label="Type">{log.message_type}</Descriptions.Item>
-            <Descriptions.Item label="Timestamp">{log.timestamp}</Descriptions.Item>
+            <Descriptions.Item label="智能体">{agentDisplayName(log.agent)}</Descriptions.Item>
+            <Descriptions.Item label="级别">{logLevelLabel(log.level)}</Descriptions.Item>
+            <Descriptions.Item label="类型">{messageTypeLabel(log.message_type)}</Descriptions.Item>
+            <Descriptions.Item label="时间">{log.timestamp}</Descriptions.Item>
             <Descriptions.Item label="Log ID">
               {log.log_id ? (
                 <Typography.Text copyable className="text-mono">
                   {log.log_id}
                 </Typography.Text>
               ) : (
-                "N/A"
+                "暂无"
               )}
             </Descriptions.Item>
           </Descriptions>
 
           {loading ? (
-            <Typography.Text type="secondary">Loading full log...</Typography.Text>
+            <Typography.Text type="secondary">正在加载完整日志...</Typography.Text>
           ) : (
             <div className="log-detail-content">
               {log.message_type === MsgType.MARKDOWN || log.message_type === MsgType.RESULT ? (
@@ -96,7 +97,7 @@ const LogDetailDrawer: React.FC<LogDetailDrawerProps> = ({ taskId, log, open, on
           {log.is_truncated ? (
             <div className="system-note">
               <ExternalLink size={14} />
-              This streamed log was truncated. The drawer attempts to fetch full content by log_id.
+              实时日志内容已截断，系统正在根据日志 ID 获取完整内容。
             </div>
           ) : null}
         </Space>

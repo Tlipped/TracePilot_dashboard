@@ -86,72 +86,72 @@ export function scoreEvidenceItem(item: EvidenceItem): EvidenceScoreResult {
 
   if (item.source === "transaction") {
     score += 32;
-    reasons.push("direct transaction evidence");
+    reasons.push("直接交易证据");
   } else if (item.source === "tool") {
     score += 30;
-    reasons.push("tool-backed observation");
+    reasons.push("工具调用支撑");
   } else if (item.source === "system") {
     score += 26;
-    reasons.push("structured system output");
+    reasons.push("结构化系统输出");
   } else if (item.source === "agent_log") {
     score += 20;
-    reasons.push("agent reasoning trace");
+    reasons.push("智能体推理记录");
   } else {
     score += 16;
-    reasons.push("report-derived claim");
+    reasons.push("报告提取结论");
   }
 
   if (item.confidence === "high") {
     score += 22;
-    reasons.push("strong claim link");
+    reasons.push("与结论强关联");
   } else if (item.confidence === "medium") {
     score += 14;
-    reasons.push("supporting claim link");
+    reasons.push("与结论有关联");
   } else {
     score += 5;
   }
 
   if (tier === "verified") {
     score += 8;
-    reasons.push("verified evidence tier");
+    reasons.push("已验证证据层级");
   } else if (tier === "report_derived") {
     score -= 6;
-    reasons.push("report-only evidence");
+    reasons.push("仅由报告支撑");
   }
 
   if (item.message_type === MsgType.TOOL_CALL) {
     score += 14;
-    reasons.push("contains tool invocation");
+    reasons.push("包含工具调用");
   }
   if (item.message_type === MsgType.RESULT) {
     score += 12;
-    reasons.push("contains agent result");
+    reasons.push("包含智能体结果");
   }
   if (item.level === LogLevel.ERROR || item.level === LogLevel.WARNING) {
     score += 4;
-    reasons.push("high-signal runtime level");
+    reasons.push("包含高信号运行事件");
   }
   if (/0x[a-f0-9]{40,64}/i.test(haystack)) {
     score += 10;
-    reasons.push("contains on-chain address or transaction hash");
+    reasons.push("包含链上地址或交易哈希");
   }
   if (SECURITY_KEYWORDS.some((keyword) => haystack.includes(keyword.toLowerCase()))) {
     score += 8;
-    reasons.push("matches vulnerability analysis keywords");
+    reasons.push("命中漏洞分析关键词");
   }
   if ((item.full_content || item.content).length > 240) {
     score += 5;
-    reasons.push("has enough context");
+    reasons.push("上下文较完整");
   }
 
   const operationalOnly = /task output|interaction:\s*(query|response)|snapshot snippet|耗时|token|统计/i.test(haystack);
   if (operationalOnly && item.source !== "transaction") {
     score -= 18;
-    reasons.push("contains operational noise");
+    reasons.push("包含运行噪声");
   }
   if ((item.full_content || item.content).trim().length < 40) {
     score -= 8;
-    reasons.push("short context");
+    reasons.push("上下文过短");
   }
 
   const finalScore = clamp(score);

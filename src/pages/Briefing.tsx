@@ -6,19 +6,19 @@ import { ArrowLeft, Bot, Braces, CheckCircle2, Database, FileSearch, GitBranch, 
 const { Header, Content } = Layout;
 
 const valueCards = [
-  { title: "Problem", text: "After a DeFi exploit, teams need to know the key transaction, vulnerable logic, and evidence quality quickly.", icon: ShieldCheck },
-  { title: "Input", text: "Select a real incident case or start analysis from a DApp / transaction hash.", icon: Database },
-  { title: "Output", text: "Attack path, fund flow, critical call, root cause, evidence chain, and repair advice.", icon: FileSearch },
-  { title: "Innovation", text: "Multi-agent workflow with dynamic trace expansion and structured evidence review.", icon: GitBranch },
+  { title: "实际问题", text: "攻击发生后，团队需要尽快确认关键交易、漏洞逻辑和证据是否可靠。", icon: ShieldCheck },
+  { title: "任务输入", text: "选择真实攻击案例，或从 DApp 与交易哈希发起分析。", icon: Database },
+  { title: "分析结果", text: "输出攻击路径、资金流、根因、证据链和修复建议。", icon: FileSearch },
+  { title: "核心创新", text: "多智能体协作、动态轨迹探索与结构化证据审查。", icon: GitBranch },
 ];
 
 const skillItems = [
-  ["list_dapps", "List analyzable on-chain risk cases"],
-  ["create_task", "Start an exploit localization task"],
-  ["get_task", "Read task status and final report"],
-  ["get_macro_analysis", "Read transaction and attack-path summary"],
-  ["get_automated_review", "Generate evidence review preview"],
-  ["get_task_logs", "Trace agent reasoning logs"],
+  ["list_dapps", "列出可分析的链上攻击案例"],
+  ["create_task", "启动攻击复盘任务"],
+  ["get_task", "读取任务状态和最终报告"],
+  ["get_macro_analysis", "读取交易与攻击路径摘要"],
+  ["get_automated_review", "生成证据审查结果"],
+  ["get_task_logs", "读取智能体分析日志"],
 ];
 
 const Briefing: React.FC = () => {
@@ -28,19 +28,19 @@ const Briefing: React.FC = () => {
       <Header className="war-room-nav">
         <Space size={10}>
           <Button icon={<ArrowLeft size={16} />} onClick={() => navigate("/")} />
-          <Typography.Text className="war-room-brand">AttackPilot Briefing</Typography.Text>
+          <Typography.Text className="war-room-brand">AttackPilot 项目介绍</Typography.Text>
         </Space>
         <Space>
-          <Button onClick={() => navigate("/tasks")}>Tasks</Button>
-          <Button type="primary" onClick={() => navigate("/")}>Cockpit</Button>
+          <Button onClick={() => navigate("/tasks")}>任务库</Button>
+          <Button type="primary" onClick={() => navigate("/")}>返回平台</Button>
         </Space>
       </Header>
       <Content className="briefing-content">
         <section className="briefing-hero">
-          <Tag className="hero-chip" icon={<Sparkles size={13} />}>On-chain risk governance / Agent Skill / Human App</Tag>
-          <Typography.Title>AttackPilot: evidence-backed exploit localization agent</Typography.Title>
+          <Tag className="hero-chip" icon={<Sparkles size={13} />}>链上攻击复盘 / 智能体协作 / 证据验证</Tag>
+          <Typography.Title>AttackPilot：证据驱动的链上攻击复盘平台</Typography.Title>
           <Typography.Paragraph>
-            AttackPilot turns exploit review into a reproducible workflow: collect on-chain facts, inspect traces, locate vulnerable logic, and present a reviewable evidence chain.
+            AttackPilot 将链上取证、执行轨迹分析、漏洞定位和补丁验证组织成一套可复现的攻击复盘流程。
           </Typography.Paragraph>
         </section>
 
@@ -59,16 +59,16 @@ const Briefing: React.FC = () => {
 
         <section className="briefing-two-col">
           <div className="briefing-block">
-            <Typography.Title level={3}>Roadshow order</Typography.Title>
+            <Typography.Title level={3}>演示顺序</Typography.Title>
             <ol className="briefing-steps">
-              <li><strong>Open with one incident</strong><span>An alert says money is gone, but the team still needs root cause and evidence.</span></li>
-              <li><strong>Enter the cockpit</strong><span>Select APE / BNO and show the attack review flow.</span></li>
-              <li><strong>Explain agent roles</strong><span>Collection, trace, localization, evidence review, remediation.</span></li>
-              <li><strong>End with report</strong><span>Root cause, key evidence, repair hint, and traceable logs.</span></li>
+              <li><strong>从真实事件开始</strong><span>资产已经损失，团队仍需查明根因和证据。</span></li>
+              <li><strong>进入复盘工作台</strong><span>选择示例案例，展示完整攻击复盘流程。</span></li>
+              <li><strong>说明智能体分工</strong><span>依次展示取证、调试、定位、验证和审查。</span></li>
+              <li><strong>以报告收束</strong><span>给出根因、关键证据、修复建议和可追溯日志。</span></li>
             </ol>
           </div>
           <div className="briefing-block skill-block">
-            <Typography.Title level={3}>ArkClaw Skill</Typography.Title>
+            <Typography.Title level={3}>平台接口能力</Typography.Title>
             <div className="skill-list">
               {skillItems.map(([name, desc], index) => (
                 <div className="skill-item" key={name}>
@@ -82,10 +82,10 @@ const Briefing: React.FC = () => {
         </section>
 
         <section className="briefing-pitch">
-          <div><Bot size={28} /><strong>Positioning</strong><span>AttackPilot is a reviewable on-chain risk analysis workflow, not just a report generator.</span></div>
-          <div><Braces size={28} /><strong>Stack</strong><span>FastAPI, React, WebSocket logs, Postgres persistence, multi-agent analysis, and Skill API.</span></div>
-          <div><Wrench size={28} /><strong>Next</strong><span>Add vulnerability knowledge base, similar-case retrieval, error classification, and cached demos.</span></div>
-          <div><CheckCircle2 size={28} /><strong>Trust</strong><span>Separate tool facts, transaction evidence, and model inference to reduce hallucination risk.</span></div>
+          <div><Bot size={28} /><strong>产品定位</strong><span>提供可审查的链上风险分析流程，而非单纯生成一份报告。</span></div>
+          <div><Braces size={28} /><strong>工程实现</strong><span>结合实时日志、任务持久化、多智能体分析和接口服务。</span></div>
+          <div><Wrench size={28} /><strong>知识复用</strong><span>通过漏洞知识库与相似案例检索辅助后续分析。</span></div>
+          <div><CheckCircle2 size={28} /><strong>结果可信</strong><span>区分工具事实、交易证据和模型推理，降低错误判断风险。</span></div>
         </section>
       </Content>
     </Layout>

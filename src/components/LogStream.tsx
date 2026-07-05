@@ -16,6 +16,7 @@ import {
 import { LogLevel, LogMessage, MsgType, TaskEvent } from "../types";
 import { getTaskLogs } from "../services/api";
 import MarkdownRenderer from "./MarkdownRenderer";
+import { agentDisplayName, logLevelLabel, messageTypeLabel, taskStatusLabel } from "../utils/presentation";
 
 interface LogStreamProps {
   events: TaskEvent[];
@@ -54,9 +55,9 @@ function formatTime(timestamp?: string) {
 }
 
 function getControlText(event: TaskEvent) {
-  if (event.type === "TASK_STATUS") return `Task status changed to ${event.status}`;
-  if (event.type === "TASK_FINAL") return `Task finished as ${event.status}`;
-  if (event.type === "LOG_DROPPED") return `${event.count} log messages were dropped due to backpressure`;
+  if (event.type === "TASK_STATUS") return `任务状态已更新为${taskStatusLabel(event.status)}`;
+  if (event.type === "TASK_FINAL") return `任务已结束，状态为${taskStatusLabel(event.status)}`;
+  if (event.type === "LOG_DROPPED") return `${event.count} 条日志因消息积压被丢弃`;
   if (event.type === "CONNECTED") return event.message;
   if (event.type === "HEARTBEAT_TIMEOUT") return event.message;
   return "";
@@ -177,7 +178,7 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
             allowClear
             className="stream-search"
             prefix={<Search size={14} />}
-            placeholder="Search logs"
+            placeholder="搜索日志"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
@@ -186,11 +187,11 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
             value={level}
             onChange={setLevel}
             options={[
-              { label: "All levels", value: "all" },
-              { label: "Info", value: LogLevel.INFO },
-              { label: "Warning", value: LogLevel.WARNING },
-              { label: "Error", value: LogLevel.ERROR },
-              { label: "Debug", value: LogLevel.DEBUG },
+              { label: "全部级别", value: "all" },
+              { label: "信息", value: LogLevel.INFO },
+              { label: "警告", value: LogLevel.WARNING },
+              { label: "错误", value: LogLevel.ERROR },
+              { label: "调试", value: LogLevel.DEBUG },
             ]}
           />
           <Select
@@ -198,15 +199,15 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
             value={messageType}
             onChange={setMessageType}
             options={[
-              { label: "All types", value: "all" },
-              { label: "Text", value: MsgType.TEXT },
-              { label: "Markdown", value: MsgType.MARKDOWN },
-              { label: "Tool", value: MsgType.TOOL_CALL },
-              { label: "Result", value: MsgType.RESULT },
+              { label: "全部类型", value: "all" },
+              { label: "文本", value: MsgType.TEXT },
+              { label: "文档", value: MsgType.MARKDOWN },
+              { label: "工具调用", value: MsgType.TOOL_CALL },
+              { label: "结果", value: MsgType.RESULT },
             ]}
           />
         </Space>
-        <Tooltip title={autoScroll ? "Pause auto scroll" : "Resume auto scroll"}>
+        <Tooltip title={autoScroll ? "暂停自动滚动" : "恢复自动滚动"}>
           <Button
             icon={autoScroll ? <CirclePause size={15} /> : <CirclePlay size={15} />}
             onClick={() => setAutoScroll((value) => !value)}
@@ -217,18 +218,18 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
       {rawMode ? (
         <div className="raw-recovery-bar">
           <Space size={8} wrap>
-            <Tag color="cyan">{filteredEvents.length} visible</Tag>
-            <Tag>{persistedEvents.length} restored</Tag>
+            <Tag color="cyan">{filteredEvents.length} 条可见</Tag>
+            <Tag>{persistedEvents.length} 条已恢复</Tag>
             <Button
               size="small"
               loading={loadingPage}
               disabled={!hasMore}
               onClick={() => loadLogPage(nextBeforeId)}
             >
-              Load older logs
+              加载更早日志
             </Button>
           </Space>
-          <Typography.Text type="secondary">Virtualized list keeps long tasks responsive.</Typography.Text>
+          <Typography.Text type="secondary">长任务日志采用虚拟列表展示。</Typography.Text>
         </div>
       ) : null}
 
@@ -238,7 +239,7 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
         onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
       >
         {filteredEvents.length === 0 ? (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No matching events" />
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有符合条件的事件" />
         ) : (
           <div>
             <div style={{ height: topPadding }} />
@@ -264,13 +265,13 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
               >
                 <div className="log-event-meta">
                   <span className="log-time">{formatTime(event.timestamp)}</span>
-                  <Tag className="agent-tag">{event.agent}</Tag>
-                  <Tag className={`level-tag ${getLevelClass(event.level)}`}>{event.level}</Tag>
+                  <Tag className="agent-tag">{agentDisplayName(event.agent)}</Tag>
+                  <Tag className={`level-tag ${getLevelClass(event.level)}`}>{logLevelLabel(event.level)}</Tag>
                   <span className="message-type">
                     {getTypeIcon(event.message_type)}
-                    {event.message_type}
+                    {messageTypeLabel(event.message_type)}
                   </span>
-                  {event.is_truncated ? <Tag color="warning">truncated</Tag> : null}
+                  {event.is_truncated ? <Tag color="warning">内容已截断</Tag> : null}
                   {event.level === LogLevel.ERROR ? <Bug size={14} className="text-red" /> : null}
                 </div>
                 <div className="log-event-body">
@@ -283,7 +284,7 @@ const LogStream: React.FC<LogStreamProps> = ({ events, selectedAgent, onSelectLo
                 {event.message_type === MsgType.TOOL_CALL ? (
                   <div className="tool-hint">
                     <Code2 size={13} />
-                    Tool call event
+                    工具调用事件
                   </div>
                 ) : null}
               </button>

@@ -300,7 +300,7 @@ const LearningCenter: React.FC = () => {
       <Header className="landing-v2-nav">
         <button className="landing-brand" type="button" onClick={() => navigate("/")}>
           <span className="landing-brand-mark"><img src={riskPilotLogo} alt="AttackPilot logo" /></span>
-          <span><strong>AttackPilot</strong><small>Learning center</small></span>
+          <span><strong>AttackPilot</strong><small>漏洞学习中心</small></span>
         </button>
         <Space size={10} className="landing-nav-actions">
           <Button type="text" onClick={() => navigate("/")}>返回首页</Button>

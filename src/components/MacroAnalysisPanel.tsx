@@ -23,12 +23,12 @@ interface MacroAnalysisPanelProps {
 }
 
 function shortHash(value?: string | null) {
-  if (!value) return "N/A";
+  if (!value) return "暂无";
   return value.length > 18 ? `${value.slice(0, 10)}...${value.slice(-6)}` : value;
 }
 
 function formatUsd(value?: number | null) {
-  if (value == null || Number.isNaN(value)) return "N/A";
+  if (value == null || Number.isNaN(value)) return "暂无";
   const sign = value > 0 ? "+" : "";
   return `${sign}$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
@@ -162,7 +162,7 @@ const MacroAnalysisPanel: React.FC<MacroAnalysisPanelProps> = ({ macro, language
                     </Space>
                     <div className="macro-tx-meta">
                       <span>
-                        {t(language, "functionSig")}: {tx.function_signature || "N/A"}
+                        {t(language, "functionSig")}: {tx.function_signature || "暂无"}
                       </span>
                       <span>
                         {t(language, "balanceDelta")}: {formatUsd(tx.balance_summary?.total_usd_delta)}
@@ -191,12 +191,12 @@ const MacroAnalysisPanel: React.FC<MacroAnalysisPanelProps> = ({ macro, language
                   <span className="macro-role-icon">{getRoleIcon(item.role)}</span>
                   <div>
                     <Space size={6} wrap>
-                      <Tag className="tx-role-tag">{item.role || "unknown"}</Tag>
+                      <Tag className="tx-role-tag">{item.role || "未知角色"}</Tag>
                       <Typography.Text copyable={{ text: item.address }} className="text-mono">
                         {shortHash(item.address)}
                       </Typography.Text>
                     </Space>
-                    <Typography.Paragraph ellipsis={{ rows: 2 }}>{item.description || "No description"}</Typography.Paragraph>
+                    <Typography.Paragraph ellipsis={{ rows: 2 }}>{item.description || "暂无说明"}</Typography.Paragraph>
                   </div>
                 </article>
               ))}
@@ -208,7 +208,7 @@ const MacroAnalysisPanel: React.FC<MacroAnalysisPanelProps> = ({ macro, language
           <div className="macro-section-title">
             <Typography.Text strong>{t(language, "faultSummary")}</Typography.Text>
           </div>
-          <MarkdownRenderer content={macro.bug_summary || "N/A"} compact />
+          <MarkdownRenderer content={macro.bug_summary || "暂无"} compact />
         </section>
       </div>
     </section>

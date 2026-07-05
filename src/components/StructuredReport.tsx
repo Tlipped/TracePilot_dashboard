@@ -21,6 +21,7 @@ import EvidenceIntelligencePanel from "./EvidenceIntelligencePanel";
 import KeyTransactionCards from "./KeyTransactionCards";
 import MarkdownRenderer from "./MarkdownRenderer";
 import PatchVerificationPanel from "./PatchVerificationPanel";
+import { taskStatusLabel } from "../utils/presentation";
 
 interface StructuredReportProps {
   task: Task | null;
@@ -182,7 +183,7 @@ function parseReportSections(report: string, events: TaskEvent[]): ReportSection
         ? transactions.map((hash) => `- \`${hash}\``).join("\n")
         : findParagraphByKeyword(report, definition.keywords);
 
-    const content = byHeading || fallback || "暂未从最终报告中提取到该区块，可查看 Raw Report 获取完整上下文。";
+    const content = byHeading || fallback || "暂未从最终报告中提取到该部分，可查看原始报告获取完整上下文。";
     return {
       key: definition.key,
       title: definition.title,
@@ -236,34 +237,34 @@ function downloadText(filename: string, content: string, mimeType: string) {
 }
 
 function safeName(value?: string) {
-  return (value || "riskpilot").replace(/[\\/:*?"<>|\s]+/g, "_");
+  return (value || "attackpilot").replace(/[\\/:*?"<>|\s]+/g, "_");
 }
 
 function buildMarkdownExport(task: Task, sections: ReportSection[], agentSummaries: AgentExportSummary[]) {
   const lines = [
-    `# RiskPilot Audit Report - ${task.dapp_name}`,
+    `# AttackPilot 攻击复盘报告 - ${task.dapp_name}`,
     "",
-    "## Task Metadata",
+    "## 任务信息",
     "",
-    `- Task ID: \`${task.task_id}\``,
-    `- Status: \`${task.status}\``,
-    `- Created: ${task.created_at}`,
-    `- Completed: ${task.completed_at ?? "N/A"}`,
-    `- Duration: ${task.duration ?? "N/A"}`,
+    `- 任务 ID：\`${task.task_id}\``,
+    `- 状态：${taskStatusLabel(task.status)}`,
+    `- 创建时间：${task.created_at}`,
+    `- 完成时间：${task.completed_at ?? "暂无"}`,
+    `- 耗时：${task.duration ?? "暂无"} 秒`,
     "",
     ...sections.flatMap((section) => [`## ${section.title}`, "", section.content, ""]),
-    "## Agent Evidence Summary",
+    "## 智能体证据摘要",
     "",
-    "| Agent | Events | Tool Calls | Results | Errors | Warnings |",
+    "| 智能体 | 事件 | 工具调用 | 结果 | 错误 | 警告 |",
     "| --- | ---: | ---: | ---: | ---: | ---: |",
     ...agentSummaries.map(
       (agent) =>
         `| ${agent.agent} | ${agent.total} | ${agent.tool_calls} | ${agent.results} | ${agent.errors} | ${agent.warnings} |`,
     ),
     "",
-    "## Raw Final Report",
+    "## 原始最终报告",
     "",
-    task.final_report || "N/A",
+    task.final_report || "暂无",
   ];
   return lines.join("\n");
 }
@@ -274,7 +275,7 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
   mode = "report",
   macroAnalysis,
   automatedReview,
-  language = "en",
+  language = "zh",
 }) => {
   const { message } = AntdApp.useApp();
   const [selectedSection, setSelectedSection] = useState<ReportSection | null>(null);
@@ -290,7 +291,7 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
       buildMarkdownExport(task, sections, agentSummaries),
       "text/markdown;charset=utf-8",
     );
-    message.success("Markdown audit report exported");
+    message.success("Markdown 报告已导出");
   };
 
   const exportJson = () => {
@@ -313,13 +314,13 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
       JSON.stringify(payload, null, 2),
       "application/json;charset=utf-8",
     );
-    message.success("JSON evidence package exported");
+    message.success("JSON 证据包已导出");
   };
 
   if (!task?.final_report) {
     return (
       <div className="empty-report">
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Final report will appear here when the task completes." />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="任务完成后将在此显示最终报告。" />
       </div>
     );
   }
@@ -328,19 +329,19 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
     <div className="structured-report-panel">
       <div className="report-actions">
         <div>
-          <Typography.Text strong>Structured Audit Report</Typography.Text>
+          <Typography.Text strong>结构化复盘报告</Typography.Text>
           <Typography.Text type="secondary">
             {mode === "learn"
-              ? "Learn mode keeps the conclusion readable and links each claim to evidence."
-              : `${sections.length} sections extracted from final report with linked evidence.`}
+              ? "学习视图按攻击过程解释结论，并关联对应证据。"
+              : `已从最终报告提取 ${sections.length} 个部分，并关联证据。`}
           </Typography.Text>
         </div>
         <Space size={8} wrap>
           <Button size="small" icon={<Download size={14} />} onClick={exportMarkdown}>
-            Export MD
+            导出 Markdown
           </Button>
           <Button size="small" icon={<FileJson size={14} />} onClick={exportJson}>
-            Export JSON
+            导出 JSON
           </Button>
         </Space>
       </div>
@@ -369,8 +370,8 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
                 <Typography.Text type="secondary">{section.description}</Typography.Text>
               </div>
               <Space size={6}>
-                <Tag color={section.evidence.length > 0 ? "cyan" : "default"}>{section.evidence.length} evidence</Tag>
-                {section.content.startsWith("暂未") ? <Tag>fallback</Tag> : <Tag color="success">parsed</Tag>}
+                <Tag color={section.evidence.length > 0 ? "cyan" : "default"}>{section.evidence.length} 条证据</Tag>
+                {section.content.startsWith("暂未") ? <Tag>待补充</Tag> : <Tag color="success">已提取</Tag>}
               </Space>
             </div>
             <MarkdownRenderer content={section.content} compact />
@@ -380,7 +381,7 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
                 icon={<SearchCheck size={14} />}
                 onClick={() => setSelectedSection(section)}
               >
-                Evidence
+                查看证据
               </Button>
             </div>
           </section>
@@ -392,7 +393,7 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
               <CheckCircle2 size={16} />
             </span>
             <div>
-              <Typography.Text strong>Raw Report</Typography.Text>
+              <Typography.Text strong>原始报告</Typography.Text>
               <Typography.Text type="secondary">完整原始报告，保留模型输出上下文。</Typography.Text>
             </div>
           </div>
@@ -401,7 +402,7 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
       </div>
 
       <EvidenceDrawer
-        title={selectedSection ? `${selectedSection.title} Evidence` : "Evidence"}
+        title={selectedSection ? `${selectedSection.title}证据` : "证据"}
         open={Boolean(selectedSection)}
         evidence={selectedSection?.evidence ?? []}
         onClose={() => setSelectedSection(null)}

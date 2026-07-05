@@ -20,6 +20,10 @@ const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "
   const [open, setOpen] = useState(false);
   const metadata = useMemo(() => getDappMetadata(dappName), [dappName]);
   const title = metadata?.name ?? dappName ?? "DApp";
+  const cause = metadata?.cause_zh ?? metadata?.cause;
+  const platform = metadata?.platform_zh ?? metadata?.platform;
+  const rootCause = metadata?.root_cause_zh ?? metadata?.root_cause;
+  const background = metadata?.report_zh ?? metadata?.background_zh ?? metadata?.report;
   const references = [
     { label: "检测记录", ...metadata?.detection },
     { label: "公开披露", ...metadata?.disclosure },
@@ -40,32 +44,32 @@ const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "
         disabled={disabled || !dappName}
         onClick={() => setOpen(true)}
       >
-        Context
+        背景知识
       </Button>
 
       <Drawer
-        title={`${title} 案例上下文`}
+        title={`${title} 背景知识`}
         open={open}
         onClose={() => setOpen(false)}
         size="large"
         extra={
           <Space>
-            {metadata?.platform ? <Tag>{metadata.platform}</Tag> : null}
-            {metadata?.cause ? <Tag color="blue">{metadata.cause}</Tag> : null}
+            {platform ? <Tag>{platform}</Tag> : null}
+            {cause ? <Tag color="blue">{cause}</Tag> : null}
           </Space>
         }
       >
         {metadata ? (
           <Space orientation="vertical" size={18} style={{ width: "100%" }}>
             <Descriptions bordered column={1} size="small">
-              <Descriptions.Item label="事件时间">{metadata.time ?? "N/A"}</Descriptions.Item>
-              <Descriptions.Item label="根因摘要">{metadata.root_cause ?? "N/A"}</Descriptions.Item>
-              <Descriptions.Item label="相关协议">{metadata.platform ?? "N/A"}</Descriptions.Item>
+              <Descriptions.Item label="事件时间">{metadata.time ?? "暂无"}</Descriptions.Item>
+              <Descriptions.Item label="根因摘要">{rootCause ?? "暂无"}</Descriptions.Item>
+              <Descriptions.Item label="相关协议">{platform ?? "暂无"}</Descriptions.Item>
             </Descriptions>
 
             <div>
-              <Typography.Title level={5}>案情背景</Typography.Title>
-              <Typography.Paragraph>{metadata.report ?? "暂无可用背景报告。"}</Typography.Paragraph>
+              <Typography.Title level={5}>案例背景知识</Typography.Title>
+              <Typography.Paragraph>{background ?? "暂无可用背景知识。"}</Typography.Paragraph>
             </div>
 
             <div>
@@ -124,7 +128,7 @@ const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "
             </div>
           </Space>
         ) : (
-          <Empty description="暂无该 DApp 的上下文元数据" />
+          <Empty description="暂无该 DApp 的背景知识" />
         )}
       </Drawer>
     </>

@@ -35,14 +35,19 @@ const LearningGuidePanel: React.FC<LearningGuidePanelProps> = ({ task, macro, la
 
   const title = metadata?.name ?? task?.dapp_name ?? "DApp";
   const isZh = language === "zh";
-  const ragQuery = [title, metadata?.cause, metadata?.root_cause, macro?.bug_summary]
+  const cause = metadata?.cause_zh ?? metadata?.cause;
+  const platform = metadata?.platform_zh ?? metadata?.platform;
+  const rootCause = metadata?.root_cause_zh ?? metadata?.root_cause;
+  const ragQuery = [title, cause, rootCause, macro?.bug_summary]
     .filter(Boolean)
     .join(" ");
   const steps = [
     {
-      title: isZh ? "背景理解" : "Context",
+      title: "背景知识",
       icon: <BookOpen size={16} />,
       text:
+        metadata?.report_zh ||
+        metadata?.background_zh ||
         metadata?.report ||
         (isZh
           ? "先理解该 DApp 的业务角色、合约功能和历史漏洞背景。"
@@ -104,13 +109,13 @@ const LearningGuidePanel: React.FC<LearningGuidePanelProps> = ({ task, macro, la
             <Typography.Text type="secondary" className="macro-subtitle">
               {isZh
                 ? "把案例背景、攻击阶段和 AttackPilot 的宏观/微观分析串起来，适合演示和教学。"
-                : "Connect incident context, attack stages, and AttackPilot macro/micro analysis for explanation."}
+            : "串联案例背景、攻击阶段和 AttackPilot 的宏观/微观分析，适合演示和教学。"}
             </Typography.Text>
           </div>
         </Space>
         <Space size={6}>
-          {metadata?.platform ? <Tag>{metadata.platform}</Tag> : null}
-          {metadata?.cause ? <Tag color="blue">{metadata.cause}</Tag> : null}
+          {platform ? <Tag>{platform}</Tag> : null}
+          {cause ? <Tag color="blue">{cause}</Tag> : null}
         </Space>
       </div>
 
@@ -119,13 +124,13 @@ const LearningGuidePanel: React.FC<LearningGuidePanelProps> = ({ task, macro, la
           <section className="learning-card learning-hero">
             <Space size={8}>
               <Landmark size={16} />
-              <Typography.Text strong>{isZh ? "漏洞背景" : "Incident Context"}</Typography.Text>
+              <Typography.Text strong>漏洞背景</Typography.Text>
             </Space>
             <div className="learning-meta-strip">
-              <Tag>{metadata?.time ?? "N/A"}</Tag>
-              <Tag>{metadata?.root_cause ?? (isZh ? "根因待解析" : "Root cause pending")}</Tag>
+              <Tag>{metadata?.time ?? "暂无时间"}</Tag>
+              <Tag>{rootCause ?? "根因待解析"}</Tag>
             </div>
-            <MarkdownRenderer content={metadata?.report || macro?.bug_summary || ""} compact />
+            <MarkdownRenderer content={metadata?.report_zh || metadata?.background_zh || metadata?.report || macro?.bug_summary || ""} compact />
           </section>
 
           <section className="learning-card">
@@ -146,12 +151,12 @@ const LearningGuidePanel: React.FC<LearningGuidePanelProps> = ({ task, macro, la
                             {shortHash(tx.hash)}
                           </Typography.Text>
                           <Tag color={tx.type === "attack" ? "error" : tx.type === "auxiliary" ? "processing" : "default"}>
-                            {tx.type}
+                            {tx.type === "attack" ? "攻击交易" : tx.type === "auxiliary" ? "辅助交易" : "候选交易"}
                           </Tag>
-                          {tx.is_debug_target ? <Tag color="purple">debug</Tag> : null}
+                          {tx.is_debug_target ? <Tag color="purple">调试目标</Tag> : null}
                         </Space>
                       }
-                      description={tx.function_signature || `${tx.from_role || "unknown"} -> ${tx.to_role || "unknown"}`}
+                      description={tx.function_signature || `${tx.from_role || "未知角色"} -> ${tx.to_role || "未知角色"}`}
                     />
                   </List.Item>
                 )}

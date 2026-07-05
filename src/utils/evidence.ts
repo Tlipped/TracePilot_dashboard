@@ -144,7 +144,7 @@ export function buildEvidenceForSection(
       title:
         log.message_type === MsgType.TOOL_CALL
           ? `Tool evidence from ${log.agent}`
-          : `Agent evidence from ${log.agent}`,
+          : `${log.agent} 智能体证据`,
       source: log.message_type === MsgType.TOOL_CALL ? "tool" : "agent_log",
       agent: log.agent,
       level: log.level,
@@ -160,7 +160,7 @@ export function buildEvidenceForSection(
   if (sectionContent && !sectionContent.startsWith("暂未")) {
     evidence.unshift({
       id: `${sectionKey}-report-summary`,
-      title: "Report section summary",
+      title: "报告章节摘要",
       source: "report",
       content: compactEvidenceText(sectionContent, 700),
       full_content: normalizeEvidenceMarkdown(sectionContent),

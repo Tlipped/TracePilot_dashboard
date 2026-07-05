@@ -5,6 +5,7 @@ import { EvidenceItem } from "../types";
 import { normalizeEvidenceMarkdown } from "../utils/evidence";
 import { enrichEvidenceItems, isToolBackedEvidence } from "../utils/evidenceScoring";
 import MarkdownRenderer from "./MarkdownRenderer";
+import { agentDisplayName, messageTypeLabel } from "../utils/presentation";
 
 interface EvidenceDrawerProps {
   title: string;
@@ -39,16 +40,16 @@ function renderableContent(item: EvidenceItem) {
 }
 
 function tierLabel(tier?: EvidenceItem["evidence_tier"]) {
-  if (tier === "verified") return "Verified";
-  if (tier === "tool_backed") return "Tool-backed";
-  if (tier === "agent_derived") return "Agent-derived";
-  return "Report-derived";
+  if (tier === "verified") return "已验证";
+  if (tier === "tool_backed") return "工具证据";
+  if (tier === "agent_derived") return "智能体推理";
+  return "报告提取";
 }
 
 function supportLabel(confidence: EvidenceItem["confidence"]) {
-  if (confidence === "high") return "Strong support";
-  if (confidence === "medium") return "Supporting";
-  return "Weak support";
+  if (confidence === "high") return "强支撑";
+  if (confidence === "medium") return "一般支撑";
+  return "弱支撑";
 }
 
 const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ title, open, evidence, onClose }) => {
@@ -65,7 +66,7 @@ const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ title, open, evidence, 
   return (
     <Drawer title={title} open={open} onClose={onClose} size="large" className="evidence-drawer">
       {rankedEvidence.length === 0 ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No linked evidence yet" />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无关联证据" />
       ) : (
         <Space direction="vertical" size={12} style={{ width: "100%" }}>
           <Segmented
@@ -73,15 +74,15 @@ const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ title, open, evidence, 
             value={filter}
             onChange={(value) => setFilter(value as EvidenceFilter)}
             options={[
-              { label: "All", value: "all" },
-              { label: "Tool-backed", value: "tool_backed" },
-              { label: "No tool", value: "no_tool" },
-              { label: "Report-only", value: "report_only" },
-              { label: "Weak", value: "weak" },
+              { label: "全部", value: "all" },
+              { label: "工具证据", value: "tool_backed" },
+              { label: "无工具支撑", value: "no_tool" },
+              { label: "仅报告", value: "report_only" },
+              { label: "弱证据", value: "weak" },
             ]}
           />
           {visibleEvidence.length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No evidence matches this filter" />
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有符合筛选条件的证据" />
           ) : (
             <List
               className="evidence-list"
@@ -95,7 +96,9 @@ const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ title, open, evidence, 
                         <Typography.Text strong>{item.title}</Typography.Text>
                         <Tag>{tierLabel(item.evidence_tier)}</Tag>
                         <Tag color={getSupportColor(item.confidence)}>{supportLabel(item.confidence)}</Tag>
-                        <Tag color={getScoreColor(item.score_label)}>{item.score_label}</Tag>
+                        <Tag color={getScoreColor(item.score_label)}>
+                          {item.score_label === "strong" ? "强证据" : item.score_label === "supporting" ? "辅助证据" : "弱证据"}
+                        </Tag>
                       </Space>
                     </div>
 
@@ -114,9 +117,9 @@ const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ title, open, evidence, 
                     </div>
 
                     <Descriptions bordered size="small" column={1}>
-                      {item.agent ? <Descriptions.Item label="Agent">{item.agent}</Descriptions.Item> : null}
-                      {item.message_type ? <Descriptions.Item label="Type">{item.message_type}</Descriptions.Item> : null}
-                      {item.timestamp ? <Descriptions.Item label="Time">{item.timestamp}</Descriptions.Item> : null}
+                      {item.agent ? <Descriptions.Item label="智能体">{agentDisplayName(item.agent)}</Descriptions.Item> : null}
+                      {item.message_type ? <Descriptions.Item label="类型">{messageTypeLabel(item.message_type)}</Descriptions.Item> : null}
+                      {item.timestamp ? <Descriptions.Item label="时间">{item.timestamp}</Descriptions.Item> : null}
                       {item.log_id ? (
                         <Descriptions.Item label="Log ID">
                           <Typography.Text copyable className="text-mono">

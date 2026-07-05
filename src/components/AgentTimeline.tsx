@@ -10,6 +10,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { LogLevel, LogMessage, MsgType, TaskEvent, TaskStatus } from "../types";
+import { agentDisplayName, messageTypeLabel, taskStatusLabel } from "../utils/presentation";
 
 interface AgentTimelineProps {
   events: TaskEvent[];
@@ -63,27 +64,27 @@ function compactText(value: string, limit = 220) {
 }
 
 function getLogTitle(log: LogMessage) {
-  if (log.level === LogLevel.ERROR) return "Error signal";
-  if (log.level === LogLevel.WARNING) return "Warning signal";
-  if (log.message_type === MsgType.TOOL_CALL) return "Tool call";
-  if (log.message_type === MsgType.RESULT) return "Result captured";
-  if (log.message_type === MsgType.MARKDOWN) return "Reasoning note";
-  return "Agent message";
+  if (log.level === LogLevel.ERROR) return "错误信号";
+  if (log.level === LogLevel.WARNING) return "警告信号";
+  if (log.message_type === MsgType.TOOL_CALL) return "调用工具";
+  if (log.message_type === MsgType.RESULT) return "获得结果";
+  if (log.message_type === MsgType.MARKDOWN) return "分析记录";
+  return "智能体消息";
 }
 
 function getControlTitle(event: TaskEvent) {
-  if (event.type === "TASK_STATUS") return `Task ${event.status}`;
-  if (event.type === "TASK_FINAL") return `Final state ${event.status}`;
-  if (event.type === "LOG_DROPPED") return "Log backpressure";
-  if (event.type === "HEARTBEAT_TIMEOUT") return "Heartbeat timeout";
-  if (event.type === "CONNECTED") return "WebSocket connected";
-  return "System event";
+  if (event.type === "TASK_STATUS") return `任务${taskStatusLabel(event.status)}`;
+  if (event.type === "TASK_FINAL") return `最终状态：${taskStatusLabel(event.status)}`;
+  if (event.type === "LOG_DROPPED") return "日志积压";
+  if (event.type === "HEARTBEAT_TIMEOUT") return "连接心跳超时";
+  if (event.type === "CONNECTED") return "实时连接已建立";
+  return "系统事件";
 }
 
 function getControlPreview(event: TaskEvent) {
-  if (event.type === "TASK_STATUS") return `Status changed to ${event.status}.`;
-  if (event.type === "TASK_FINAL") return event.final_report ? "Final report is ready." : event.error ?? "";
-  if (event.type === "LOG_DROPPED") return `${event.count} messages were dropped.`;
+  if (event.type === "TASK_STATUS") return `任务状态已更新为${taskStatusLabel(event.status)}。`;
+  if (event.type === "TASK_FINAL") return event.final_report ? "最终报告已生成。" : event.error ?? "";
+  if (event.type === "LOG_DROPPED") return `${event.count} 条消息因积压被丢弃。`;
   if (event.type === "CONNECTED") return event.message;
   if (event.type === "HEARTBEAT_TIMEOUT") return event.message;
   return "";
@@ -150,14 +151,14 @@ const AgentTimeline: React.FC<AgentTimelineProps> = ({ events, selectedAgent, on
       <div className="panel-header">
         <Space size={8}>
           <Clock3 size={16} />
-          <Typography.Text strong>Agent Timeline</Typography.Text>
+          <Typography.Text strong>智能体时间线</Typography.Text>
         </Space>
-        <Tag>{items.length} events</Tag>
+        <Tag>{items.length} 个事件</Tag>
       </div>
 
       <div className="timeline-list">
         {items.length === 0 ? (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No timeline events" />
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无时间线事件" />
         ) : (
           items.map((item) => {
             const levelClass = getLevelClass(item.kind === "log" ? item.level : undefined, item.kind === "control" && item.warning);
@@ -170,16 +171,16 @@ const AgentTimeline: React.FC<AgentTimelineProps> = ({ events, selectedAgent, on
                 <div className="timeline-content">
                   <div className="timeline-meta">
                     <span className="log-time">{formatTime(item.timestamp)}</span>
-                    {item.kind === "log" ? <Tag className="agent-tag">{item.agent}</Tag> : <Tag>system</Tag>}
+                    {item.kind === "log" ? <Tag className="agent-tag">{agentDisplayName(item.agent)}</Tag> : <Tag>系统</Tag>}
                     {item.kind === "log" ? (
-                      <Tag className={`level-tag ${levelClass}`}>{item.messageType}</Tag>
+                      <Tag className={`level-tag ${levelClass}`}>{messageTypeLabel(item.messageType)}</Tag>
                     ) : item.status ? (
-                      <Tag>{item.status}</Tag>
+                      <Tag>{taskStatusLabel(item.status)}</Tag>
                     ) : null}
                   </div>
                   <Typography.Text strong>{item.title}</Typography.Text>
                   <Typography.Paragraph ellipsis={{ rows: 2 }} className="timeline-preview">
-                    {item.preview || "No preview available."}
+                    {item.preview || "暂无预览内容。"}
                   </Typography.Paragraph>
                 </div>
                 {item.kind === "log" ? <ChevronRight size={15} className="timeline-open" /> : null}

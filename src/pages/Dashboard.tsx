@@ -30,6 +30,7 @@ import {
   TaskStatus,
 } from "../types";
 import { modeLabel, t } from "../utils/i18n";
+import { formatDurationZh, taskStatusLabel } from "../utils/presentation";
 import riskPilotLogo from "../assets/riskpilot_logo.png";
 
 const { Header, Content } = Layout;
@@ -41,11 +42,7 @@ function isLogEvent(event: TaskEvent): event is LogMessage {
 }
 
 function formatDuration(duration?: number | null) {
-  if (duration == null) return "N/A";
-  if (duration < 60) return `${duration.toFixed(1)}s`;
-  const minutes = Math.floor(duration / 60);
-  const seconds = Math.floor(duration % 60);
-  return `${minutes}m ${seconds}s`;
+  return formatDurationZh(duration);
 }
 
 function getStatusColor(status?: TaskStatus) {
@@ -100,7 +97,7 @@ const Dashboard: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [loadingTask, setLoadingTask] = useState(true);
   const [viewMode, setViewMode] = useState<ProductViewMode>("report");
-  const [language, setLanguage] = useState<LanguageMode>("zh");
+  const language: LanguageMode = "zh";
   const [activeMainTab, setActiveMainTab] = useState(getDefaultMainTab("report"));
   const [macroAnalysis, setMacroAnalysis] = useState<MacroAnalysisResponse | null>(null);
   const [automatedReview, setAutomatedReview] = useState<AutomatedReviewResponse | null>(null);
@@ -114,7 +111,7 @@ const Dashboard: React.FC = () => {
       setErrorMsg("");
       return nextTask;
     } catch {
-      setErrorMsg("Failed to fetch task status.");
+      setErrorMsg("任务状态获取失败。");
       return null;
     } finally {
       setLoadingTask(false);
@@ -192,7 +189,7 @@ const Dashboard: React.FC = () => {
             setWsStatus(null);
           }
         } catch {
-          if (!cancelled && mountedRef.current) setErrorMsg("Failed to fetch persisted task logs. Please check /api/tasks/{task_id}/logs.");
+          if (!cancelled && mountedRef.current) setErrorMsg("历史任务日志获取失败，请检查日志接口。");
         }
         return;
       }
@@ -329,10 +326,10 @@ const Dashboard: React.FC = () => {
       : "待连接";
   const systemStatusTone = agentIssueCount > 0 ? "warning" : task?.status === TaskStatus.FAILED ? "error" : "healthy";
   const systemStatusHint = agentIssueCount > 0
-    ? `${agentIssueCount} 个 Agent 有告警或错误`
+    ? `${agentIssueCount} 个智能体有告警或错误`
     : activeAgentCount > 0
-      ? "所有 Agent 正常运行"
-      : "等待 Agent 输出日志";
+      ? "所有智能体正常运行"
+      : "等待智能体输出日志";
 
   const openLog = (log: LogMessage) => {
     setSelectedLog(log);
@@ -566,17 +563,17 @@ const Dashboard: React.FC = () => {
             <div>
               <span>{t(language, "status")}</span>
               <Space size={6}>
-                <Tag color={getStatusColor(task?.status)}>{task?.status}</Tag>
+                <Tag color={getStatusColor(task?.status)}>{taskStatusLabel(task?.status)}</Tag>
                 {task?.archived ? <Tag>{t(language, "archived")}</Tag> : null}
               </Space>
             </div>
             <div>
               <span>{t(language, "created")}</span>
-              <Typography.Text>{task?.created_at ?? "N/A"}</Typography.Text>
+              <Typography.Text>{task?.created_at ?? "暂无"}</Typography.Text>
             </div>
             <div>
               <span>{t(language, "completed")}</span>
-              <Typography.Text>{task?.completed_at ?? "N/A"}</Typography.Text>
+              <Typography.Text>{task?.completed_at ?? "暂无"}</Typography.Text>
             </div>
             <div>
               <span>{t(language, "error")}</span>
@@ -595,10 +592,10 @@ const Dashboard: React.FC = () => {
         <Space size={12} className="review-topbar-main">
           <Button icon={<ArrowLeft size={16} />} onClick={() => navigate("/tasks")} title="返回任务控制台" />
           <Button icon={<Home size={16} />} onClick={() => navigate("/")} title="返回首页" />
-          <span className="workbench-brand-mark compact"><img src={riskPilotLogo} alt="RiskPilot logo" /></span>
+          <span className="workbench-brand-mark compact"><img src={riskPilotLogo} alt="AttackPilot 标志" /></span>
           <div className="review-title-block">
             <Typography.Title level={5} className="review-title">
-              {task?.dapp_name ? `${task.dapp_name} Review` : "Review Workbench"}
+              {task?.dapp_name ? `${task.dapp_name} 攻击复盘` : "攻击复盘工作台"}
             </Typography.Title>
             <Typography.Text type="secondary" className="text-mono">
               {taskId?.slice(0, 8)}...
@@ -619,16 +616,7 @@ const Dashboard: React.FC = () => {
               ]}
             />
           </div>
-          <Segmented
-            size="small"
-            value={language}
-            onChange={(value) => setLanguage(value as LanguageMode)}
-            options={[
-              { label: "中文", value: "zh" },
-              { label: "EN", value: "en" },
-            ]}
-          />
-          <Tag color={getStatusColor(task?.status)}>{task?.status ?? t(language, "loading")}</Tag>
+          <Tag color={getStatusColor(task?.status)}>{task?.status ? taskStatusLabel(task.status) : t(language, "loading")}</Tag>
           {task?.archived ? <Tag>{t(language, "archived")}</Tag> : null}
           <Tag>{task?.dapp_name ?? t(language, "unknownDapp")}</Tag>
           <Tag>{formatDuration(task?.duration)}</Tag>
@@ -651,7 +639,7 @@ const Dashboard: React.FC = () => {
         <div className="task-overview">
           <div>
             <Typography.Text type="secondary">{t(language, "dapp")}</Typography.Text>
-            <Typography.Title level={4}>{task?.dapp_name ?? "Loading..."}</Typography.Title>
+            <Typography.Title level={4}>{task?.dapp_name ?? "加载中..."}</Typography.Title>
           </div>
           <div className="overview-metrics">
             <div>

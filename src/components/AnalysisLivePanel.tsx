@@ -4,6 +4,7 @@ import { Activity, Bot, FileText, ListTree, SearchCheck } from "lucide-react";
 import LogStream from "./LogStream";
 import { AgentStats } from "./AgentNavigator";
 import { LogLevel, LogMessage, MsgType, Task, TaskEvent, TaskStatus } from "../types";
+import { agentDisplayName, messageTypeLabel } from "../utils/presentation";
 
 interface AnalysisLivePanelProps {
   task: Task | null;
@@ -62,7 +63,7 @@ const AnalysisLivePanel: React.FC<AnalysisLivePanelProps> = ({
         .reverse(),
     [logEvents],
   );
-  const currentAgent = agentStats.find((item) => item.lastSeen)?.name ?? agentStats[0]?.name ?? "等待 Agent";
+  const currentAgent = agentDisplayName(agentStats.find((item) => item.lastSeen)?.name ?? agentStats[0]?.name) || "等待智能体";
   const stage = inferStage(events, task);
   const isDone = task?.status === TaskStatus.COMPLETED;
   const hasFinalReport = typeof task?.final_report === "string" && task.final_report.trim().length > 0;
@@ -130,8 +131,8 @@ const AnalysisLivePanel: React.FC<AnalysisLivePanelProps> = ({
           {latestLogs.length ? (
             latestLogs.map((log) => (
               <button key={log.log_id || `${log.timestamp}-${log.agent}`} type="button" onClick={() => onSelectLog(log)}>
-                <Tag>{log.agent}</Tag>
-                <strong>{log.message_type}</strong>
+                <Tag>{agentDisplayName(log.agent)}</Tag>
+                <strong>{messageTypeLabel(log.message_type)}</strong>
                 <p>{compactMessage(log.message)}</p>
               </button>
             ))

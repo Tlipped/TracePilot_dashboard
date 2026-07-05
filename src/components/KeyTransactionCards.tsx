@@ -61,13 +61,13 @@ function getReportParagraphs(report: string) {
 
 function inferRole(text: string, index: number, total: number) {
   const normalized = text.toLowerCase();
-  if (/create|prepare|init|liquidity|pool|部署|创建|初始化|流动性/.test(normalized)) return "Preparation";
-  if (/trigger|convert|execute|swap|call|触发|调用|执行|兑换/.test(normalized)) return "Exploit Trigger";
-  if (/manipulate|storage|price|slippage|reserve|操纵|价格|滑点|储备/.test(normalized)) return "State Manipulation";
-  if (/profit|benefit|gain|transfer|withdraw|获利|收益|转移|提现/.test(normalized)) return "Profit";
-  if (index === 0) return "Preparation";
-  if (index === total - 1 && total > 1) return "Profit / Finalization";
-  return "Exploit Step";
+  if (/create|prepare|init|liquidity|pool|部署|创建|初始化|流动性/.test(normalized)) return "攻击准备";
+  if (/trigger|convert|execute|swap|call|触发|调用|执行|兑换/.test(normalized)) return "漏洞触发";
+  if (/manipulate|storage|price|slippage|reserve|操纵|价格|滑点|储备/.test(normalized)) return "状态操纵";
+  if (/profit|benefit|gain|transfer|withdraw|获利|收益|转移|提现/.test(normalized)) return "攻击获利";
+  if (index === 0) return "攻击准备";
+  if (index === total - 1 && total > 1) return "获利与收尾";
+  return "攻击步骤";
 }
 
 function logsMentioningHash(logs: LogMessage[], hash: string) {
@@ -75,15 +75,15 @@ function logsMentioningHash(logs: LogMessage[], hash: string) {
 }
 
 function formatUsd(value?: number | null) {
-  if (value == null || Number.isNaN(value)) return "N/A";
+  if (value == null || Number.isNaN(value)) return "暂无";
   const sign = value > 0 ? "+" : "";
   return `${sign}$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 function getTransactionTypeLabel(type: KeyTransaction["type"]) {
-  if (type === "attack") return "Attack";
-  if (type === "auxiliary") return "Auxiliary";
-  return "Candidate";
+  if (type === "attack") return "攻击交易";
+  if (type === "auxiliary") return "辅助交易";
+  return "候选交易";
 }
 
 function getTransactionTypeColor(type: KeyTransaction["type"]) {
@@ -109,14 +109,14 @@ function roleIcon(role?: string | null) {
 function buildMacroTransactions(macro: MacroAnalysisResponse): KeyTransaction[] {
   return macro.transactions.map((tx) => {
     const roleDescriptions = tx.involved_roles
-      .map((item) => `- ${item.address}: ${item.role || "unknown"}\n  ${item.description || ""}`)
+      .map((item) => `- ${item.address}: ${item.role || "未知角色"}\n  ${item.description || ""}`)
       .join("\n");
     const eventLogs = tx.event_logs.map((item) => `- ${item}`).join("\n");
     const balanceLines = tx.balance_summary.top_participants
       .map((participant) => {
         const tokens = participant.tokens
           .slice(0, 4)
-          .map((token) => `${token.token}: ${token.amount ?? "N/A"} (${formatUsd(token.usd_value)})`)
+          .map((token) => `${token.token}: ${token.amount ?? "暂无"} (${formatUsd(token.usd_value)})`)
           .join("; ");
         return `- ${participant.address}: ${formatUsd(participant.usd_delta)}${tokens ? ` | ${tokens}` : ""}`;
       })
@@ -124,35 +124,35 @@ function buildMacroTransactions(macro: MacroAnalysisResponse): KeyTransaction[] 
 
     const actionParts = [
       tx.type === "attack"
-        ? "Macro analysis classifies this transaction as the main attack transaction."
+        ? "宏观分析将这笔交易识别为核心攻击交易。"
         : tx.type === "auxiliary"
-          ? "Macro analysis classifies this transaction as an auxiliary transaction."
-          : "Macro analysis keeps this transaction as a candidate transaction.",
-      tx.is_debug_target ? "It is selected as a micro-debugging target." : "",
-      tx.function_signature ? `Function signature: ${tx.function_signature}.` : "",
+          ? "宏观分析将这笔交易识别为辅助交易。"
+          : "宏观分析暂时将这笔交易保留为候选交易。",
+      tx.is_debug_target ? "这笔交易会进入微观 Trace 调试。" : "",
+      tx.function_signature ? `函数签名：${tx.function_signature}。` : "",
       tx.balance_summary.top_participants.length > 0
-        ? `Top balance delta: ${tx.balance_summary.top_participants[0].address} ${formatUsd(tx.balance_summary.top_participants[0].usd_delta)}.`
+        ? `最大余额变化：${tx.balance_summary.top_participants[0].address} ${formatUsd(tx.balance_summary.top_participants[0].usd_delta)}。`
         : "",
     ].filter(Boolean);
 
     const evidence: EvidenceItem[] = [
       {
         id: `macro-tx-${tx.hash}`,
-        title: `Macro classification: ${getTransactionTypeLabel(tx.type)}`,
+        title: `宏观交易分类：${getTransactionTypeLabel(tx.type)}`,
         source: "system",
         content: actionParts.join(" "),
         full_content: [
-          `## Macro Transaction Classification`,
+          `## 宏观交易分类`,
           "",
-          `- Hash: \`${tx.hash}\``,
-          `- Type: **${getTransactionTypeLabel(tx.type)}**`,
-          `- Debug target: **${tx.is_debug_target ? "yes" : "no"}**`,
-          `- From: \`${tx.from || "N/A"}\` (${tx.from_role || "unknown"})`,
-          `- To: \`${tx.to || "N/A"}\` (${tx.to_role || "unknown"})`,
-          `- Function signature: \`${tx.function_signature || "N/A"}\``,
-          `- Status: ${tx.status || "N/A"}`,
-          `- Gas used: ${tx.gas_used ?? "N/A"}`,
-          `- Cost: ${tx.cost_eth ?? "N/A"} ETH`,
+          `- 交易哈希：\`${tx.hash}\``,
+          `- 类型：**${getTransactionTypeLabel(tx.type)}**`,
+          `- 调试目标：**${tx.is_debug_target ? "是" : "否"}**`,
+          `- 发送方：\`${tx.from || "暂无"}\` (${tx.from_role || "未知角色"})`,
+          `- 接收方：\`${tx.to || "暂无"}\` (${tx.to_role || "未知角色"})`,
+          `- 函数签名：\`${tx.function_signature || "暂无"}\``,
+          `- 状态：${tx.status || "暂无"}`,
+          `- Gas 用量：${tx.gas_used ?? "暂无"}`,
+          `- 成本：${tx.cost_eth ?? "暂无"} ETH`,
         ].join("\n"),
         confidence: "high",
       },
@@ -161,10 +161,10 @@ function buildMacroTransactions(macro: MacroAnalysisResponse): KeyTransaction[] 
     if (roleDescriptions) {
       evidence.push({
         id: `macro-roles-${tx.hash}`,
-        title: "Involved address roles",
+        title: "相关地址角色",
         source: "system",
         content: compactEvidenceText(roleDescriptions, 600),
-        full_content: `## Involved Address Roles\n\n${roleDescriptions}`,
+        full_content: `## 相关地址角色\n\n${roleDescriptions}`,
         confidence: "high",
       });
     }
@@ -172,10 +172,10 @@ function buildMacroTransactions(macro: MacroAnalysisResponse): KeyTransaction[] 
     if (balanceLines) {
       evidence.push({
         id: `macro-balance-${tx.hash}`,
-        title: "Balance change summary",
+        title: "余额变化摘要",
         source: "system",
         content: compactEvidenceText(balanceLines, 600),
-        full_content: `## Balance Change Summary\n\n${balanceLines}`,
+        full_content: `## 余额变化摘要\n\n${balanceLines}`,
         confidence: "high",
       });
     }
@@ -183,10 +183,10 @@ function buildMacroTransactions(macro: MacroAnalysisResponse): KeyTransaction[] 
     if (eventLogs) {
       evidence.push({
         id: `macro-events-${tx.hash}`,
-        title: "Decoded event logs",
+        title: "已解析事件日志",
         source: "system",
         content: compactEvidenceText(eventLogs, 600),
-        full_content: `## Decoded Event Logs\n\n${eventLogs}`,
+        full_content: `## 已解析事件日志\n\n${eventLogs}`,
         confidence: "medium",
       });
     }
@@ -220,14 +220,14 @@ function buildFallbackTransactions(task: Task | null, events: TaskEvent[]): KeyT
       "";
     const action = reportContext
       ? compactEvidenceText(reportContext, 220)
-      : "Transaction was referenced by the analysis. Evidence details are available in linked logs.";
+      : "分析中引用了该交易，详细证据可在关联日志中查看。";
     const relatedLogs = logsMentioningHash(logs, hash);
     const role = inferRole(`${reportContext}\n${relatedLogs.map((log) => log.message).join("\n")}`, index, hashes.length);
 
     const evidence: EvidenceItem[] = [
       {
         id: `tx-${hash}`,
-        title: `Transaction ${shortHash(hash)}`,
+        title: `交易 ${shortHash(hash)}`,
         source: "transaction",
         content: hash,
         full_content: hash,
@@ -238,7 +238,7 @@ function buildFallbackTransactions(task: Task | null, events: TaskEvent[]): KeyT
     if (reportContext) {
       evidence.push({
         id: `tx-report-${hash}`,
-        title: "Report context",
+        title: "报告背景片段",
         source: "report",
         content: compactEvidenceText(reportContext, 700),
         full_content: normalizeEvidenceMarkdown(reportContext),
@@ -249,7 +249,7 @@ function buildFallbackTransactions(task: Task | null, events: TaskEvent[]): KeyT
     relatedLogs.forEach((log, logIndex) => {
       evidence.push({
         id: `tx-log-${hash}-${log.log_id ?? logIndex}`,
-        title: `${log.agent} transaction evidence`,
+        title: `${log.agent} 交易证据`,
         source: log.message_type === "tool" ? "tool" : "agent_log",
         agent: log.agent,
         level: log.level,
@@ -270,7 +270,7 @@ const KeyTransactionCards: React.FC<KeyTransactionCardsProps> = ({
   task,
   events,
   macroAnalysis,
-  language = "en",
+  language = "zh",
 }) => {
   const [selectedTx, setSelectedTx] = useState<KeyTransaction | null>(null);
   const [macro, setMacro] = useState<MacroAnalysisResponse | null>(null);
@@ -310,7 +310,7 @@ const KeyTransactionCards: React.FC<KeyTransactionCardsProps> = ({
             <KeyRound size={16} />
             <Typography.Text strong>{language === "zh" ? "关键交易" : "Key Transactions"}</Typography.Text>
           </Space>
-          <Tag>pending</Tag>
+          <Tag>等待中</Tag>
         </div>
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -328,8 +328,8 @@ const KeyTransactionCards: React.FC<KeyTransactionCardsProps> = ({
           <Typography.Text strong>{language === "zh" ? "关键交易" : "Key Transactions"}</Typography.Text>
         </Space>
         <Space size={6}>
-          {macro ? <Tag color="success">macro</Tag> : <Tag>fallback</Tag>}
-          <Tag color="cyan">{transactions.length} tx</Tag>
+          {macro ? <Tag color="success">宏观分析</Tag> : <Tag>报告提取</Tag>}
+          <Tag color="cyan">{transactions.length} 笔交易</Tag>
         </Space>
       </div>
 
@@ -356,7 +356,7 @@ const KeyTransactionCards: React.FC<KeyTransactionCardsProps> = ({
                   <Tag key={`${tx.hash}-${item.address}`} className="tx-role-tag">
                     <Space size={4}>
                       {roleIcon(item.role)}
-                      {item.role || "unknown"}
+                      {item.role || "未知角色"}
                     </Space>
                   </Tag>
                 ))}
@@ -373,7 +373,7 @@ const KeyTransactionCards: React.FC<KeyTransactionCardsProps> = ({
       </div>
 
       <EvidenceDrawer
-        title={selectedTx ? `${shortHash(selectedTx.hash)} Evidence` : "Transaction Evidence"}
+        title={selectedTx ? `${shortHash(selectedTx.hash)} 交易证据` : "交易证据"}
         open={Boolean(selectedTx)}
         evidence={selectedTx?.evidence ?? []}
         onClose={() => setSelectedTx(null)}

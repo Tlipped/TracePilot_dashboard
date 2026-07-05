@@ -3,6 +3,7 @@ import { Empty, Progress, Space, Tag, Typography } from "antd";
 import { AlertTriangle, Bot, CheckCircle2, FileText, MessageSquareText, Wrench } from "lucide-react";
 import { AGENT_NAMES } from "../constants/agents";
 import { LogLevel, LogMessage, MsgType, TaskEvent } from "../types";
+import { agentDisplayName } from "../utils/presentation";
 
 interface AgentInsightsProps {
   events: TaskEvent[];
@@ -43,10 +44,10 @@ function getHealth(insight: Insight): "idle" | "ok" | "warning" | "error" {
 }
 
 function getHealthTag(health: ReturnType<typeof getHealth>) {
-  if (health === "error") return <Tag color="error">error</Tag>;
-  if (health === "warning") return <Tag color="warning">warning</Tag>;
-  if (health === "ok") return <Tag color="success">observed</Tag>;
-  return <Tag>idle</Tag>;
+  if (health === "error") return <Tag color="error">错误</Tag>;
+  if (health === "warning") return <Tag color="warning">警告</Tag>;
+  if (health === "ok") return <Tag color="success">已运行</Tag>;
+  return <Tag>等待中</Tag>;
 }
 
 const AgentInsights: React.FC<AgentInsightsProps> = ({ events, selectedAgent, onSelectAgent, onSelectLog }) => {
@@ -100,21 +101,21 @@ const AgentInsights: React.FC<AgentInsightsProps> = ({ events, selectedAgent, on
       <div className="insight-metrics">
         <div>
           <span className="metric-value">{active.length}</span>
-          <span className="metric-label">active agents</span>
+          <span className="metric-label">已参与智能体</span>
         </div>
         <div>
           <span className="metric-value">{active.reduce((sum, item) => sum + item.toolCalls, 0)}</span>
-          <span className="metric-label">tool calls</span>
+          <span className="metric-label">工具调用</span>
         </div>
         <div>
           <span className="metric-value">{active.reduce((sum, item) => sum + item.results, 0)}</span>
-          <span className="metric-label">results</span>
+          <span className="metric-label">分析结果</span>
         </div>
       </div>
 
       <div className="insight-list">
         {selectedInsights.length === 0 ? (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No agent insights" />
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无智能体摘要" />
         ) : (
           selectedInsights.map((insight) => {
             const health = getHealth(insight);
@@ -133,7 +134,7 @@ const AgentInsights: React.FC<AgentInsightsProps> = ({ events, selectedAgent, on
                 <div className="insight-card-head">
                   <Space size={7}>
                     <Bot size={15} />
-                    <Typography.Text strong>{insight.name}</Typography.Text>
+                    <Typography.Text strong>{agentDisplayName(insight.name)}</Typography.Text>
                   </Space>
                   {getHealthTag(health)}
                 </div>
@@ -183,11 +184,11 @@ const AgentInsights: React.FC<AgentInsightsProps> = ({ events, selectedAgent, on
                       if (event.key === "Enter" && insight.lastLog) onSelectLog(insight.lastLog);
                     }}
                   >
-                    <Typography.Text type="secondary">Latest</Typography.Text>
+                    <Typography.Text type="secondary">最新动态</Typography.Text>
                     <Typography.Paragraph ellipsis={{ rows: 2 }}>{compactText(insight.lastLog.message)}</Typography.Paragraph>
                   </div>
                 ) : (
-                  <Typography.Text type="secondary">Waiting for activity.</Typography.Text>
+                  <Typography.Text type="secondary">等待智能体输出。</Typography.Text>
                 )}
               </div>
             );

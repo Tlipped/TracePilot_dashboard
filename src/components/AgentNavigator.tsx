@@ -2,6 +2,7 @@ import React from "react";
 import { Badge, Button, Space, Tooltip, Typography } from "antd";
 import { Bot, CircleAlert, CircleCheck, Clock3, Filter } from "lucide-react";
 import { LogLevel } from "../types";
+import { agentDisplayName } from "../utils/presentation";
 
 export interface AgentStats {
   name: string;
@@ -49,9 +50,9 @@ const AgentNavigator: React.FC<AgentNavigatorProps> = ({ stats, selectedAgent, o
       <div className="panel-header">
         <Space size={8}>
           <Bot size={16} />
-          <Typography.Text strong>Agent State</Typography.Text>
+          <Typography.Text strong>智能体状态</Typography.Text>
         </Space>
-        <Tooltip title="Show all agents">
+        <Tooltip title="显示全部智能体">
           <Button
             size="small"
             type={selectedAgent === "all" ? "primary" : "default"}
@@ -64,11 +65,11 @@ const AgentNavigator: React.FC<AgentNavigatorProps> = ({ stats, selectedAgent, o
       <div className="agent-summary">
         <div>
           <span className="metric-value">{activeAgents}</span>
-          <span className="metric-label">active</span>
+          <span className="metric-label">已参与</span>
         </div>
         <div>
           <span className="metric-value">{totalLogs}</span>
-          <span className="metric-label">events</span>
+          <span className="metric-label">事件</span>
         </div>
       </div>
 
@@ -85,7 +86,7 @@ const AgentNavigator: React.FC<AgentNavigatorProps> = ({ stats, selectedAgent, o
             >
               <span className="agent-row-main">
                 <Badge status={getBadge(status)} />
-                <span className="agent-name">{item.name}</span>
+                <span className="agent-name">{agentDisplayName(item.name)}</span>
               </span>
               <span className="agent-row-meta">
                 {item.errors > 0 ? <CircleAlert size={13} className="text-red" /> : null}

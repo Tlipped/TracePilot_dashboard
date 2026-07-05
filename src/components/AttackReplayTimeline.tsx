@@ -8,6 +8,7 @@ import {
   extractTransactionHashes,
 } from "../utils/evidence";
 import EvidenceDrawer from "./EvidenceDrawer";
+import { modeLabel } from "../utils/i18n";
 
 interface AttackReplayTimelineProps {
   task: Task | null;
@@ -42,7 +43,7 @@ function transactionEvidence(report: string): EvidenceItem[] {
     .slice(0, 5)
     .map((hash, index) => ({
       id: `attack-tx-${index}`,
-      title: `Attack transaction ${index + 1}`,
+      title: `攻击交易 ${index + 1}`,
       source: "transaction",
       content: hash,
       full_content: hash,
@@ -57,8 +58,8 @@ function buildAttackPhases(task: Task | null, events: TaskEvent[]): AttackPhase[
   return [
     {
       key: "prepare",
-      title: "Preparation",
-      subtitle: "攻击准备",
+      title: "攻击准备",
+      subtitle: "准备攻击条件",
       description: findTextByKeywords(
         report,
         ["prepare", "create", "pool", "liquidity", "初始化", "创建", "流动性"],
@@ -69,8 +70,8 @@ function buildAttackPhases(task: Task | null, events: TaskEvent[]): AttackPhase[
     },
     {
       key: "trigger",
-      title: "Trigger",
-      subtitle: "漏洞触发",
+      title: "漏洞触发",
+      subtitle: "触发关键函数",
       description: findTextByKeywords(
         report,
         ["trigger", "convert", "call", "execute", "触发", "调用", "执行"],
@@ -81,20 +82,20 @@ function buildAttackPhases(task: Task | null, events: TaskEvent[]): AttackPhase[
     },
     {
       key: "manipulate",
-      title: "Manipulation",
-      subtitle: "状态操纵",
+      title: "状态操纵",
+      subtitle: "改变价格或状态",
       description: findTextByKeywords(
         report,
         ["manipulate", "slippage", "storage", "event", "price", "操纵", "滑点", "状态", "价格"],
-        "观察 Trace、Storage Change 和 Event Log 中是否出现价格、储备、余额或权限状态异常。",
+        "观察执行轨迹、状态变更和事件日志中是否出现价格、储备、余额或权限状态异常。",
       ),
       icon: <Zap size={17} />,
       evidence: buildAttackPhaseEvidence(events, ["storage", "event", "swap", "price", "balance", "state"]),
     },
     {
       key: "profit",
-      title: "Profit",
-      subtitle: "攻击获利",
+      title: "攻击获利",
+      subtitle: "完成资产转移",
       description: findTextByKeywords(
         report,
         ["profit", "gain", "benefit", "transfer", "获利", "收益", "转移"],
@@ -105,8 +106,8 @@ function buildAttackPhases(task: Task | null, events: TaskEvent[]): AttackPhase[
     },
     {
       key: "verify",
-      title: "Patch Verification",
-      subtitle: "补丁验证",
+      title: "补丁验证",
+      subtitle: "重放检查修复",
       description: findTextByKeywords(
         report,
         ["verify", "patch", "replay", "validation", "验证", "补丁", "抵挡"],
@@ -125,7 +126,7 @@ const AttackReplayTimeline: React.FC<AttackReplayTimelineProps> = ({ task, event
   if (!task?.final_report && events.length === 0) {
     return (
       <section className="attack-replay-panel">
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Attack replay timeline will appear as analysis evidence accumulates." />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="分析形成证据后，将在此展示攻击复盘时间线。" />
       </section>
     );
   }
@@ -135,9 +136,9 @@ const AttackReplayTimeline: React.FC<AttackReplayTimelineProps> = ({ task, event
       <div className="panel-header">
         <Space size={8}>
           <GitBranch size={16} />
-          <Typography.Text strong>Attack Replay Timeline</Typography.Text>
+          <Typography.Text strong>攻击复盘时间线</Typography.Text>
         </Space>
-        <Tag>{mode}</Tag>
+        <Tag>{modeLabel("zh", mode)}</Tag>
       </div>
 
       <div className="attack-phase-list">
@@ -152,13 +153,13 @@ const AttackReplayTimeline: React.FC<AttackReplayTimelineProps> = ({ task, event
                   <Typography.Text type="secondary">{phase.subtitle}</Typography.Text>
                 </div>
                 <Space size={6}>
-                  <Tag color={phase.evidence.length > 0 ? "cyan" : "default"}>{phase.evidence.length} evidence</Tag>
+                  <Tag color={phase.evidence.length > 0 ? "cyan" : "default"}>{phase.evidence.length} 条证据</Tag>
                   <Button
                     size="small"
                     icon={<SearchCheck size={14} />}
                     onClick={() => setSelectedPhase(phase)}
                   >
-                    Evidence
+                    查看证据
                   </Button>
                 </Space>
               </div>
@@ -171,7 +172,7 @@ const AttackReplayTimeline: React.FC<AttackReplayTimelineProps> = ({ task, event
       </div>
 
       <EvidenceDrawer
-        title={selectedPhase ? `${selectedPhase.title} Evidence` : "Attack Phase Evidence"}
+        title={selectedPhase ? `${selectedPhase.title}证据` : "攻击阶段证据"}
         open={Boolean(selectedPhase)}
         evidence={selectedPhase?.evidence ?? []}
         onClose={() => setSelectedPhase(null)}

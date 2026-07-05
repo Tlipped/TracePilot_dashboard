@@ -39,7 +39,7 @@ const AgentFileLogs: React.FC<AgentFileLogsProps> = ({ taskId }) => {
         setLoadingFile(true);
         setSelectedLog(await getAgentLogFile(taskId, fileId));
       } catch {
-        message.error("Failed to load agent log file");
+        message.error("智能体日志文件加载失败");
       } finally {
         setLoadingFile(false);
       }
@@ -59,7 +59,7 @@ const AgentFileLogs: React.FC<AgentFileLogsProps> = ({ taskId }) => {
       setSelectedLog(null);
       if (nextSelected) await loadFile(nextSelected);
     } catch {
-      message.error("Failed to load agent log files");
+      message.error("日志文件列表加载失败");
     } finally {
       setLoadingList(false);
     }
@@ -77,7 +77,7 @@ const AgentFileLogs: React.FC<AgentFileLogsProps> = ({ taskId }) => {
   const handleCopy = async () => {
     if (!selectedLog?.content) return;
     await navigator.clipboard.writeText(selectedLog.content);
-    message.success("Log copied");
+    message.success("日志已复制");
   };
 
   if (loadingList && files.length === 0) {
@@ -93,12 +93,12 @@ const AgentFileLogs: React.FC<AgentFileLogsProps> = ({ taskId }) => {
       <div className="file-log-panel">
         <div className="file-log-header">
           <div>
-            <Typography.Text strong>Agent Files</Typography.Text>
-            <Typography.Text type="secondary">No persisted log files found.</Typography.Text>
+            <Typography.Text strong>智能体日志文件</Typography.Text>
+            <Typography.Text type="secondary">未找到持久化日志文件。</Typography.Text>
           </div>
           <Button size="small" icon={<RefreshCcw size={14} />} onClick={loadList} />
         </div>
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No log files" />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无日志文件" />
       </div>
     );
   }
@@ -107,9 +107,9 @@ const AgentFileLogs: React.FC<AgentFileLogsProps> = ({ taskId }) => {
     <div className="file-log-panel">
       <div className="file-log-header">
         <div>
-          <Typography.Text strong>Agent Files</Typography.Text>
+          <Typography.Text strong>智能体日志文件</Typography.Text>
           <Typography.Text type="secondary" className="text-mono">
-            {logDir ?? "logs unavailable"}
+            {logDir ?? "日志目录不可用"}
           </Typography.Text>
         </div>
         <Button size="small" icon={<RefreshCcw size={14} />} loading={loadingList} onClick={loadList} />
@@ -135,12 +135,12 @@ const AgentFileLogs: React.FC<AgentFileLogsProps> = ({ taskId }) => {
       <div className="file-log-main">
         <div className="file-log-meta">
           <Space size={6} wrap>
-            <Tag>{selectedFile?.agent ?? "Agent"}</Tag>
-            <Tag>{selectedFile ? formatBytes(selectedFile.size) : "N/A"}</Tag>
-            {selectedLog?.truncated ? <Tag color="warning">truncated</Tag> : null}
+            <Tag>{selectedFile?.agent ?? "智能体"}</Tag>
+            <Tag>{selectedFile ? formatBytes(selectedFile.size) : "暂无"}</Tag>
+            {selectedLog?.truncated ? <Tag color="warning">内容已截断</Tag> : null}
           </Space>
           <Button size="small" icon={<Copy size={13} />} disabled={!selectedLog?.content} onClick={handleCopy}>
-            Copy
+            复制
           </Button>
         </div>
 
@@ -152,7 +152,7 @@ const AgentFileLogs: React.FC<AgentFileLogsProps> = ({ taskId }) => {
           ) : selectedLog?.content ? (
             <pre>{selectedLog.content}</pre>
           ) : (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Empty log file" />
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="日志文件为空" />
           )}
         </div>
       </div>
