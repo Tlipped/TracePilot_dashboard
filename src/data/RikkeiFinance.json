@@ -16,5 +16,6 @@
         "link": "https://twitter.com/CertiKAlert/status/1514832924838961153"
     },
     "root_cause": "setOracleData",
-    "report_link": "https://web3sec.notion.site/Incorrect-access-control-a46226e2ada841299d2c661cef49f496"
+    "report_link": "https://web3sec.notion.site/Incorrect-access-control-a46226e2ada841299d2c661cef49f496",
+    "report_zh": "SetOracleData() 函数的可见性为 public，可被外部调用。任何人都可以调用 SetOracleData 来操纵价格。"
 }

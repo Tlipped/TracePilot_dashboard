@@ -24,5 +24,6 @@
         "link": "https://twitter.com/k06a/status/1305223409610166275"
     },
     "root_cause": "_internalTransferFrom",
-    "report_link": "https://www.freebuf.com/articles/paper/249711.html"
+    "report_link": "https://www.freebuf.com/articles/paper/249711.html",
+    "report_zh": "攻击者利用了`_internalTransferFrom`函数中缺失的输入验证，该函数未检查`_from`和`_to`地址是否不同。通过将这两个地址设为相同，攻击者可以使函数的最后一步（`balances[_to] = _balancesToNew`）覆盖前一步（`balances[_from] = _balancesFromNew`）。此缺陷使攻击者能够在没有任何实际资产转移的情况下人为抬高目标地址的代币余额，实质上无中生有地铸造代币，实现了“水龙头”攻击。"
 }

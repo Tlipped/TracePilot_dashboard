@@ -16,5 +16,6 @@
     },
     "root_cause": "calcStepIncome",
     "report": "The attacker exploited the calcStepIncome function in the MainPool contract by passing an inflated value_ parameter (36_099_999_999_999_999_900), which improperly updated the withdrawable balance, allowing them to drain ~20 ETH.",
-    "report_link": "https://web3sec.notion.site/ADC-1d8729274113800f9961d1c2d66e50d7?pvs=23"
+    "report_link": "https://web3sec.notion.site/ADC-1d8729274113800f9961d1c2d66e50d7?pvs=23",
+    "report_zh": "攻击者通过向 MainPool 合约的 calcStepIncome 函数传递一个膨胀的 value_ 参数（36_099_999_999_999_999_900），不当更新了可提取余额，从而盗取了约 20 ETH。"
 }

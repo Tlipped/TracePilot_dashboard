@@ -13,5 +13,6 @@
     },
     "root_cause": "redeem",
     "report": "The redeem function in BondFixedExpiryTeller lacks sufficient validation on the input token_ parameter. Since token_ is externally controllable and not restricted to legitimate bond tokens, an attacker deployed a malicious custom contract that mimics a valid ERC20BondToken. When redeem was called with this fake token, the function burned tokens from the caller (which had no real effect) but then transferred amount_ of the underlying asset—configured by the attacker to return OHM—from the teller contract. This allowed the attacker to drain approximately 30,000 OHM (valued at $300K) from the BondFixedExpiryTeller.",
-    "report_link": "https://web3sec.notion.site/Insufficient-validation-1a43e574762943e9b51df7deea9a9caf"
+    "report_link": "https://web3sec.notion.site/Insufficient-validation-1a43e574762943e9b51df7deea9a9caf",
+    "report_zh": "BondFixedExpiryTeller 的 redeem 函数对输入参数 token_ 缺乏充分验证。由于 token_ 外部可控且未限制为合法的债券代币，攻击者部署了一个恶意定制合约，冒充有效的 ERC20BondToken。当使用该假代币调用 redeem 时，函数从调用者处销毁代币（无实际效果），但随后从 teller 合约转移 amount_ 数量的基础资产——攻击者配置为返回 OHM。这使攻击者从 BondFixedExpiryTeller 中盗取约 30,000 OHM（价值 30 万美元）。"
 }

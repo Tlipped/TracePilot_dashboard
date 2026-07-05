@@ -16,5 +16,6 @@
         "link": "https://twitter.com/ishwinder/status/1505555913658314761"
     },
     "root_cause": "_balance + _withdraw",
-    "report_link": "https://zhuanlan.zhihu.com/p/485220134"
+    "report_link": "https://zhuanlan.zhihu.com/p/485220134",
+    "report_zh": "漏洞存在于StakingRewards合约的_balance函数中，该合约未能验证余额值。攻击者通过操纵amount参数触发下溢，从池中耗尽代币。合约未正确使用SafeMath库或包含溢出/下溢检查，导致约70万美元损失。"
 }

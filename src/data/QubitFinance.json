@@ -16,5 +16,6 @@
         "link": "https://twitter.com/QubitFin/status/1486965562903531522"
     },
     "root_cause": "deposit + safeTransferFrom",
-    "report_link": "https://web3sec.notion.site/Insufficient-validation-6ae40b36b37849b08e6e2bebdc87f1fb"
+    "report_link": "https://web3sec.notion.site/Insufficient-validation-6ae40b36b37849b08e6e2bebdc87f1fb",
+    "report_zh": "Qubit Finance"
 }

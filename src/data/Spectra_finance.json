@@ -17,5 +17,6 @@
     },
     "root_cause": "execute + _dispatch",
     "report": "The execute() function delegates to _dispatch() without proper validation of user-controlled parameters like kyberRouter and targetData. This allowed an attacker to craft malicious input that forced the protocol to call transferFrom on asdCRV, draining 188,013 asdCRV (～$73,325) from an approved allowance.",
-    "report_link": "https://lunaray.medium.com/spectra-protocol-hack-analysis-06b877498757"
+    "report_link": "https://lunaray.medium.com/spectra-protocol-hack-analysis-06b877498757",
+    "report_zh": "execute() 函数委托给 _dispatch() 时未对用户控制的参数（如 kyberRouter 和 targetData）进行适当验证。这使得攻击者能够构造恶意输入，迫使协议对 asdCRV 调用 transferFrom，从已批准的额度中盗取 188,013 asdCRV（约 73,325 美元）。"
 }

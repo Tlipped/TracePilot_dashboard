@@ -16,5 +16,6 @@
         "link": "https://www.tuoluo.cn/article/detail-10093322.html"
     },
     "root_cause": "swapExactTokensForETHSupportingFeeOnTransferTokens",
-    "report_link": "https://www.freebuf.com/articles/blockchain-articles/323849.html"
+    "report_link": "https://www.freebuf.com/articles/blockchain-articles/323849.html",
+    "report_zh": "swapExactTokensForETHSupportingFeeOnTransferTokens 函数错误地使用了第一个交易对的 WETH 余额进行多对计算，使攻击者能够通过闪电贷利用此漏洞，盗取约 23 万美元的资产。"
 }

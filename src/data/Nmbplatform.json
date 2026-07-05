@@ -16,5 +16,6 @@
         "link": "https://twitter.com/BlockSecTeam/status/1602881707958407168"
     },
     "root_cause": "getReward",
-    "report_link": "https://web3sec.notion.site/Staking-reward-is-based-on-spot-price-626996b6df1a41599e9d1443fb1617ff"
+    "report_link": "https://web3sec.notion.site/Staking-reward-is-based-on-spot-price-626996b6df1a41599e9d1443fb1617ff",
+    "report_zh": "getReward 中的质押奖励计算依赖一个价格源，该价格源使用了被操纵的 NIMB-NBU_WBNB 交易对的现货价格。具体而言，earnedByNonce 函数以原生奖励代币计算奖励，然后通过 getTokenAmountForToken 将其转换为支付代币，后者查询价格源。由于 NIMB 的价格源来自可被操纵的流动性池，攻击者人为抬高了 NIMB 价格，以稳定支付代币的形式获取了不成比例的高额奖励。"
 }

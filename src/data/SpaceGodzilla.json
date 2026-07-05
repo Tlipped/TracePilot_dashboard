@@ -16,5 +16,6 @@
         "link": "https://medium.com/numen-cyber-labs/spacegodzilla-attack-event-analysis-d29a061b17e1"
     },
     "root_cause": "swapAndLiquifyStepv1",
-    "report_link": "https://web3sec.notion.site/Incorrect-access-control-25b8a47d86024ad6819c9a959cdc91bb?pvs=23"
+    "report_link": "https://web3sec.notion.site/Incorrect-access-control-25b8a47d86024ad6819c9a959cdc91bb?pvs=23",
+    "report_zh": "swapAndLiquifyStepv1() 函数缺少适当的访问控制，允许任何外部调用者触发它，并通过添加任意代币和 ETH 余额作为流动性来操纵流动性操作。"
 }

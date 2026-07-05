@@ -13,5 +13,6 @@
     },
     "root_cause": "managePosition",
     "report": "The essence of the attack was a precision calculation issue during the minting of share tokens, which allowed manipulation of the critical variable 'index' and failed to properly account for rounding in token precision, resulting in a loss of approximately $3.6 million.",
-    "report_link": "https://www.freebuf.com/articles/blockchain-articles/383686.html"
+    "report_link": "https://www.freebuf.com/articles/blockchain-articles/383686.html",
+    "report_zh": "攻击的本质是在铸造份额代币时出现的精度计算问题，该问题允许操纵关键变量“index”，且未能正确处理代币精度的舍入，导致损失约 360 万美元。"
 }

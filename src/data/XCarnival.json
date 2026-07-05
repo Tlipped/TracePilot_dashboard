@@ -22,5 +22,6 @@
         "link": "https://medium.com/coinmonks/xcarnival-attack-analysis-1e5722f03a09"
     },
     "root_cause": "pledgeAndBorrow",
-    "report_link": "https://www.freebuf.com/articles/others-articles/337562.html"
+    "report_link": "https://www.freebuf.com/articles/others-articles/337562.html",
+    "report_zh": "攻击者利用 pledgeAndBorrow 函数中的逻辑缺陷：在质押 NFT 并立即取回后，系统仍允许针对同一订单借款，因为合约未验证已质押的 NFT 是否已被取回。这使攻击者能够在没有实际抵押品的情况下借入资金，盗取了 3087 ETH（约 380 万美元）。"
 }

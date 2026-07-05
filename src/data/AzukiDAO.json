@@ -21,5 +21,6 @@
     ],
     "report": "The attacker exploited a missing signature reuse validation flaw in the claim function. By repeatedly calling the function with the same valid signature before its expiry, the attacker was able to bypass the contract's existing record of claimed signatures, extracting a total of 6,250,000 Bean tokens and converting them to approximately 36 ETH (~$69,000).",
     "root_cause": "claim",
-    "report_link": "https://www.freebuf.com/articles/blockchain-articles/371312.html"
+    "report_link": "https://www.freebuf.com/articles/blockchain-articles/371312.html",
+    "report_zh": "攻击者利用 claim 函数中缺失签名重用验证的缺陷。通过在签名过期前使用相同的有效签名反复调用该函数，攻击者绕过了合约对已领取签名的记录，共提取 6,250,000 枚 Bean 代币，并将其兑换为约 36 ETH（约 69,000 美元）。"
 }

@@ -10,5 +10,6 @@
     ],
     "report": "The attacker exploited a logic flaw in the BRA contract's _transfer function. The flaw caused the contract to double the tax fee sent to the PancakeSwap liquidity pool without invoking the sync() function to update the pair's reserves. This discrepancy allowed the attacker to profit, extracting approximately 675 WBNB and 144 WBNB across two separate transactions.",
     "root_cause": "_transfer",
-    "report_link": "https://web3sec.notion.site/doubles-reward-the-tax-fee-to-the-pancake-pair-67248a5a986645b8a3fd4e2b2395da79?pvs=23"
+    "report_link": "https://web3sec.notion.site/doubles-reward-the-tax-fee-to-the-pancake-pair-67248a5a986645b8a3fd4e2b2395da79?pvs=23",
+    "report_zh": "攻击者利用了BRA合约_transfer函数的逻辑缺陷。该缺陷导致合约在未调用sync()函数更新交易对储备的情况下，将发送到PancakeSwap流动性池的税费翻倍。这种差异使攻击者获利，通过两笔独立交易提取了约675 WBNB和144 WBNB。"
 }

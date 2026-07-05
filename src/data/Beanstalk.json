@@ -21,5 +21,6 @@
         "link": "https://twitter.com/peckshield/status/1515692144190648322"
     },
     "root_cause": "emergencyCommit",
-    "report_link": "https://medium.com/coinmonks/beanstalk-exploit-a-simplified-post-mortem-analysis-92e6cdb17ace"
+    "report_link": "https://medium.com/coinmonks/beanstalk-exploit-a-simplified-post-mortem-analysis-92e6cdb17ace",
+    "report_zh": "攻击者利用 `emergencyCommit` 函数绕过了治理提案标准的 7 天时间锁。在使用闪电贷获得治理代币绝对多数（2/3）后，攻击者立即通过 `emergencyCommit` 对恶意提案（BIP18）进行投票并执行。该提案抽干了协议的流动性池，导致总损失约 1.82 亿美元，攻击者净获利约 7600 万美元的 WETH。"
 }

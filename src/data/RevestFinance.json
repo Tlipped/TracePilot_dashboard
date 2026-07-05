@@ -16,5 +16,6 @@
         "link": "https://twitter.com/BlockSecTeam/status/1508065573250678793"
     },
     "root_cause": "depositAdditionalToFNFT + mint",
-    "report_link": "https://www.freebuf.com/articles/blockchain-articles/326466.html"
+    "report_link": "https://www.freebuf.com/articles/blockchain-articles/326466.html",
+    "report_zh": "此次安全事件的根本原因是NFT合约在铸造后更新nextId，违反了'检查-效果-交互'模式，且缺少重入锁，导致合约函数可重入，最终引发重入攻击，造成约200万美元的损失。"
 }

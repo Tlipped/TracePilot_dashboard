@@ -17,5 +17,6 @@
         "link": "https://twitter.com/storming0x/status/1473321779250802693"
     },
     "root_cause": "deposit",
-    "report_link": "https://www.panewslab.com/zh/articles/N1145282"
+    "report_link": "https://www.panewslab.com/zh/articles/N1145282",
+    "report_zh": "攻击者利用 RewardsHypervisor 合约中的 deposit 函数进行重入攻击，伪造了 2 亿 VISR 的存款，获得 195,249,950 vVISR，并最终提取了 8,812,958 VISR。总损失约 820 万美元。"
 }

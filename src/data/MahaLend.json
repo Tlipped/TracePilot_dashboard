@@ -13,5 +13,6 @@
     },
     "root_cause": "rayDiv",
     "report": "This is a common vulnerability which also affects RDNT and other protocols, which involves precision expansion and rounding. The rayDiv function is known to have rounding issues, and the attacker could try to manipulate the input b to cause the rounded value to increase to a similar magnitude. In such case, during operations like withdrawing, the actual value would be much smaller than expected due to rounding issues.",
-    "report_link": "https://web3sec.notion.site/Precision-Loss-in-RayDiv-21200ba2e5bd46f9a117ac31dac03a0e?pvs=23"
+    "report_link": "https://web3sec.notion.site/Precision-Loss-in-RayDiv-21200ba2e5bd46f9a117ac31dac03a0e?pvs=23",
+    "report_zh": "这是一种常见的漏洞，也影响了RDNT和其他协议，涉及精度扩展和舍入问题。rayDiv函数已知存在舍入问题，攻击者可能尝试操纵输入b，导致舍入值增加到相近的量级。在这种情况下，在诸如提取等操作期间，由于舍入问题，实际值会比预期小得多。"
 }

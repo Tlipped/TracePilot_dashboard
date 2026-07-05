@@ -16,5 +16,6 @@
         "link": "https://twitter.com/HunnyFinance/status/1400443773436399617"
     },
     "root_cause": "mintFor",
-    "report_link": "https://web3sec.notion.site/Incorrect-profit-calculation-via-balanceOf-13bc12c60a24491086b5334242eb47dd"
+    "report_link": "https://web3sec.notion.site/Incorrect-profit-calculation-via-balanceOf-13bc12c60a24491086b5334242eb47dd",
+    "report_zh": "mintFor 函数错误地使用 balanceOf(address(this)) 来计算可用于兑换 HUNNY-BNB LP 代币的 CAKE 数量，从而计算利润。由于 balanceOf 包含合约中所有 CAKE（包括属于其他用户的资金），绩效费计算基于虚增的总余额，而非仅被转移的费用金额。这使得攻击者可以存入 CAKE，触发 getReward（调用 mintFor），导致合约增发与整个池子 CAKE 余额成比例的过量 HUNNY 代币。该漏洞与 PancakeBunny 攻击类似，将共享合约余额误用为特定用户或特定费用的数量代理。"
 }

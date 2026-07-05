@@ -17,5 +17,6 @@
         "link": "https://twitter.com/PunkProtocol/status/1425220676382724098"
     },
     "root_cause": "initialize",
-    "report_link": "http://www.xmetaera.com/c/20240813/61543.html"
+    "report_link": "http://www.xmetaera.com/c/20240813/61543.html",
+    "report_zh": "此次攻击的根本原因在于CompoundModel合约的初始化函数缺乏安全控制，允许其被重新初始化。初始化函数应仅调用一次，并且必须包含调用者权限检查。"
 }

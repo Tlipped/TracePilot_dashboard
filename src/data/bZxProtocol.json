@@ -14,5 +14,6 @@
     },
     "root_cause": "borrow",
     "report": "The attacker exploited an inflation attack vector related to the `borrow` function in an empty or newly forked liquidity pool. By first depositing a minimal amount to acquire pool tokens and then front-running a legitimate large deposit transaction with a massive 'donation' (inflation) of assets, the attacker artificially and drastically inflated the value of each pool token. This manipulation allowed the attacker to subsequently use the `borrow` function (or a similar withdrawal mechanism) to illicitly withdraw a far greater quantity of tokens than they rightfully owned or had initially deposited.",
-    "report_link": "https://web3sec.notion.site/Inflation-Attack-90b5a0937ec64641bac809884ee45a2c"
+    "report_link": "https://web3sec.notion.site/Inflation-Attack-90b5a0937ec64641bac809884ee45a2c",
+    "report_zh": "攻击者利用了与空或新分叉的流动性池中`borrow`函数相关的通胀攻击向量。首先存入少量资金获取池代币，然后抢跑一笔大额存款交易，通过大规模资产“捐赠”（通胀）人为地急剧抬高每个池代币的价值。这种操纵使得攻击者随后可以使用`borrow`函数（或类似的提款机制）非法提取远超其应得数量或初始存款的代币。"
 }

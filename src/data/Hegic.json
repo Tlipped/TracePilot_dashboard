@@ -16,5 +16,6 @@
         "time": "2020/4/25 10:02",
         "link": "https://twitter.com/gakonst/status/1253987785574211584"
     },
-    "root_cause": "getSlippageFee"
+    "root_cause": "getSlippageFee",
+    "report_zh": "完整的专家报告不可用。请严格根据提供的“root_cause”信息评估生成的报告。"
 }

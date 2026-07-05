@@ -16,5 +16,6 @@
         "link": "https://twitter.com/peckshield/status/1432228488405307395?ref_src=twsrc%5Etfw%7Ctwcamp%5Etweetembed%7Ctwterm%5E1432228488405307395%7Ctwgr%5Eb900715aa78a7868f88d2dc4cb2c17a5fa413c0c%7Ctwcon%5Es1_&ref_url=https%3A%2F%2Fcoingape.com%2Fcream-finance-faces-second-flash-loan-attack-in-2021-loses-18-million%2F"
     },
     "root_cause": "doTransferOut",
-    "report_link": "https://rekt.news/cream-rekt"
+    "report_link": "https://rekt.news/cream-rekt",
+    "report_zh": "攻击者利用了 AMP 代币 `transfer` 函数中的重入漏洞，该函数内部调用了 `_callPreTransferHooks`。通过利用这个钩子，攻击者能够在 `doTransferOut` 操作（即发送借出代币的函数）期间重新进入 Cream Finance 的借贷合约。这使得他们能够在合约内部状态（如用户的借款余额）从第一次借款更新之前，执行第二次 `borrow()` 函数。通过跨越 17 笔交易的重入循环，攻击者非法借入了额外资金，最终获利约 6,000 ETH（当时价值约 1,880 万美元）。"
 }

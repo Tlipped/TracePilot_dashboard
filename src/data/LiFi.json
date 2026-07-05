@@ -16,5 +16,6 @@
         "link": "https://twitter.com/lifiprotocol/status/1505738407938387971"
     },
     "root_cause": "swapAndStartBridgeTokensViaCBridge",
-    "report_link": "https://blocksec.com/zh/blog/li-fi-attack-a-cross-chain-bridge-vulnerability-no-it-s-due-to-unchecked-external-call"
+    "report_link": "https://blocksec.com/zh/blog/li-fi-attack-a-cross-chain-bridge-vulnerability-no-it-s-due-to-unchecked-external-call",
+    "report_zh": "攻击的根本原因是未验证的外部调用。攻击者通过调用CBridgeFacet合约的swapAndStartBridgeTokensViaCBridge(0x01c0a31a)函数来执行唯一的操作，该操作随后将不同spender的各种代币（如USDC、MATIC、RPL、GNO、USDT、MVI、AUDIO、AAVE、JRT和DAI）转移至攻击者控制的EOA。根据上述代码，swapAndStartBridgeTokensViaCBridge是源链上跨链交易的入口点。LI.FI项目声称可以为用户找到最佳路由，即Smart Routing，这发生在链下。具体而言，前端网站计算最佳路由，并将参数（包括兑换合约和路由路径）编码到swapAndStartBridgeTokensViaCBridge函数的参数中。最关键的是，LIFI没有考虑到链上任何账户都可调用此函数，因为它未检查白名单和滑点等参数。最严重的问题是CBridgeFacet合约需要用户授权代币，从而使用户资金面临风险。"
 }

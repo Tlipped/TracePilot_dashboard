@@ -16,5 +16,6 @@
         "link": "https://twitter.com/peckshield/status/1525952084725534720"
     },
     "root_cause": "swapToSwap",
-    "report_link": "https://blocksec.com/zh/blog/the-analysis-of-fegtoken-security-incident-devils-in-the-details"
+    "report_link": "https://blocksec.com/zh/blog/the-analysis-of-fegtoken-security-incident-devils-in-the-details",
+    "report_zh": "首先，swapToSwap函数未验证参数导致任意授权。其次，由于swapToSwap函数中的虚假交换，受害合约的实际余额和记录余额不一致。这被用于恢复攻击者的存款金额并反复进行授权。攻击者在ETH和BSC主网上发起一系列攻击，累计价值约130万美元。"
 }

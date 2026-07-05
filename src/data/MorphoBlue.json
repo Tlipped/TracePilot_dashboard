@@ -13,5 +13,6 @@
     },
     "root_cause": "borrow / price",
     "report": "The exploit stemmed from an oracle misconfiguration that caused the price of PAXG to be inflated by a factor of 10^12 due to a decimal mismatch between USDC (6 decimals) and PAXG (18 decimals). The attacker deposited only $350 worth of PAXG and borrowed $250,000 in USDC by exploiting the highly overvalued asset. The root cause was the incorrect configuration of the oracle's SCALE_FACTOR, which led to a false price feed that the borrowing logic relied upon without sufficient validation.",
-    "report_link": "https://blog.solidityscan.com/morphoblue-hack-analysis-638b685f8bf2"
+    "report_link": "https://blog.solidityscan.com/morphoblue-hack-analysis-638b685f8bf2",
+    "report_zh": "漏洞源于预言机配置错误，由于 USDC（6 位小数）与 PAXG（18 位小数）之间的精度不匹配，导致 PAXG 价格被虚增了 10^12 倍。攻击者仅存入价值约 350 美元的 PAXG，并利用高估的资产借出 25 万美元 USDC。根本原因是预言机的 SCALE_FACTOR 配置错误，导致借出逻辑依赖了虚假的价格信息，且缺乏充分验证。"
 }

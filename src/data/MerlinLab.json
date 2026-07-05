@@ -40,5 +40,6 @@
         "link": "https://medium.com/valixconsulting/merlin-lab-incident-case-analysis-d023d4205bd7"
     },
     "root_cause": "amountMerlinToMint",
-    "report_link": "https://zhuanlan.zhihu.com/p/385606097"
+    "report_link": "https://zhuanlan.zhihu.com/p/385606097",
+    "report_zh": "攻击者向金库存入0.1 WBNB，然后手动将1000 BNB转入合约，欺骗合约以为收到1000 BNB奖励。这种操纵导致合约铸造了过多的MERL代币作为奖励。利用这一奖励计算逻辑缺陷，攻击者单笔交易即可铸造8996 MERL代币，并最终在一次攻击中提取约332 BNB（约10万美元）。核心问题是合约在计算MERL铸造数量时，未正确验证存入资金的实际来源或合法性。"
 }

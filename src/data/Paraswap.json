@@ -13,5 +13,6 @@
     },
     "root_cause": "uniswapV3SwapCallback",
     "report": "The root cause of the exploit is a vulnerability in the contract’s handling of external callback functions, which allowed unauthorized redirection of funds. When the uniswapV3SwapCallback method is called in the affected UniswapV3Utils contract within AugustusV6, the attacker is able to enter any address in the `fromAddress` that has authorized funds and transfer funds from this address to the address controlled by them.",
-    "report_link": "https://medium.com/neptune-mutual/analysis-of-the-paraswap-exploit-1f97c604b4fe"
+    "report_link": "https://medium.com/neptune-mutual/analysis-of-the-paraswap-exploit-1f97c604b4fe",
+    "report_zh": "漏洞根源在于合约对外部回调函数的处理存在漏洞，允许未经授权的资金重定向。当在AugustusV6内的受影响UniswapV3Utils合约中调用uniswapV3SwapCallback方法时，攻击者能够在`fromAddress`中输入任何已授权资金的地址，并将资金从该地址转移至其控制的地址。"
 }

@@ -13,5 +13,6 @@
     },
     "root_cause": "mint",
     "report": "The mint function has incorrect access control: it is declared public with no authorization checks, allowing any address to call it and mint 100,000,000,000,000,000 tokens to themselves.",
-    "report_link": "https://web3sec.notion.site/Incorrect-access-control-b96a3407da09492f92033c7e5b1286eb?pvs=23"
+    "report_link": "https://web3sec.notion.site/Incorrect-access-control-b96a3407da09492f92033c7e5b1286eb?pvs=23",
+    "report_zh": "mint 函数的访问控制不正确：它被声明为 public 且没有授权检查，允许任何地址调用它并向自己铸造 100,000,000,000,000,000 个代币。"
 }

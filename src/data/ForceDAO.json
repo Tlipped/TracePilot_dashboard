@@ -25,5 +25,6 @@
         "link": "https://twitter.com/force_dao/status/1378764434026287104"
     },
     "root_cause": "deposit",
-    "report_link": "https://zhuanlan.zhihu.com/p/362592672"
+    "report_link": "https://zhuanlan.zhihu.com/p/362592672",
+    "report_zh": "xFORCE合约中的deposit函数未验证force.transferFrom的返回值。因此，攻击者可以无需实际转移FORCE代币就铸造xFORCE代币，然后将其兑换为真实的FORCE代币。攻击者利用此漏洞铸造了数千万枚FORCE代币。"
 }

@@ -16,5 +16,6 @@
         "link": "https://twitter.com/FrankResearcher/status/1387347025742557186"
     },
     "root_cause": "swap",
-    "report_link": "https://web3sec.notion.site/Incorrect-calculation-10000-vs-1000-5382319195184d1d85ab70b193b7d444?pvs=23"
+    "report_link": "https://web3sec.notion.site/Incorrect-calculation-10000-vs-1000-5382319195184d1d85ab70b193b7d444?pvs=23",
+    "report_zh": "代码中常量不一致导致计算错误：余额调整使用10000，而K不变性检查使用1000。"
 }

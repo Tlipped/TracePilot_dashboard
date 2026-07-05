@@ -18,5 +18,6 @@
         "link": "https://twitter.com/peckshield/status/1407489245468524549"
     },
     "root_cause": "emergencyBurn",
-    "report_link": "https://elevenfinance.medium.com/eleven-finance-nrv-vault-exploit-and-loss-of-funds-a-post-mortem-437a79ded743"
+    "report_link": "https://elevenfinance.medium.com/eleven-finance-nrv-vault-exploit-and-loss-of-funds-a-post-mortem-437a79ded743",
+    "report_zh": "分析表明，漏洞原因是开发者疏忽。emergencyBurn()函数未销毁份额，允许攻击者执行此次攻击。"
 }

@@ -14,5 +14,6 @@
     ],
     "report": "The attack was possible due to a lack of liquidity checks in the donateToReserves function of the Etoken. Based on on-chain data analysis, the attacker has successfully executed multiple transactions resulting in the theft of approximately $196 million, making it the largest hack of 2023 thus far.",
     "root_cause": "donateToReserves",
-    "report_link": "https://medium.com/@numencyberlabs/a-detailed-analysis-of-euler-finances-196-million-flash-loan-attack-81cdef370024"
+    "report_link": "https://medium.com/@numencyberlabs/a-detailed-analysis-of-euler-finances-196-million-flash-loan-attack-81cdef370024",
+    "report_zh": "攻击之所以可能，是因为Etoken的donateToReserves函数缺乏流动性检查。根据链上数据分析，攻击者成功执行多笔交易，窃取约1.96亿美元，成为迄今2023年最大黑客事件。"
 }

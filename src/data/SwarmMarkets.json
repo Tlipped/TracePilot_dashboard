@@ -9,5 +9,6 @@
     "lost": "~7k $DAI",
     "root_cause": "mint",
     "report": "The mint function in the XToken contract lacks access control, allowing any external caller to mint arbitrary amounts of tokens. These tokens can then be unwrapped into USDC via the XTokenWrapper contract, resulting in unauthorized fund extraction.",
-    "report_link": "https://web3sec.notion.site/Insufficient-validation-1c77292741138059a2f7cfb8375c977d?pvs=23"
+    "report_link": "https://web3sec.notion.site/Insufficient-validation-1c77292741138059a2f7cfb8375c977d?pvs=23",
+    "report_zh": "XToken合约中的mint函数缺少访问控制，允许任何外部调用者铸造任意数量的代币。这些代币随后可通过XTokenWrapper合约解包为USDC，导致未经授权的资金提取。"
 }

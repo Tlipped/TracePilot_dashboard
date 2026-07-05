@@ -12,5 +12,6 @@
         "link": "['https://x.com/MetaSec_xyz/status/1730044259087315046']"
     },
     "root_cause": "emergencyWithdraw",
-    "report": "The full expert report is unavailable. Please evaluate the generated report strictly based on the provided 'root_cause' information."
+    "report": "The full expert report is unavailable. Please evaluate the generated report strictly based on the provided 'root_cause' information.",
+    "report_zh": "完整专家报告不可用。请严格根据所提供的“root_cause”信息评估生成的报告。"
 }

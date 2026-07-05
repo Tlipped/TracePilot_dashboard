@@ -17,5 +17,6 @@
     },
     "root_cause": "performOperations",
     "report": "The performoperations()  in Seneca which uses the parameters passed in to choose to execute different function logic. When the user specifies action as 30, the function will choose to call the _call(). The attacker directly calls the performOperations function and constructs the following parameters. Actions is passed in the above 30, and the _call function is called.",
-    "report_link": "https://web3sec.notion.site/Arbitrary-call-d8cdf083f3114ded8c848c110d10a4c3"
+    "report_link": "https://web3sec.notion.site/Arbitrary-call-d8cdf083f3114ded8c848c110d10a4c3",
+    "report_zh": "Seneca 中的 performoperations() 利用传入的参数选择执行不同的函数逻辑。当用户指定 action 为 30 时，该函数会选择调用 _call()。攻击者直接调用 performOperations 函数并构造了以下参数。传入 action 为 30，并调用 _call 函数。"
 }

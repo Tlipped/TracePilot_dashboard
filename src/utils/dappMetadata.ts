@@ -6,13 +6,18 @@ export interface DappReference {
 export interface DappMetadata {
   name?: string;
   cause?: string;
+  cause_zh?: string;
   platform?: string;
+  platform_zh?: string;
   time?: string;
   transaction_hash?: string[];
   report?: string;
+  report_zh?: string;
+  background_zh?: string;
   detection?: DappReference;
   disclosure?: DappReference;
   root_cause?: string;
+  root_cause_zh?: string;
   report_link?: string;
 }
 

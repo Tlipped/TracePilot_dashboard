@@ -13,5 +13,6 @@
     ],
     "report": "On May 14, 2023, $LAND suffered a hack due to a Missing Access Control vulnerability that resulted in a total loss of 149,616 $BUSD. The $land project allowed multiple miner addresses to mint NFTs, and one of these addresses was identified as 0x2e599883715d2f92468fa5ae3f9aab4e930e3ac7. The attacker took advantage of the vulnerability and interacted with the 0x2e599883715d2f92468fa5ae3f9aab4e930e3ac7 contract to mint 200 NFTs. The attacker continued to mint additional NFTs until the issuance limit for NFTs was reached.",
     "root_cause": "mint",
-    "report_link": "https://blog.solidityscan.com/land-hack-analysis-missing-access-control-66fb9555a3e3"
+    "report_link": "https://blog.solidityscan.com/land-hack-analysis-missing-access-control-66fb9555a3e3",
+    "report_zh": "2023 年 5 月 14 日，$LAND 因缺失访问控制漏洞遭受黑客攻击，共损失 149,616 $BUSD。$land 项目允许多个矿工地址铸造 NFT，其中有一个地址被识别为 0x2e599883715d2f92468fa5ae3f9aab4e930e3ac7。攻击者利用该漏洞，与 0x2e599883715d2f92468fa5ae3f9aab4e930e3ac7 合约交互，铸造了 200 个 NFT。攻击者继续铸造更多 NFT，直至达到 NFT 的发行上限。"
 }

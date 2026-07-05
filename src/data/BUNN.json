@@ -13,5 +13,6 @@
     },
     "root_cause": "deliver",
     "report": "The attacker exploited the `deliver` function by calling it to directly reduce the `_rTotal` supply. This action artificially and disproportionately increased the effective token balance of the PancakeSwap liquidity pool within the contract's internal accounting. The attacker then performed a swap that took advantage of this inflated pool balance, resulting in a profit of 52 BNB.",
-    "report_link": "https://web3sec.notion.site/deliver-function-8dce738dd2f243ae8abe83e95eeee9d4?pvs=23"
+    "report_link": "https://web3sec.notion.site/deliver-function-8dce738dd2f243ae8abe83e95eeee9d4?pvs=23",
+    "report_zh": "攻击者利用`deliver`函数，通过调用它直接减少`_rTotal`供应量。这一操作在合约内部会计中人为地、不成比例地增加了PancakeSwap流动性池的有效代币余额。攻击者随后利用这一虚高的池余额进行交换，获利52 BNB。"
 }

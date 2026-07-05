@@ -17,5 +17,6 @@
     },
     "root_cause": "migrateStake",
     "report": "The migrateStake function lacks proper access control, allowing any external caller to trigger migration of an arbitrary amount from an old staking contract on behalf of any user. This could lead to unauthorized inflation of stakes or reward manipulation in the new contract.",
-    "report_link": "https://web3sec.notion.site/Incorrect-access-control-f5e0efb872754102b82731745b102ba3?pvs=23"
+    "report_link": "https://web3sec.notion.site/Incorrect-access-control-f5e0efb872754102b82731745b102ba3?pvs=23",
+    "report_zh": "migrateStake函数缺少适当的访问控制，允许任何外部调用者代表任意用户从旧质押合约中触发任意数量的迁移。这可能导致新合约中未经授权的质押膨胀或奖励操纵。"
 }

@@ -13,5 +13,6 @@
     },
     "root_cause": "0x1ef29a02",
     "report": "Because of the Arbitrary call, the attacker were able to access and drain value from the accounts of users who had created approvals for the contract.",
-    "report_link": "https://web3sec.notion.site/Arbitrary-call-0a4c953a188546729c7a6b942f273b2a?pvs=23"
+    "report_link": "https://web3sec.notion.site/Arbitrary-call-0a4c953a188546729c7a6b942f273b2a?pvs=23",
+    "report_zh": "由于任意调用，攻击者能够访问并耗尽已对合约创建授权的用户账户中的资金。"
 }

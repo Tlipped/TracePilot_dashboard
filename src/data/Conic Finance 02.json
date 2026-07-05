@@ -17,5 +17,6 @@
     },
     "root_cause": "deposit / withdraw",
     "report": "The attacker exploited a combination of reentrancy and read-only reentrancy vulnerabilities in the deposit and withdraw functions. First, by manipulating liquidity to trigger a 'depegged' state, they set a target Curve pool's weight to zero. Then, during a subsequent withdraw operation, they reentered the contract. This caused the withdrawal logic to use a manipulated, custom price oracle (invoked when a pool's weight is zero) instead of the primary Chainlink oracle, allowing them to withdraw far more assets than entitled. The attack resulted in a loss of $3.5 million.",
-    "report_link": "https://www.freebuf.com/vuls/373401.html"
+    "report_link": "https://www.freebuf.com/vuls/373401.html",
+    "report_zh": "攻击者结合了重入和只读重入漏洞，利用存款和取款函数。首先通过操纵流动性触发“脱锚”状态，将目标Curve池的权重设为零。然后在后续的取款操作中重入合约。这导致取款逻辑使用了一个被操纵的自定义价格预言机（当池权重为零时被调用），而不是主要的Chainlink预言机，从而提取了远超应得数量的资产。攻击造成350万美元损失。"
 }

@@ -12,5 +12,6 @@
         "link": "['https://x.com/ChainAegis/status/1761246415488225668']"
     },
     "root_cause": "0x72c4cff6",
-    "report": "The full expert report is unavailable. Please evaluate the generated report strictly based on the provided 'root_cause' information."
+    "report": "The full expert report is unavailable. Please evaluate the generated report strictly based on the provided 'root_cause' information.",
+    "report_zh": "完整专家报告不可用。请严格根据提供的'root_cause'信息评估生成的报告。"
 }

@@ -13,5 +13,6 @@
     },
     "root_cause": "0xb2bd16ab",
     "report": "The function 0xb2bd16ab in the UniBot does not properly check input parameters. Thus anyone can use this function to arbitrarily call the external token contract and execute the transferFrom() method. Thus anyone who approves the UniBot contract may suffer from the attack.",
-    "report_link": "https://web3sec.notion.site/Arbitrary-Call-7c381d35b33945f8be387fd03c6dfa48?pvs=23"
+    "report_link": "https://web3sec.notion.site/Arbitrary-Call-7c381d35b33945f8be387fd03c6dfa48?pvs=23",
+    "report_zh": "UniBot中的函数0xb2bd16ab未正确检查输入参数。因此任何人都可以利用此函数任意调用外部代币合约并执行transferFrom()方法。因此任何授权了UniBot合约的用户都可能遭受攻击。"
 }

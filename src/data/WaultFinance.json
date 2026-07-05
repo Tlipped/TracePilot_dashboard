@@ -16,5 +16,6 @@
         "link": "https://twitter.com/InspexCo/status/1422776666892378115"
     },
     "root_cause": "stake",
-    "report_link": "https://zhuanlan.zhihu.com/p/396525700"
+    "report_link": "https://zhuanlan.zhihu.com/p/396525700",
+    "report_zh": "攻击者利用 WUSDMaster 合约中的 stake 函数，该函数允许 BSC_USDT 和 WUSD 之间 1:1 兑换，同时执行 swap 使 WaultSwapPair (BSC_USDT-WEX) 池失衡，从而创造套利机会。攻击者使用闪电贷反复调用 stake，操纵池价，最终获利约 93 万美元。"
 }

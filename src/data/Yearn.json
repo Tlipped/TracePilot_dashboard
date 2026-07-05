@@ -10,5 +10,6 @@
     ],
     "report": "The attacker exploited a misconfiguration in the yUSDT vault's constructor, which incorrectly set the dependency token to iUSDC instead of iUSDT. This allowed the attacker to manipulate share pricing via rebalance, deposit 1 wei of USDT, and mint over 1 quadrillion yUSDT tokens, ultimately stealing approximately $11.54 million.",
     "root_cause": "rebalance / constructor",
-    "report_link": "https://blockapex.io/yearn-finance-hack-analysis/"
+    "report_link": "https://blockapex.io/yearn-finance-hack-analysis/",
+    "report_zh": "攻击者利用了 yUSDT 金库构造函数中的配置错误，该错误将依赖代币错误地设置为 iUSDC 而非 iUSDT。这使得攻击者能够通过重新平衡操纵份额定价，存入 1 wei 的 USDT，并铸造超过 1 万亿亿个 yUSDT 代币，最终盗取了约 1154 万美元。"
 }

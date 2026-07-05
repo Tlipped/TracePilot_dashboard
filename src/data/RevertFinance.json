@@ -17,5 +17,6 @@
     },
     "root_cause": "swap",
     "report": "The V3Utils contract had insufficient input validation, allowing arbitrary external calls, resulting in the theft of funds from approved users.",
-    "report_link": "https://web3sec.notion.site/Arbitrary-External-Call-Vulnerability-2cc8559005984ec2b917b975b32c9f67"
+    "report_link": "https://web3sec.notion.site/Arbitrary-External-Call-Vulnerability-2cc8559005984ec2b917b975b32c9f67",
+    "report_zh": "V3Utils合约输入验证不足，允许任意外部调用，导致已授权用户的资金被盗。"
 }

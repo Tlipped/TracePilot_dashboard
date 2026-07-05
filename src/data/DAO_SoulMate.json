@@ -17,5 +17,6 @@
     },
     "root_cause": "redeem",
     "report": "The attacker exploited a vulnerability where anyone could call the redeem() function to burn $BUI tokens held by the contract and obtain the corresponding underlying assets.",
-    "report_link": "https://web3sec.notion.site/Lack-of-proper-access-control-3fb0448d789147219e6b1c6b31a5924c?pvs=23"
+    "report_link": "https://web3sec.notion.site/Lack-of-proper-access-control-3fb0448d789147219e6b1c6b31a5924c?pvs=23",
+    "report_zh": "攻击者利用了一个漏洞，任何人都可以调用 redeem() 函数来销毁合约持有的 $BUI 代币，并获取相应的底层资产。"
 }

@@ -9,5 +9,6 @@
     ],
     "report": "The function receiveUpPool has no access control or msg.sender validation, as a result, it could be called by anyone to manipulate the newlockstartTime. By repeatedly calling receiveUpPool and withdraw, the attacker could keep claiming rewards.",
     "root_cause": "receiveUpPool",
-    "report_link": "https://web3sec.notion.site/Access-control-ba5a4a25fa304d918337190d4cb485d9?pvs=23"
+    "report_link": "https://web3sec.notion.site/Access-control-ba5a4a25fa304d918337190d4cb485d9?pvs=23",
+    "report_zh": "函数 receiveUpPool 没有访问控制或 msg.sender 验证，因此任何人都可以调用它来操纵 newlockstartTime。通过反复调用 receiveUpPool 和 withdraw，攻击者可以持续领取奖励。"
 }

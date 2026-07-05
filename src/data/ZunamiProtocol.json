@@ -17,5 +17,6 @@
     },
     "root_cause": "cacheAssetPrice",
     "report": "The cacheAssetPrice() function calculates asset price based on totalHoldings, which the attacker manipulated by flash loaning funds from multiple sources and swapping them for 4.8M UZD on Curve. This artificially inflated totalHoldings and sdtPrice in strategies like MIMCurveStakeDao, leading to a flawed LP price calculation. The attack resulted in a loss of over $2 million.",
-    "report_link": "https://web3sec.notion.site/Flawed-Price-Dependency-a1396fbf87814894a2c417ea1f41a299?pvs=23"
+    "report_link": "https://web3sec.notion.site/Flawed-Price-Dependency-a1396fbf87814894a2c417ea1f41a299?pvs=23",
+    "report_zh": "cacheAssetPrice() 函数基于 totalHoldings 计算资产价格，攻击者通过从多个来源闪电贷资金并在 Curve 上将其兑换为 480 万 UZD 操纵了该值。这人为地抬高了 MIMCurveStakeDao 等策略中的 totalHoldings 和 sdtPrice，导致 LP 价格计算出现缺陷。攻击造成超过 200 万美元的损失。"
 }

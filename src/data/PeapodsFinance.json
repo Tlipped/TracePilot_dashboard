@@ -9,5 +9,6 @@
     "lost": "~1K $DAI",
     "root_cause": "flash",
     "report": "The attacker exploited the `flash` function in the ppPP contract, which lacks validation, allowing multiple flash loans in a single transaction to bond and debond Peas tokens, accumulating enough to swap for ～$1K in WETH.",
-    "report_link": "https://web3sec.notion.site/Insufficient-validation-1d8729274113808ba18ae11fae1d8ba2"
+    "report_link": "https://web3sec.notion.site/Insufficient-validation-1d8729274113808ba18ae11fae1d8ba2",
+    "report_zh": "攻击者利用了ppPP合约中缺乏验证的`flash`函数，允许在单笔交易中进行多次闪电贷，用于bond和debond Peas代币，积累足够后代换为约$1K的WETH。"
 }

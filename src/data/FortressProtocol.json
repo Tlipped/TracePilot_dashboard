@@ -20,5 +20,6 @@
         "link": "https://twitter.com/BlockSecTeam/status/1523530484877209600"
     },
     "root_cause": "submit",
-    "report_link": "https://learnblockchain.cn/article/4062"
+    "report_link": "https://learnblockchain.cn/article/4062",
+    "report_zh": "submit函数缺乏对签名者和投票权的验证，允许攻击者修改fcds状态变量并操纵价格预言机。这使得攻击者能够通过恶意治理提案设定夸大的抵押因子，然后通过套利获利。"
 }

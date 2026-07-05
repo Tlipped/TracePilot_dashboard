@@ -14,5 +14,6 @@
     ],
     "report": "The attacker exploited a critical lack of validation in the `selfSwap` and `fill` functions. By crafting a malicious contract that mimicked a legitimate DEX router, and then passing its address as the `routerID` in a `selfSwap` request, the attacker bypassed any on-chain verification. When the `fill` function executed, it performed a delegate call to the attacker-controlled contract, which contained a `transferFrom` function. This allowed the attacker to directly transfer out all approved tokens from victim accounts. The attack drained approximately $1.5 million from Ethereum and an additional $450k from other chains, affecting 17 users in total.",
     "root_cause": "selfSwap + fill",
-    "report_link": "https://blockapex.io/dexible-hack-analysis/"
+    "report_link": "https://blockapex.io/dexible-hack-analysis/",
+    "report_zh": "攻击者利用了`selfSwap`和`fill`函数中关键的验证缺失。通过构造一个模仿合法DEX路由器的恶意合约，并将其地址作为`routerID`传递给`selfSwap`请求，攻击者绕过了所有链上验证。当`fill`函数执行时，它向攻击者控制的合约发起了delegate调用，该合约包含`transferFrom`函数。这使得攻击者能够直接将受害者账户中所有已授权的代币转出。此次攻击从以太坊盗取了约150万美元，并从其他链盗取了额外的45万美元，共影响17名用户。"
 }

@@ -21,5 +21,6 @@
         "link": "https://twitter.com/AlchemixFi/status/1405430945360998408"
     },
     "root_cause": "_plantOrRecallExcessFunds",
-    "report_link": "https://forum.alchemix.fi/public/d/137-incident-report-06162021"
+    "report_link": "https://forum.alchemix.fi/public/d/137-incident-report-06162021",
+    "report_zh": "Alchemix 报告中，_plantOrRecallExcessFunds 函数的部署脚本错误意外创建了额外的 alETH 金库，导致金库操作中的数组索引错误。这错误计算了超额资金处理逻辑中的未偿奖励，迫使 transmuter 资金被完全发送以偿还用户债务，导致未经授权的抵押品提取，造成 2,688.634 ETH 缺口（约 653 万美元）。"
 }
