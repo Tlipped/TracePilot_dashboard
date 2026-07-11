@@ -1,0 +1,126 @@
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
+
+const root = process.cwd();
+const warnings = [];
+
+function readText(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), "utf8");
+}
+
+function readJson(relativePath) {
+  return JSON.parse(readText(relativePath));
+}
+
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
+function warn(message) {
+  warnings.push(message);
+}
+
+function includesAll(source, tokens, label) {
+  const missing = tokens.filter((token) => !source.includes(token));
+  assert(missing.length === 0, `${label} missing: ${missing.join(", ")}`);
+}
+
+function checkPackageScripts() {
+  const pkg = readJson("package.json");
+  includesAll(Object.keys(pkg.scripts ?? {}).join("\n"), ["build", "lint", "test:smoke"], "package scripts");
+}
+
+function checkOfflineDemoFallback() {
+  const api = readText("src/services/api.ts");
+  includesAll(
+    api,
+    [
+      "listDemoTasks",
+      "return listDemoTasks()",
+      "getDemoTask(taskId)",
+      "getDemoTaskLogs(taskId, params)",
+      "getDemoFullLog(taskId, logId)",
+      "getDemoAgentLogFiles(taskId)",
+    ],
+    "offline demo fallback",
+  );
+
+  const snapshots = readJson("src/data/demoSnapshots.json");
+  assert(Array.isArray(snapshots.cases), "demoSnapshots.json must contain a cases array");
+  if (snapshots.cases.length === 0) {
+    warn("demoSnapshots.json has no cached cases yet. Import demo cases before a submission/demo build.");
+    return;
+  }
+
+  for (const item of snapshots.cases) {
+    assert(item.id, "each demo case needs an id");
+    assert(item.name, `demo case ${item.id} needs a name`);
+    assert(item.task?.task_id, `demo case ${item.id} needs task.task_id`);
+    assert(Array.isArray(item.logs), `demo case ${item.id} needs logs array`);
+  }
+}
+
+function checkLandingWorkflowContracts() {
+  const landing = readText("src/pages/LandingWarRoom.tsx");
+  const caseReplayText = "\u5df2\u53d1\u751f\u6848\u4f8b\u590d\u76d8";
+  const quickDetectText = "\u5feb\u901f\u653b\u51fb\u68c0\u6d4b";
+  includesAll(
+    landing,
+    [
+      'expanded.has("fault_localization")',
+      'expanded.add("rag_retrieval")',
+      'expanded.has("patch_verification")',
+      'expanded.add("patch_generation")',
+      "parseTxHashes",
+      "detectTransactions",
+      "startTransactionDeepAnalysis",
+      caseReplayText,
+      quickDetectText,
+    ],
+    "landing workflow contract",
+  );
+
+  const taskList = readText("src/pages/TaskList.tsx");
+  includesAll(taskList, [caseReplayText, "createTask"], "task list case replay entry");
+}
+
+function checkChineseTextHealth() {
+  const files = [
+    "src/pages/LandingWarRoom.tsx",
+    "src/pages/TaskList.tsx",
+    "src/pages/Dashboard.tsx",
+    "src/components/LearningGuidePanel.tsx",
+  ];
+  const mojibakePattern = /[鏀诲嚮鑰鍊熷叆涓存椂璧勯噾]/;
+  for (const file of files) {
+    const source = readText(file);
+    if (source.includes("\uFFFD")) {
+      warn(`${file} contains replacement characters; check encoding.`);
+    }
+    if (mojibakePattern.test(source)) {
+      warn(`${file} may contain old mojibake fallback text; review visible Chinese copy.`);
+    }
+  }
+}
+
+const checks = [
+  checkPackageScripts,
+  checkOfflineDemoFallback,
+  checkLandingWorkflowContracts,
+  checkChineseTextHealth,
+];
+
+for (const check of checks) {
+  check();
+}
+
+console.log(`Smoke checks passed: ${checks.length}`);
+if (warnings.length > 0) {
+  console.log("\nWarnings:");
+  for (const item of warnings) {
+    console.log(`- ${item}`);
+  }
+}
