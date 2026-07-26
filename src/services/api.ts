@@ -17,6 +17,7 @@ import {
   AssistantChatRequest,
   AssistantChatResponse,
   AutomatedReviewResponse,
+  CaseReviewV1,
   DappCatalogResponse,
   FullLogResponse,
   MacroAnalysisResponse,
@@ -105,6 +106,14 @@ export async function getAutomatedReview(taskId: string): Promise<AutomatedRevie
   if (demoReview) return demoReview;
   if (hasDemoSnapshot(taskId)) throw new Error("Offline demo automated review is not available.");
   const response = await api.get<AutomatedReviewResponse>(`/api/tasks/${taskId}/automated-review`);
+  return response.data;
+}
+
+export async function getCaseReview(taskId: string): Promise<CaseReviewV1> {
+  if (hasDemoSnapshot(taskId)) {
+    throw new Error("Offline demo trusted review is not available.");
+  }
+  const response = await api.get<CaseReviewV1>(`/api/tasks/${taskId}/case-review`);
   return response.data;
 }
 

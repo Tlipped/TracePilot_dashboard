@@ -184,6 +184,76 @@ export type ProductViewMode = "report" | "learn" | "auditor" | "raw";
 
 export type LanguageMode = "en" | "zh";
 
+export interface LocalizedText {
+  en: string;
+  zh?: string | null;
+}
+
+export interface CaseReviewEvidence {
+  id: string;
+  kind: string;
+  source: string;
+  title: LocalizedText;
+  content_excerpt: string;
+  generated_by: "tool" | "model" | "system" | "legacy_adapter" | string;
+  transaction_hash?: string | null;
+  trace_index?: number | null;
+  artifact_ref?: string | null;
+  content_hash?: string | null;
+  observed_at?: string | null;
+  metadata: Record<string, unknown>;
+}
+
+export interface CaseReviewClaim {
+  id: string;
+  category: string;
+  statement: LocalizedText;
+  confidence: string;
+  verification_status: string;
+  generated_by: string;
+  evidence_refs: string[];
+}
+
+export interface CaseReviewAttackStage {
+  order: number;
+  title: LocalizedText;
+  description: LocalizedText;
+  status: string;
+  transaction_hash?: string | null;
+  evidence_refs: string[];
+}
+
+export interface CaseReviewPatchVerification {
+  patch_summary?: LocalizedText | null;
+  reported_verdict?: string | null;
+  verification_status: string;
+  trust_level: string;
+  compile_status: string;
+  replay_status: string;
+  attack_blocked?: boolean | null;
+  profit_after?: string | null;
+  evidence_refs: string[];
+  limitations: LocalizedText[];
+}
+
+export interface CaseReviewV1 {
+  schema_version: "1.0" | string;
+  task_id: string;
+  dapp_name: string;
+  task_status: string;
+  generated_at: string;
+  data_source: string;
+  completeness: "complete" | "partial" | "minimal" | string;
+  language_policy: string;
+  executive_summary?: CaseReviewClaim | null;
+  attack_stages: CaseReviewAttackStage[];
+  root_causes: CaseReviewClaim[];
+  patch_verification: CaseReviewPatchVerification;
+  evidence: CaseReviewEvidence[];
+  quality_warnings: LocalizedText[];
+  legacy_report_available: boolean;
+}
+
 export type ReportSectionKey =
   | "root_cause"
   | "attack_path"
