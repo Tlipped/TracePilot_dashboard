@@ -2,6 +2,7 @@ import axios from "axios";
 import { BACKEND_HTTP_URL } from "../config/appConfig";
 import {
   getDemoAutomatedReview,
+  getDemoCaseReview,
   getDemoFullLog,
   getDemoMacroAnalysis,
   getDemoTask,
@@ -110,6 +111,8 @@ export async function getAutomatedReview(taskId: string): Promise<AutomatedRevie
 }
 
 export async function getCaseReview(taskId: string): Promise<CaseReviewV1> {
+  const demoReview = getDemoCaseReview(taskId);
+  if (demoReview) return demoReview;
   if (hasDemoSnapshot(taskId)) {
     throw new Error("Offline demo trusted review is not available.");
   }

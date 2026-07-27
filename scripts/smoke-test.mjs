@@ -30,7 +30,11 @@ function includesAll(source, tokens, label) {
 
 function checkPackageScripts() {
   const pkg = readJson("package.json");
-  includesAll(Object.keys(pkg.scripts ?? {}).join("\n"), ["build", "lint", "test:smoke"], "package scripts");
+  includesAll(
+    Object.keys(pkg.scripts ?? {}).join("\n"),
+    ["build", "lint", "test:smoke", "test:demo-importer", "demo:import"],
+    "package scripts",
+  );
 }
 
 function checkOfflineDemoFallback() {
@@ -44,6 +48,7 @@ function checkOfflineDemoFallback() {
       "getDemoTaskLogs(taskId, params)",
       "getDemoFullLog(taskId, logId)",
       "getDemoAgentLogFiles(taskId)",
+      "getDemoCaseReview(taskId)",
     ],
     "offline demo fallback",
   );
@@ -60,7 +65,23 @@ function checkOfflineDemoFallback() {
     assert(item.name, `demo case ${item.id} needs a name`);
     assert(item.task?.task_id, `demo case ${item.id} needs task.task_id`);
     assert(Array.isArray(item.logs), `demo case ${item.id} needs logs array`);
+    assert(item.case_review?.schema_version, `demo case ${item.id} needs a CaseReview snapshot`);
   }
+}
+
+function checkDemoImporterSafety() {
+  const importer = readText("scripts/import-demo-snapshot.mjs");
+  includesAll(
+    importer,
+    [
+      "--dry-run",
+      "only terminal tasks can become demo snapshots",
+      "[REDACTED PRIVATE KEY]",
+      "Review the generated files before committing",
+      "/case-review",
+    ],
+    "demo importer safety",
+  );
 }
 
 function checkLandingWorkflowContracts() {
@@ -94,7 +115,9 @@ function checkChineseTextHealth() {
     "src/pages/Dashboard.tsx",
     "src/components/LearningGuidePanel.tsx",
   ];
-  const mojibakePattern = /[鏀诲嚮鑰鍊熷叆涓存椂璧勯噾]/;
+  // Match corruption signatures, not individual CJK characters that can
+  // legitimately occur in security terminology.
+  const mojibakePattern = /(?:锛|銆|浠诲|鏀诲|缁撴|瀛︿|浜ゆ)/;
   for (const file of files) {
     const source = readText(file);
     if (source.includes("\uFFFD")) {
@@ -109,6 +132,7 @@ function checkChineseTextHealth() {
 const checks = [
   checkPackageScripts,
   checkOfflineDemoFallback,
+  checkDemoImporterSafety,
   checkLandingWorkflowContracts,
   checkChineseTextHealth,
 ];

@@ -16,7 +16,7 @@ import LogStream from "../components/LogStream";
 import LearningGuidePanel from "../components/LearningGuidePanel";
 import MacroAnalysisPanel from "../components/MacroAnalysisPanel";
 import StructuredReport from "../components/StructuredReport";
-import TrustedCaseReview from "../components/TrustedCaseReview";
+import TrustedCaseReview, { TrustedCaseReviewState } from "../components/TrustedCaseReview";
 import { getAutomatedReview, getCaseReview, getMacroAnalysis, getTask, getTaskLogs } from "../services/api";
 import WebSocketService from "../services/WebSocketService";
 import {
@@ -104,6 +104,9 @@ const Dashboard: React.FC = () => {
   const [macroAnalysis, setMacroAnalysis] = useState<MacroAnalysisResponse | null>(null);
   const [automatedReview, setAutomatedReview] = useState<AutomatedReviewResponse | null>(null);
   const [caseReview, setCaseReview] = useState<CaseReviewV1 | null>(null);
+  const [caseReviewLoading, setCaseReviewLoading] = useState(false);
+  const [caseReviewError, setCaseReviewError] = useState("");
+  const [caseReviewReloadToken, setCaseReviewReloadToken] = useState(0);
 
   const refreshTask = useCallback(async () => {
     if (!taskId) return null;
@@ -221,6 +224,7 @@ const Dashboard: React.FC = () => {
   const hasMacroAnalysis = Boolean(macroAnalysis);
   const hasAutomatedReview = Boolean(automatedReview);
   const hasCaseReview = Boolean(caseReview);
+  const hasCaseReviewEntry = hasCaseReview || caseReviewLoading || Boolean(caseReviewError) || terminalTask;
   const hasReplay = hasFinalReport;
   const hasLearningGuide = hasFinalReport || hasMacroAnalysis;
   const hasConsistencyReview = hasFinalReport || hasAutomatedReview;
@@ -277,21 +281,37 @@ const Dashboard: React.FC = () => {
     let cancelled = false;
     if (!taskId) {
       setCaseReview(null);
+      setCaseReviewLoading(false);
+      setCaseReviewError("");
       return;
     }
 
+    setCaseReview(null);
+    setCaseReviewLoading(true);
+    setCaseReviewError("");
     getCaseReview(taskId)
       .then((payload) => {
-        if (!cancelled) setCaseReview(payload);
+        if (!cancelled) {
+          setCaseReview(payload);
+          setCaseReviewError("");
+        }
       })
-      .catch(() => {
-        if (!cancelled) setCaseReview(null);
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setCaseReview(null);
+          setCaseReviewError(
+            error instanceof Error ? error.message : "可信评审暂时不可用，请稍后重试。",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setCaseReviewLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [taskId, task?.status, task?.completed_at]);
+  }, [caseReviewReloadToken, taskId, task?.status, task?.completed_at]);
 
   useEffect(() => {
     if (caseReview && viewMode === "report" && !isTaskRunning && activeMainTab === "report") {
@@ -423,7 +443,15 @@ const Dashboard: React.FC = () => {
           language={language}
           onOpenLegacyReport={() => setActiveMainTab("report")}
         />
-      ) : null,
+      ) : (
+        <TrustedCaseReviewState
+          loading={caseReviewLoading}
+          error={caseReviewError}
+          hasLegacyReport={hasFinalReport}
+          onRetry={() => setCaseReviewReloadToken((value) => value + 1)}
+          onOpenLegacyReport={() => setActiveMainTab("report")}
+        />
+      ),
     };
 
     const replayTab: MainTabItem = {
@@ -535,7 +563,7 @@ const Dashboard: React.FC = () => {
     };
 
     const availableKeys = new Set(["live", "stream", "timeline"]);
-    if (hasCaseReview) availableKeys.add("trusted-review");
+    if (hasCaseReviewEntry) availableKeys.add("trusted-review");
     if (hasFinalReport) availableKeys.add("report");
     if (hasReplay) availableKeys.add("attack-replay");
     if (hasLearningGuide) availableKeys.add("learning");
@@ -549,8 +577,10 @@ const Dashboard: React.FC = () => {
     agentStats,
     automatedReview,
     caseReview,
+    caseReviewError,
+    caseReviewLoading,
     events,
-    hasCaseReview,
+    hasCaseReviewEntry,
     hasConsistencyReview,
     hasFinalReport,
     hasLearningGuide,

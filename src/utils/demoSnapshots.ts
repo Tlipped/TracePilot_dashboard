@@ -2,6 +2,7 @@ import snapshots from "../data/demoSnapshots.json";
 import {
   AgentLogFileResponse,
   AutomatedReviewResponse,
+  CaseReviewV1,
   LogMessage,
   MacroAnalysisResponse,
   Task,
@@ -11,11 +12,13 @@ import {
 type DemoSnapshot = {
   id: string;
   source_task_id?: string | null;
+  captured_at?: string | null;
   name: string;
   task: Task;
   logs: LogMessage[];
   macro?: MacroAnalysisResponse | null;
   review?: AutomatedReviewResponse | null;
+  case_review?: CaseReviewV1 | null;
 };
 
 type DemoLogPack = {
@@ -87,6 +90,10 @@ export function getDemoMacroAnalysis(taskId: string): MacroAnalysisResponse | nu
 
 export function getDemoAutomatedReview(taskId: string): AutomatedReviewResponse | null {
   return getDemoSnapshot(taskId)?.review ?? null;
+}
+
+export function getDemoCaseReview(taskId: string): CaseReviewV1 | null {
+  return getDemoSnapshot(taskId)?.case_review ?? null;
 }
 
 export async function getDemoFullLog(taskId: string, logId: string): Promise<string | null> {

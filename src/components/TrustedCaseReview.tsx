@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { Alert, Button, Card, Collapse, Empty, Space, Tag, Typography } from "antd";
-import { CheckCircle2, ExternalLink, FileWarning, ShieldCheck } from "lucide-react";
+import { Alert, Button, Card, Collapse, Empty, Result, Skeleton, Space, Tag, Typography } from "antd";
+import { CheckCircle2, ExternalLink, FileWarning, RotateCcw, ShieldCheck } from "lucide-react";
 import {
   CaseReviewClaim,
   CaseReviewEvidence,
@@ -37,6 +37,125 @@ function trustPresentation(status: string) {
   return { color: "default", label: "未经验证" };
 }
 
+function technicalStatusLabel(status: string) {
+  const normalized = status.trim().toLowerCase();
+  if (normalized === "passed") return "已通过";
+  if (normalized === "blocked") return "攻击已阻断";
+  if (normalized === "reverted") return "攻击已回滚";
+  if (normalized === "failed") return "未通过";
+  return "暂无工具结果";
+}
+
+function SourceText({
+  value,
+  language,
+}: {
+  value: LocalizedText;
+  language: LanguageMode;
+}) {
+  const chinese = value.zh?.trim() ?? "";
+  const english = value.en?.trim() ?? "";
+
+  if (language === "zh" && chinese) {
+    return (
+      <>
+        <Paragraph className="trusted-review-source-text">{chinese}</Paragraph>
+        {english && english !== chinese && (
+          <Collapse
+            ghost
+            size="small"
+            items={[
+              {
+                key: "source",
+                label: "查看英文事实原文",
+                children: <Paragraph className="trusted-review-source-text">{english}</Paragraph>,
+              },
+            ]}
+          />
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {language === "zh" && (
+        <div className="trusted-source-meta">
+          <Tag color="blue">英文事实原文</Tag>
+          <Text type="secondary">暂未生成经校验的中文翻译，避免改写安全语义。</Text>
+        </div>
+      )}
+      <Paragraph className="trusted-review-source-text">{english || chinese}</Paragraph>
+    </>
+  );
+}
+
+interface TrustedCaseReviewStateProps {
+  loading: boolean;
+  error?: string;
+  hasLegacyReport: boolean;
+  onRetry: () => void;
+  onOpenLegacyReport: () => void;
+}
+
+export const TrustedCaseReviewState: React.FC<TrustedCaseReviewStateProps> = ({
+  loading,
+  error,
+  hasLegacyReport,
+  onRetry,
+  onOpenLegacyReport,
+}) => {
+  if (loading) {
+    return (
+      <div className="trusted-case-review" aria-live="polite">
+        <Card className="trusted-review-card">
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space>
+              <Skeleton.Avatar active size="large" shape="square" />
+              <Skeleton.Input active size="large" />
+            </Space>
+            <Skeleton active paragraph={{ rows: 5 }} />
+          </Space>
+        </Card>
+        <div className="trusted-review-grid">
+          <Card className="trusted-review-card"><Skeleton active paragraph={{ rows: 4 }} /></Card>
+          <Card className="trusted-review-card"><Skeleton active paragraph={{ rows: 4 }} /></Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Card className="trusted-review-card">
+      <Result
+        status={error ? "warning" : "info"}
+        title={error ? "可信评审暂时不可用" : "可信评审尚未生成"}
+        subTitle={
+          error
+            ? "原始报告仍然可用。你可以重试结构化接口，失败不会影响其他分析结果。"
+            : "任务完成后，系统会自动组织结论、验证状态和证据索引。"
+        }
+        extra={[
+          <Button
+            key="retry"
+            type="primary"
+            icon={<RotateCcw size={14} />}
+            onClick={onRetry}
+          >
+            重新生成
+          </Button>,
+          hasLegacyReport ? (
+            <Button key="legacy" onClick={onOpenLegacyReport}>
+              查看原始报告
+            </Button>
+          ) : null,
+        ].filter(Boolean)}
+      />
+      {error && <Alert type="error" showIcon message="接口错误详情" description={error} />}
+    </Card>
+  );
+};
+
 function ClaimCard({
   title,
   claim,
@@ -62,9 +181,7 @@ function ClaimCard({
       title={title}
       extra={<Tag color={trust.color}>{trust.label}</Tag>}
     >
-      <Paragraph className="trusted-review-source-text">
-        {localized(claim.statement, language)}
-      </Paragraph>
+      <SourceText value={claim.statement} language={language} />
       {claim.evidence_refs.length > 0 && (
         <Space size={[4, 6]} wrap>
           <Text type="secondary">关联证据：</Text>
@@ -88,6 +205,9 @@ const TrustedCaseReview: React.FC<TrustedCaseReviewProps> = ({
   );
   const verification = review.patch_verification;
   const verificationTrust = trustPresentation(verification.verification_status);
+  const productBrief = review.task_status === "failed"
+    ? "本次任务未正常完成，以下内容只用于故障排查，不应作为最终审计结论。"
+    : `系统已整理 ${review.attack_stages.length} 个攻击阶段和 ${review.evidence.length} 条可追溯证据；补丁状态为“${verificationTrust.label}”。`;
 
   const evidenceItems = review.evidence.map((item) => ({
     key: item.id,
@@ -133,6 +253,19 @@ const TrustedCaseReview: React.FC<TrustedCaseReviewProps> = ({
             查看原始报告
           </Button>
         )}
+      </section>
+
+      <section className="trusted-product-brief">
+        <div>
+          <Text type="secondary">面向评审的一句话结论</Text>
+          <Title level={4}>{productBrief}</Title>
+        </div>
+        <div className="trusted-brief-metrics">
+          <div><Text type="secondary">任务状态</Text><Text strong>{review.task_status === "completed" ? "分析完成" : review.task_status}</Text></div>
+          <div><Text type="secondary">攻击阶段</Text><Text strong>{review.attack_stages.length}</Text></div>
+          <div><Text type="secondary">证据条目</Text><Text strong>{review.evidence.length}</Text></div>
+          <div><Text type="secondary">修复可信度</Text><Tag color={verificationTrust.color}>{verificationTrust.label}</Tag></div>
+        </div>
       </section>
 
       {review.quality_warnings.length > 0 && (
@@ -203,8 +336,8 @@ const TrustedCaseReview: React.FC<TrustedCaseReviewProps> = ({
         extra={<Tag color={verificationTrust.color}>{verificationTrust.label}</Tag>}
       >
         <div className="trusted-verification-metrics">
-          <div><Text type="secondary">编译</Text><Text strong>{verification.compile_status}</Text></div>
-          <div><Text type="secondary">攻击重放</Text><Text strong>{verification.replay_status}</Text></div>
+          <div><Text type="secondary">编译</Text><Text strong>{technicalStatusLabel(verification.compile_status)}</Text></div>
+          <div><Text type="secondary">攻击重放</Text><Text strong>{technicalStatusLabel(verification.replay_status)}</Text></div>
           <div>
             <Text type="secondary">攻击是否阻断</Text>
             <Text strong>
@@ -214,9 +347,7 @@ const TrustedCaseReview: React.FC<TrustedCaseReviewProps> = ({
           <div><Text type="secondary">修复后收益</Text><Text strong>{verification.profit_after || "未知"}</Text></div>
         </div>
         {verification.patch_summary && (
-          <Paragraph className="trusted-review-source-text">
-            {localized(verification.patch_summary, language)}
-          </Paragraph>
+          <SourceText value={verification.patch_summary} language={language} />
         )}
         {verification.verification_status === "verified" ? (
           <Alert

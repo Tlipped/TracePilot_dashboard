@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:smoke": "node scripts/smoke-test.mjs"
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "test:demo-importer": "node scripts/test-demo-importer.mjs",
+    "demo:import": "node scripts/import-demo-snapshot.mjs"
   },
   "dependencies": {
     "antd": "^6.3.1",
