@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, App as AntdApp, Button, Layout, Segmented, Space, Spin, Tabs, Tag, Typography } from "antd";
-import { Activity, ArrowLeft, Bot, FileText, FolderOpen, Home, ListTree, RefreshCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
+import { Activity, ArrowLeft, Bot, FileText, FolderOpen, Home, ListTree, RefreshCcw, RotateCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
 import AgentFileLogs from "../components/AgentFileLogs";
 import AgentConsistencyPanel from "../components/AgentConsistencyPanel";
@@ -16,6 +16,7 @@ import LogStream from "../components/LogStream";
 import LearningGuidePanel from "../components/LearningGuidePanel";
 import MacroAnalysisPanel from "../components/MacroAnalysisPanel";
 import StructuredReport from "../components/StructuredReport";
+import TaskRecoveryPanel from "../components/TaskRecoveryPanel";
 import TrustedCaseReview, { TrustedCaseReviewState } from "../components/TrustedCaseReview";
 import { getAutomatedReview, getCaseReview, getMacroAnalysis, getTask, getTaskLogs } from "../services/api";
 import WebSocketService from "../services/WebSocketService";
@@ -107,6 +108,7 @@ const Dashboard: React.FC = () => {
   const [caseReviewLoading, setCaseReviewLoading] = useState(false);
   const [caseReviewError, setCaseReviewError] = useState("");
   const [caseReviewReloadToken, setCaseReviewReloadToken] = useState(0);
+  const [connectionEpoch, setConnectionEpoch] = useState(0);
 
   const refreshTask = useCallback(async () => {
     if (!taskId) return null;
@@ -215,7 +217,7 @@ const Dashboard: React.FC = () => {
       WebSocketService.unsubscribe(handleEvent);
       WebSocketService.unsubscribeStatus(handleStatus);
     };
-  }, [refreshTask, taskId]);
+  }, [connectionEpoch, refreshTask, taskId]);
 
   const terminalTask = isTerminalTask(task?.status);
   const isTaskRunning = task?.status === TaskStatus.RUNNING || (!terminalTask && wsStatus === WebSocket.OPEN);
@@ -386,6 +388,17 @@ const Dashboard: React.FC = () => {
     setDrawerOpen(true);
   };
 
+  const handleTaskResumed = useCallback((nextTask: Task) => {
+    setTask(nextTask);
+    setMacroAnalysis(null);
+    setAutomatedReview(null);
+    setCaseReview(null);
+    setErrorMsg("");
+    generatedNoticeRef.current = { report: false, macro: false, review: false };
+    setActiveMainTab("recovery");
+    setConnectionEpoch((value) => value + 1);
+  }, []);
+
   const mainTabItems = useMemo(() => {
     const liveTab: MainTabItem = {
       key: "live",
@@ -450,6 +463,23 @@ const Dashboard: React.FC = () => {
           hasLegacyReport={hasFinalReport}
           onRetry={() => setCaseReviewReloadToken((value) => value + 1)}
           onOpenLegacyReport={() => setActiveMainTab("report")}
+        />
+      ),
+    };
+
+    const recoveryTab: MainTabItem = {
+      key: "recovery",
+      label: (
+        <Space size={6}>
+          <RotateCcw size={14} />
+          阶段恢复
+        </Space>
+      ),
+      children: (
+        <TaskRecoveryPanel
+          taskId={taskId ?? ""}
+          task={task}
+          onResumed={handleTaskResumed}
         />
       ),
     };
@@ -538,6 +568,7 @@ const Dashboard: React.FC = () => {
 
     const tabMap: Record<string, MainTabItem> = {
       live: liveTab,
+      recovery: recoveryTab,
       "trusted-review": trustedReviewTab,
       report: reportTab,
       "attack-replay": replayTab,
@@ -549,20 +580,20 @@ const Dashboard: React.FC = () => {
     };
     const modeOrder: Record<ProductViewMode, string[]> = {
       report: isTaskRunning
-        ? ["live", "stream", "timeline", "trusted-review", "report", "attack-replay", "macro", "consistency", "learning"]
-        : ["trusted-review", "report", "attack-replay", "macro", "consistency", "learning", "stream", "timeline"],
+        ? ["live", "recovery", "stream", "timeline", "trusted-review", "report", "attack-replay", "macro", "consistency", "learning"]
+        : ["recovery", "trusted-review", "report", "attack-replay", "macro", "consistency", "learning", "stream", "timeline"],
       learn: isTaskRunning
-        ? ["live", "learning", "stream", "timeline", "attack-replay", "trusted-review", "report", "macro", "consistency"]
-        : ["learning", "attack-replay", "trusted-review", "report", "macro", "consistency", "stream", "timeline"],
+        ? ["live", "recovery", "learning", "stream", "timeline", "attack-replay", "trusted-review", "report", "macro", "consistency"]
+        : ["learning", "recovery", "attack-replay", "trusted-review", "report", "macro", "consistency", "stream", "timeline"],
       auditor: isTaskRunning
-        ? ["live", "trusted-review", "macro", "consistency", "stream", "timeline", "report", "attack-replay", "learning"]
-        : ["trusted-review", "macro", "consistency", "report", "attack-replay", "timeline", "stream", "learning"],
+        ? ["live", "recovery", "trusted-review", "macro", "consistency", "stream", "timeline", "report", "attack-replay", "learning"]
+        : ["recovery", "trusted-review", "macro", "consistency", "report", "attack-replay", "timeline", "stream", "learning"],
       raw: isTaskRunning
-        ? ["live", "stream", "timeline", "trusted-review", "report", "macro", "consistency", "attack-replay", "learning"]
-        : ["stream", "timeline", "trusted-review", "report", "macro", "consistency", "attack-replay", "learning"],
+        ? ["live", "recovery", "stream", "timeline", "trusted-review", "report", "macro", "consistency", "attack-replay", "learning"]
+        : ["stream", "timeline", "recovery", "trusted-review", "report", "macro", "consistency", "attack-replay", "learning"],
     };
 
-    const availableKeys = new Set(["live", "stream", "timeline"]);
+    const availableKeys = new Set(["live", "recovery", "stream", "timeline"]);
     if (hasCaseReviewEntry) availableKeys.add("trusted-review");
     if (hasFinalReport) availableKeys.add("report");
     if (hasReplay) availableKeys.add("attack-replay");
@@ -586,6 +617,7 @@ const Dashboard: React.FC = () => {
     hasLearningGuide,
     hasMacroAnalysis,
     hasReplay,
+    handleTaskResumed,
     isTaskRunning,
     language,
     macroAnalysis,

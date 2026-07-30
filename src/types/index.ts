@@ -78,6 +78,54 @@ export interface Task {
   archived?: boolean;
 }
 
+export interface CheckpointStageState {
+  stage: "input_prepared" | "macro_analysis" | "micro_analysis" | string;
+  stage_order: number;
+  latest_status: "not_started" | "running" | "completed" | "failed" | "interrupted" | string;
+  latest_attempt: number;
+  latest_at?: string | null;
+  completed_checkpoint_id?: string | null;
+  artifact_sha256?: string | null;
+  artifact_size?: number | null;
+  integrity: string;
+  valid_for_recovery: boolean;
+  validation_message: string;
+}
+
+export interface CheckpointEvent {
+  type?: "CHECKPOINT";
+  checkpoint_id: string;
+  task_id: string;
+  stage: string;
+  stage_order: number;
+  status: string;
+  attempt: number;
+  input_sha256: string;
+  artifact_sha256?: string | null;
+  artifact_size?: number | null;
+  details: Record<string, unknown>;
+  created_at?: string | null;
+}
+
+export interface TaskRecoveryState {
+  task_id: string;
+  task_status: TaskStatus;
+  can_resume: boolean;
+  resume_from?: string | null;
+  reason_code: string;
+  reason: string;
+  input_sha256?: string | null;
+  checkpoint_count: number;
+  recovery_count: number;
+  stages: CheckpointStageState[];
+  events: CheckpointEvent[];
+}
+
+export interface TaskResumeResponse {
+  task: Task;
+  recovery: TaskRecoveryState;
+}
+
 export interface ConnectedEvent {
   type: "CONNECTED";
   task_id: string;
@@ -144,6 +192,7 @@ export type TaskEvent =
   | TaskFinalEvent
   | LogDroppedEvent
   | HeartbeatTimeoutEvent
+  | (CheckpointEvent & { type: "CHECKPOINT" })
   | LogMessage;
 
 export interface FullLogResponse {

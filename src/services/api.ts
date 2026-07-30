@@ -26,6 +26,8 @@ import {
   RagSearchResponse,
   Task,
   TaskCreateRequest,
+  TaskRecoveryState,
+  TaskResumeResponse,
   TxDetectRequest,
   TxDetectResponse,
   TaskLogPageResponse,
@@ -91,6 +93,35 @@ export async function getTask(taskId: string): Promise<Task> {
   const demoTask = getDemoTask(taskId);
   if (demoTask) return demoTask;
   const response = await api.get<Task>(`/api/tasks/${taskId}`);
+  return response.data;
+}
+
+export async function getTaskRecovery(taskId: string): Promise<TaskRecoveryState> {
+  const demoTask = getDemoTask(taskId);
+  if (demoTask) {
+    return {
+      task_id: taskId,
+      task_status: demoTask.status,
+      can_resume: false,
+      resume_from: null,
+      reason_code: "OFFLINE_DEMO_SNAPSHOT",
+      reason: "离线演示快照是只读结果，不会触发真实 Agent 续跑。",
+      input_sha256: null,
+      checkpoint_count: 0,
+      recovery_count: 0,
+      stages: [],
+      events: [],
+    };
+  }
+  const response = await api.get<TaskRecoveryState>(`/api/tasks/${taskId}/recovery`);
+  return response.data;
+}
+
+export async function resumeTask(taskId: string): Promise<TaskResumeResponse> {
+  if (hasDemoSnapshot(taskId)) {
+    throw new Error("离线演示快照不可恢复，请选择真实运行任务。");
+  }
+  const response = await api.post<TaskResumeResponse>(`/api/tasks/${taskId}/resume`);
   return response.data;
 }
 

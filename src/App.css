@@ -180,6 +180,59 @@ body[data-appearance="dark"] .trusted-verification-metrics > div {
   }
 }
 
+.task-recovery-panel {
+  padding: 2px 0 18px;
+}
+
+.task-recovery-card {
+  overflow: hidden;
+}
+
+.task-recovery-card .ant-card-head {
+  border-bottom-color: var(--border);
+}
+
+.task-recovery-card .ant-alert {
+  margin-bottom: 22px;
+}
+
+.checkpoint-loading {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.checkpoint-steps {
+  max-width: 920px;
+  margin-top: 4px;
+}
+
+.checkpoint-stage-detail {
+  display: grid;
+  gap: 5px;
+  padding: 3px 0 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.checkpoint-trust-boundary {
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 760px) {
+  .task-recovery-card .ant-card-head {
+    align-items: flex-start;
+  }
+
+  .task-recovery-card .ant-card-extra {
+    margin-top: 8px;
+  }
+}
+
 .app-shell {
   min-height: 100vh;
   background: var(--bg-deep);

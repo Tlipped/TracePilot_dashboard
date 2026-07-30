@@ -73,6 +73,7 @@ function getLogTitle(log: LogMessage) {
 }
 
 function getControlTitle(event: TaskEvent) {
+  if (event.type === "CHECKPOINT") return `阶段检查点：${event.stage}`;
   if (event.type === "TASK_STATUS") return `任务${taskStatusLabel(event.status)}`;
   if (event.type === "TASK_FINAL") return `最终状态：${taskStatusLabel(event.status)}`;
   if (event.type === "LOG_DROPPED") return "日志积压";
@@ -82,6 +83,7 @@ function getControlTitle(event: TaskEvent) {
 }
 
 function getControlPreview(event: TaskEvent) {
+  if (event.type === "CHECKPOINT") return `第 ${event.attempt} 次尝试 · ${event.status}`;
   if (event.type === "TASK_STATUS") return `任务状态已更新为${taskStatusLabel(event.status)}。`;
   if (event.type === "TASK_FINAL") return event.final_report ? "最终报告已生成。" : event.error ?? "";
   if (event.type === "LOG_DROPPED") return `${event.count} 条消息因积压被丢弃。`;
@@ -136,10 +138,10 @@ const AgentTimeline: React.FC<AgentTimelineProps> = ({ events, selectedAgent, on
         return {
           kind: "control",
           id: `${event.type}-${index}`,
-          timestamp: "timestamp" in event ? event.timestamp : "",
+          timestamp: "timestamp" in event ? event.timestamp : event.type === "CHECKPOINT" ? event.created_at ?? "" : "",
           title: getControlTitle(event),
           preview: getControlPreview(event),
-          status: "status" in event ? event.status : undefined,
+          status: event.type === "TASK_STATUS" || event.type === "TASK_FINAL" ? event.status : undefined,
           warning: event.type === "LOG_DROPPED" || event.type === "HEARTBEAT_TIMEOUT",
         };
       })
