@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Button, Descriptions, Drawer, Empty, List, Space, Tag, Typography } from "antd";
 import { ExternalLink, Info } from "lucide-react";
 import { getDappMetadata, shortHash } from "../utils/dappMetadata";
@@ -13,10 +13,9 @@ interface Props {
   size?: "small" | "middle" | "large";
   type?: "link" | "text" | "default" | "primary" | "dashed";
   disabled?: boolean;
-  autoOpenKey?: string | number | null;
 }
 
-const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "default", disabled, autoOpenKey }) => {
+const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "default", disabled }) => {
   const [open, setOpen] = useState(false);
   const metadata = useMemo(() => getDappMetadata(dappName), [dappName]);
   const title = metadata?.name ?? dappName ?? "DApp";
@@ -29,11 +28,6 @@ const DappContextButton: React.FC<Props> = ({ dappName, size = "small", type = "
     { label: "公开披露", ...metadata?.disclosure },
     { label: "复盘报告", link: metadata?.report_link },
   ].filter((item) => item.link);
-
-  useEffect(() => {
-    if (!autoOpenKey || !dappName) return;
-    setOpen(true);
-  }, [autoOpenKey, dappName]);
 
   return (
     <>

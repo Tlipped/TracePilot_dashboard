@@ -737,7 +737,7 @@ const Dashboard: React.FC = () => {
           <Tag icon={wsOpen ? <Wifi size={13} /> : <WifiOff size={13} />} color={connectionColor}>
             {connectionLabel}
           </Tag>
-          <DappContextButton dappName={task?.dapp_name} autoOpenKey={task?.task_id} />
+          <DappContextButton dappName={task?.dapp_name} />
           <Button icon={<Bot size={15} />} onClick={() => setAssistantOpen(true)}>
             取证助手
           </Button>

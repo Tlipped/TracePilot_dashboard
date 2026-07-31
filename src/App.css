@@ -1,5 +1,5 @@
 #root {
-  height: 100%;
+  min-height: 100vh;
 }
 
 /* Trusted review workspace: scoped so legacy report and live panels stay unchanged. */
@@ -446,6 +446,13 @@ body[data-appearance="dark"] .trusted-verification-metrics > div {
   height: calc(100vh - 86px);
   overflow: hidden;
   padding: 18px;
+}
+
+.dashboard-layout {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .task-list-page {

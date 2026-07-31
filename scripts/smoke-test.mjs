@@ -108,6 +108,30 @@ function checkLandingWorkflowContracts() {
   includesAll(taskList, [caseReplayText, "createTask"], "task list case replay entry");
 }
 
+function checkWorkbenchScrollContract() {
+  const appCss = readText("src/App.css");
+  const indexCss = readText("src/index.css");
+  const dashboard = readText("src/pages/Dashboard.tsx");
+  const dappContext = readText("src/components/DappContextButton.tsx");
+
+  assert(
+    /\.dashboard-layout\s*\{[^}]*overflow-y:\s*auto;[^}]*\}/s.test(appCss),
+    "dashboard layout must remain vertically scrollable",
+  );
+  assert(
+    /#root\s*\{[^}]*min-height:\s*100vh;[^}]*\}/s.test(appCss),
+    "root must use min-height instead of a fixed viewport height",
+  );
+  assert(
+    /html,\s*body\s*\{[^}]*min-height:\s*100%;[^}]*overflow-y:\s*auto;[^}]*\}/s.test(indexCss),
+    "document must preserve natural vertical scrolling",
+  );
+  assert(
+    !dashboard.includes("autoOpenKey=") && !dappContext.includes("autoOpenKey"),
+    "DApp context drawer must not auto-open and lock document scrolling",
+  );
+}
+
 function checkChineseTextHealth() {
   const files = [
     "src/pages/LandingWarRoom.tsx",
@@ -134,6 +158,7 @@ const checks = [
   checkOfflineDemoFallback,
   checkDemoImporterSafety,
   checkLandingWorkflowContracts,
+  checkWorkbenchScrollContract,
   checkChineseTextHealth,
 ];
 
