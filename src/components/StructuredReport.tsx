@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
-import { App as AntdApp, Button, Empty, Space, Tag, Typography } from "antd";
-import { Bug, CheckCircle2, Download, FileJson, KeyRound, Route, SearchCheck, ShieldCheck, Wrench } from "lucide-react";
+import React, { useMemo } from "react";
+import { App as AntdApp, Button, Collapse, Empty, Space, Tag, Typography } from "antd";
+import { Bug, Download, FileJson, FileText, KeyRound, Route, ShieldCheck, Wrench } from "lucide-react";
 import {
   EvidenceItem,
   AutomatedReviewResponse,
@@ -16,7 +16,6 @@ import {
 } from "../types";
 import { buildEvidenceForSection } from "../utils/evidence";
 import AgentConsistencyPanel from "./AgentConsistencyPanel";
-import EvidenceDrawer from "./EvidenceDrawer";
 import EvidenceIntelligencePanel from "./EvidenceIntelligencePanel";
 import KeyTransactionCards from "./KeyTransactionCards";
 import MarkdownRenderer from "./MarkdownRenderer";
@@ -278,7 +277,6 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
   language = "zh",
 }) => {
   const { message } = AntdApp.useApp();
-  const [selectedSection, setSelectedSection] = useState<ReportSection | null>(null);
   const finalReport = task?.final_report ?? "";
   const sections = useMemo(() => parseReportSections(finalReport, events), [events, finalReport]);
   const agentSummaries = useMemo(() => buildAgentSummaries(events), [events]);
@@ -329,11 +327,11 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
     <div className="structured-report-panel">
       <div className="report-actions">
         <div>
-          <Typography.Text strong>结构化复盘报告</Typography.Text>
+          <Typography.Text strong>{task.dapp_name} 攻击分析报告</Typography.Text>
           <Typography.Text type="secondary">
             {mode === "learn"
-              ? "学习视图按攻击过程解释结论，并关联对应证据。"
-              : `已从最终报告提取 ${sections.length} 个部分，并关联证据。`}
+              ? "先阅读案件结论；过程解释和证据依据可按需展开。"
+              : "主报告优先展示；交易、证据和工程校验默认收起。"}
           </Typography.Text>
         </div>
         <Space size={8} wrap>
@@ -347,66 +345,73 @@ const StructuredReport: React.FC<StructuredReportProps> = ({
       </div>
 
       <div className="report-section-list">
-        <div className="product-summary-grid">
-          <KeyTransactionCards task={task} events={events} macroAnalysis={macroAnalysis} language={language} />
-          <PatchVerificationPanel task={task} events={events} />
-        </div>
-
-        <EvidenceIntelligencePanel sections={sections} language={language} />
-        <AgentConsistencyPanel
-          task={task}
-          events={events}
-          macro={macroAnalysis ?? null}
-          review={automatedReview}
-          language={language}
-        />
-
-        {sections.map((section) => (
-          <section className="report-section-card" key={section.key}>
-            <div className="report-section-head">
-              <span className="report-section-icon">{section.icon}</span>
+        <section className="report-primary-card">
+          <div className="report-primary-head">
+            <Space size={9}>
+              <span className="report-section-icon">
+                <FileText size={16} />
+              </span>
               <div>
-                <Typography.Text strong>{section.title}</Typography.Text>
-                <Typography.Text type="secondary">{section.description}</Typography.Text>
+                <Typography.Text strong>案件完整报告</Typography.Text>
+                <Typography.Text type="secondary">系统最终结论与完整分析上下文</Typography.Text>
               </div>
-              <Space size={6}>
-                <Tag color={section.evidence.length > 0 ? "cyan" : "default"}>{section.evidence.length} 条证据</Tag>
-                {section.content.startsWith("暂未") ? <Tag>待补充</Tag> : <Tag color="success">已提取</Tag>}
-              </Space>
-            </div>
-            <MarkdownRenderer content={section.content} compact />
-            <div className="report-section-footer">
-              <Button
-                size="small"
-                icon={<SearchCheck size={14} />}
-                onClick={() => setSelectedSection(section)}
-              >
-                查看证据
-              </Button>
-            </div>
-          </section>
-        ))}
-
-        <section className="report-section-card raw-report-card">
-          <div className="report-section-head">
-            <span className="report-section-icon">
-              <CheckCircle2 size={16} />
-            </span>
-            <div>
-              <Typography.Text strong>原始报告</Typography.Text>
-              <Typography.Text type="secondary">完整原始报告，保留模型输出上下文。</Typography.Text>
-            </div>
+            </Space>
+            <Tag color="blue">主报告</Tag>
           </div>
-          <MarkdownRenderer content={finalReport} compact />
+          <div className="report-primary-content">
+            <MarkdownRenderer content={finalReport} compact />
+          </div>
         </section>
-      </div>
 
-      <EvidenceDrawer
-        title={selectedSection ? `${selectedSection.title}证据` : "证据"}
-        open={Boolean(selectedSection)}
-        evidence={selectedSection?.evidence ?? []}
-        onClose={() => setSelectedSection(null)}
-      />
+        <Collapse
+          className="report-support-collapse"
+          expandIconPosition="end"
+          items={[
+            {
+              key: "evidence-quality",
+              label: (
+                <div className="report-support-label">
+                  <div>
+                    <Typography.Text strong>证据与可信度</Typography.Text>
+                    <Typography.Text type="secondary">查看证据质量和多智能体结论是否连续</Typography.Text>
+                  </div>
+                  <Tag>{sections.reduce((total, section) => total + section.evidence.length, 0)} 条关联证据</Tag>
+                </div>
+              ),
+              children: (
+                <div className="report-support-stack">
+                  <EvidenceIntelligencePanel sections={sections} language={language} />
+                  <AgentConsistencyPanel
+                    task={task}
+                    events={events}
+                    macro={macroAnalysis ?? null}
+                    review={automatedReview}
+                    language={language}
+                  />
+                </div>
+              ),
+            },
+            {
+              key: "engineering-details",
+              label: (
+                <div className="report-support-label">
+                  <div>
+                    <Typography.Text strong>关键交易与补丁验证</Typography.Text>
+                    <Typography.Text type="secondary">录屏时无需展开，需要追溯工程细节时再查看</Typography.Text>
+                  </div>
+                  <Tag>工程细节</Tag>
+                </div>
+              ),
+              children: (
+                <div className="product-summary-grid">
+                  <KeyTransactionCards task={task} events={events} macroAnalysis={macroAnalysis} language={language} />
+                  <PatchVerificationPanel task={task} events={events} />
+                </div>
+              ),
+            },
+          ]}
+        />
+      </div>
     </div>
   );
 };

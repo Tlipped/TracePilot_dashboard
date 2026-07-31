@@ -206,6 +206,55 @@ function checkWorkbenchNoiseReduction() {
   );
 }
 
+function checkReportRecordingLayout() {
+  const replay = readText("src/components/AttackReplayTimeline.tsx");
+  const report = readText("src/components/StructuredReport.tsx");
+  const evidence = readText("src/components/EvidenceIntelligencePanel.tsx");
+
+  includesAll(
+    replay,
+    [
+      "parseReportBlocks",
+      "findAttackBlocks",
+      "explicitStages",
+      "从本案最终报告提取",
+      "不套用固定阶段",
+      "attack-story-step",
+    ],
+    "case-specific attack replay",
+  );
+  assert(!replay.includes('key: "prepare"'), "attack replay must not return to fixed phase templates");
+  assert(!replay.includes("attack-phase-card"), "attack replay must not render the old log-heavy phase cards");
+
+  const primaryReportIndex = report.indexOf('className="report-primary-card"');
+  const supportCollapseIndex = report.indexOf('className="report-support-collapse"');
+  assert(primaryReportIndex >= 0, "structured report must render the final report as the primary card");
+  assert(
+    supportCollapseIndex > primaryReportIndex,
+    "supporting evidence and engineering checks must appear after the primary report",
+  );
+  includesAll(
+    report,
+    [
+      "案件完整报告",
+      "主报告优先展示",
+      "证据与可信度",
+      "关键交易与补丁验证",
+    ],
+    "report recording layout",
+  );
+  includesAll(
+    evidence,
+    [
+      "evidence-intelligence-compact",
+      "证据质量",
+      "查看代表性证据",
+    ],
+    "compact evidence summary",
+  );
+  assert(!evidence.includes("evidence-section-bars"), "evidence summary must not render per-section card grids");
+}
+
 function checkChineseTextHealth() {
   const files = [
     "src/pages/LandingWarRoom.tsx",
@@ -235,6 +284,7 @@ const checks = [
   checkWorkbenchScrollContract,
   checkReviewInformationArchitecture,
   checkWorkbenchNoiseReduction,
+  checkReportRecordingLayout,
   checkChineseTextHealth,
 ];
 

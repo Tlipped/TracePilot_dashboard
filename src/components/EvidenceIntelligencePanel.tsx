@@ -23,110 +23,81 @@ function scoreColor(label: string) {
   return "exception";
 }
 
+function scoreLabel(label: string, isZh: boolean) {
+  if (!isZh) return label;
+  if (label === "strong") return "证据充分";
+  if (label === "supporting") return "基本支撑";
+  return "证据偏弱";
+}
+
+function riskLabel(risk: string, isZh: boolean) {
+  if (!isZh) return risk;
+  const labels: Record<string, string> = {
+    "no linked evidence": "暂无关联证据",
+    "no direct transaction hash": "缺少直接交易哈希",
+    "no tool-backed evidence": "缺少工具调用证据",
+    "single-agent evidence": "证据仅来自单一智能体",
+    "mostly weak evidence": "弱证据占比较高",
+  };
+  return labels[risk] ?? risk;
+}
+
 const EvidenceIntelligencePanel: React.FC<EvidenceIntelligencePanelProps> = ({ sections, language = "zh" }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isZh = language === "zh";
   const allEvidence = useMemo(() => sections.flatMap((section) => section.evidence), [sections]);
   const enrichedEvidence = useMemo(() => enrichEvidenceItems(allEvidence).slice(0, 12), [allEvidence]);
   const health = useMemo(() => summarizeEvidenceHealth(allEvidence), [allEvidence]);
-  const sectionHealth = useMemo(
-    () =>
-      sections.map((section) => ({
-        ...section,
-        health: summarizeEvidenceHealth(section.evidence),
-      })),
-    [sections],
-  );
 
   return (
-    <section className="evidence-intelligence-card">
-      <div className="evidence-intelligence-head">
-        <Space size={8}>
-          <ShieldCheck size={16} />
+    <section className="evidence-intelligence-card evidence-intelligence-compact">
+      <div className="evidence-compact-main">
+        <div className="evidence-compact-title">
+          <ShieldCheck size={17} />
           <div>
-            <Typography.Text strong>{isZh ? "证据智能筛选" : "Evidence Intelligence"}</Typography.Text>
+            <Space size={7} wrap>
+              <Typography.Text strong>{isZh ? "证据质量" : "Evidence quality"}</Typography.Text>
+              <Tag color={scoreColor(health.label)}>{scoreLabel(health.label, isZh)}</Tag>
+            </Space>
             <Typography.Text type="secondary">
-              {isZh
-                ? "按来源层级、工具调用和交易哈希评估支撑等级，不代表模型概率。"
-                : "Ranks support by source tier, tool usage, and transaction hashes, not model probability."}
+              {isZh ? "用于说明报告依据是否充分，不代表模型置信概率。" : "Support quality, not model confidence."}
             </Typography.Text>
           </div>
-        </Space>
+        </div>
+
+        <div className="evidence-compact-score">
+          <strong>{health.score}%</strong>
+          <span>{isZh ? "支撑度" : "support"}</span>
+        </div>
+
+        <div className="evidence-compact-metrics">
+          <span><ShieldCheck size={14} /> {health.strong} {isZh ? "条强证据" : "strong"}</span>
+          <span><Activity size={14} /> {health.supporting} {isZh ? "条辅助证据" : "supporting"}</span>
+          <span><Database size={14} /> {health.transactions} {isZh ? "笔链上交易" : "transactions"}</span>
+          <span><Wrench size={14} /> {health.tools} {isZh ? "条工具证据" : "tool-backed"}</span>
+        </div>
+
         <Button size="small" icon={<SearchCheck size={14} />} onClick={() => setDrawerOpen(true)}>
-          {isZh ? "查看强证据" : "Top Evidence"}
+          {isZh ? "查看代表性证据" : "View evidence"}
         </Button>
       </div>
 
-      <div className="evidence-health-grid">
-        <div className="evidence-score-card">
-          <Progress
-            type="circle"
-            percent={health.score}
-            size={72}
-            status={health.label === "weak" ? "exception" : "normal"}
-          />
-          <div>
-            <Tag color={scoreColor(health.label)}>{health.label}</Tag>
-            <Typography.Text type="secondary">
-              {isZh ? "整体证据支撑度" : "Overall evidence support"}
-            </Typography.Text>
-          </div>
-        </div>
-        <div className="evidence-metric-strip">
-          <span>
-            <ShieldCheck size={14} />
-            {health.strong} strong
-          </span>
-          <span>
-            <Activity size={14} />
-            {health.supporting} supporting
-          </span>
-          <span>
-            <Database size={14} />
-            {health.transactions} tx
-          </span>
-          <span>
-            <Wrench size={14} />
-            {health.tools} tool
-          </span>
-        </div>
-      </div>
-
-      <div className="evidence-section-bars">
-        {sectionHealth.map((section) => (
-          <div className="evidence-section-bar" key={section.key}>
-            <div className="evidence-section-bar-head">
-              <Typography.Text strong>{section.title}</Typography.Text>
-              <Space size={4} wrap className="evidence-section-tags">
-                <Tag color={scoreColor(section.health.label)}>{section.health.label}</Tag>
-                <Tag>{section.health.total} evidence</Tag>
-              </Space>
-            </div>
-            <Progress
-              percent={section.health.score}
-              size="small"
-              status={section.health.label === "weak" ? "exception" : "normal"}
-              showInfo={false}
-            />
-          </div>
-        ))}
-      </div>
+      <Progress
+        percent={health.score}
+        size="small"
+        status={health.label === "weak" ? "exception" : "normal"}
+        showInfo={false}
+      />
 
       {health.risks.length ? (
-        <div className="evidence-risk-row">
+        <div className="evidence-compact-risk">
           <TriangleAlert size={14} />
-          <Space size={4} wrap>
-            {health.risks.map((risk) => (
-              <Tag key={risk} color="warning">
-                {risk}
-              </Tag>
-            ))}
-          </Space>
+          <span>{health.risks.slice(0, 2).map((risk) => riskLabel(risk, isZh)).join("；")}</span>
         </div>
       ) : null}
 
       <EvidenceDrawer
-        title={isZh ? "强证据排序" : "Top Ranked Evidence"}
+        title={isZh ? "代表性强证据" : "Top ranked evidence"}
         open={drawerOpen}
         evidence={enrichedEvidence}
         onClose={() => setDrawerOpen(false)}

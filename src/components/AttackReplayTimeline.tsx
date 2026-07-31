@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button, Empty, Space, Tag, Typography } from "antd";
-import { CircleDollarSign, GitBranch, PlayCircle, SearchCheck, ShieldCheck, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText, GitBranch, SearchCheck } from "lucide-react";
 import { EvidenceItem, ProductViewMode, Task, TaskEvent } from "../types";
 import {
   buildAttackPhaseEvidence,
@@ -8,7 +8,6 @@ import {
   extractTransactionHashes,
 } from "../utils/evidence";
 import EvidenceDrawer from "./EvidenceDrawer";
-import { modeLabel } from "../utils/i18n";
 
 interface AttackReplayTimelineProps {
   task: Task | null;
@@ -16,166 +15,265 @@ interface AttackReplayTimelineProps {
   mode?: ProductViewMode;
 }
 
+interface ReportBlock {
+  heading: string;
+  level: number;
+  content: string;
+}
+
 interface AttackPhase {
   key: string;
   title: string;
-  subtitle: string;
   description: string;
-  icon: React.ReactNode;
+  sourceHeading: string;
   evidence: EvidenceItem[];
 }
 
-function findTextByKeywords(report: string, keywords: string[], fallback: string) {
-  const paragraphs = report
-    .split(/\n\s*\n/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-  const normalized = keywords.map((keyword) => keyword.toLowerCase());
-  const match = paragraphs.find((paragraph) => {
-    const haystack = paragraph.toLowerCase();
-    return normalized.some((keyword) => haystack.includes(keyword));
+const PHASE_STOP_WORDS = new Set([
+  "about",
+  "after",
+  "against",
+  "attack",
+  "before",
+  "from",
+  "into",
+  "stage",
+  "that",
+  "their",
+  "then",
+  "this",
+  "through",
+  "transaction",
+  "with",
+]);
+
+function parseReportBlocks(report: string): ReportBlock[] {
+  const blocks: ReportBlock[] = [];
+  let current: ReportBlock | null = null;
+
+  report.split(/\r?\n/).forEach((line) => {
+    const match = line.match(/^\s*(#{2,4})\s+(.+?)\s*$/);
+    if (match) {
+      if (current) blocks.push(current);
+      current = {
+        heading: match[2],
+        level: match[1].length,
+        content: "",
+      };
+      return;
+    }
+
+    if (current) current.content += `${line}\n`;
   });
-  return match ? compactEvidenceText(match, 360) : fallback;
+
+  if (current) blocks.push(current);
+  return blocks.map((block) => ({ ...block, content: block.content.trim() }));
 }
 
-function transactionEvidence(report: string): EvidenceItem[] {
-  return extractTransactionHashes(report)
-    .slice(0, 5)
-    .map((hash, index) => ({
-      id: `attack-tx-${index}`,
-      title: `攻击交易 ${index + 1}`,
-      source: "transaction",
-      content: hash,
-      full_content: hash,
-      confidence: "high",
-    }));
+function cleanPhaseTitle(heading: string) {
+  return heading
+    .replace(/`/g, "")
+    .replace(/^(?:stage|step)\s*\d+(?:\.\d+)?\s*[-—:：]\s*/i, "")
+    .replace(/^\d+(?:\.\d+)*[.)、]?\s*/, "")
+    .trim();
+}
+
+function narrativeFromBlock(block: ReportBlock) {
+  const withoutCode = block.content.replace(/```[\s\S]*?```/g, " ");
+  const paragraph = withoutCode
+    .split(/\n\s*\n/)
+    .map((item) => item.trim())
+    .find((item) =>
+      item.length > 30
+      && !item.split(/\r?\n/).every((line) => /^\s*\|/.test(line) || /^\s*[-:| ]+\s*$/.test(line)),
+    );
+
+  return compactEvidenceText(
+    (paragraph || withoutCode)
+      .replace(/^\s*\|.*$/gm, " ")
+      .replace(/^\s*[-:| ]+\s*$/gm, " ")
+      .replace(/[#*_>`[\]]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+    260,
+  );
+}
+
+function phaseKeywords(block: ReportBlock) {
+  const text = `${block.heading} ${narrativeFromBlock(block)}`.toLowerCase();
+  const english = text.match(/[a-z][a-z0-9_]{3,}/g) ?? [];
+  const chinese = text.match(/[\p{Script=Han}]{2,6}/gu) ?? [];
+  return Array.from(new Set([...english.filter((word) => !PHASE_STOP_WORDS.has(word)), ...chinese])).slice(0, 10);
+}
+
+function findAttackBlocks(report: string) {
+  const blocks = parseReportBlocks(report);
+  const explicitStages = blocks.filter((block) =>
+    /^(?:stage|step)\s*\d+|profit realization|攻击阶段|攻击步骤|获利|资金转移/i.test(block.heading.trim()),
+  );
+  if (explicitStages.length >= 2) return explicitStages.slice(0, 8);
+
+  const attackSectionIndex = blocks.findIndex((block) =>
+    /attack (?:path|flow|reconstruction)|exploit (?:path|flow)|攻击(?:路径|流程|复盘)/i.test(block.heading),
+  );
+  if (attackSectionIndex >= 0) {
+    const parent = blocks[attackSectionIndex];
+    const children: ReportBlock[] = [];
+    for (let index = attackSectionIndex + 1; index < blocks.length; index += 1) {
+      if (blocks[index].level <= parent.level) break;
+      if (blocks[index].level === parent.level + 1) children.push(blocks[index]);
+    }
+    if (children.length >= 2) return children.slice(0, 8);
+  }
+
+  const matched = blocks.filter((block) =>
+    /setup|prepare|trigger|exploit|swap|transfer|profit|攻击|触发|利用|兑换|转移|获利/i.test(block.heading),
+  );
+  if (matched.length >= 2) return matched.slice(0, 8);
+
+  return blocks
+    .filter((block) => block.level === 2 && narrativeFromBlock(block).length > 30)
+    .slice(0, 5);
 }
 
 function buildAttackPhases(task: Task | null, events: TaskEvent[]): AttackPhase[] {
   const report = task?.final_report ?? "";
-  const txEvidence = transactionEvidence(report);
+  const usedEvidence = new Set<string>();
 
-  return [
-    {
-      key: "prepare",
-      title: "攻击准备",
-      subtitle: "准备攻击条件",
-      description: findTextByKeywords(
-        report,
-        ["prepare", "create", "pool", "liquidity", "初始化", "创建", "流动性"],
-        "识别攻击者是否先创建市场、准备流动性、部署辅助合约或设置攻击前置状态。",
-      ),
-      icon: <GitBranch size={17} />,
-      evidence: [...txEvidence.slice(0, 2), ...buildAttackPhaseEvidence(events, ["create", "pool", "liquidity", "init"])],
-    },
-    {
-      key: "trigger",
-      title: "漏洞触发",
-      subtitle: "触发关键函数",
-      description: findTextByKeywords(
-        report,
-        ["trigger", "convert", "call", "execute", "触发", "调用", "执行"],
-        "定位触发漏洞的核心交易、核心函数和关键调用链。",
-      ),
-      icon: <PlayCircle size={17} />,
-      evidence: buildAttackPhaseEvidence(events, ["trigger", "convert", "execute", "call", "function", "trace"]),
-    },
-    {
-      key: "manipulate",
-      title: "状态操纵",
-      subtitle: "改变价格或状态",
-      description: findTextByKeywords(
-        report,
-        ["manipulate", "slippage", "storage", "event", "price", "操纵", "滑点", "状态", "价格"],
-        "观察执行轨迹、状态变更和事件日志中是否出现价格、储备、余额或权限状态异常。",
-      ),
-      icon: <Zap size={17} />,
-      evidence: buildAttackPhaseEvidence(events, ["storage", "event", "swap", "price", "balance", "state"]),
-    },
-    {
-      key: "profit",
-      title: "攻击获利",
-      subtitle: "完成资产转移",
-      description: findTextByKeywords(
-        report,
-        ["profit", "gain", "benefit", "transfer", "获利", "收益", "转移"],
-        "归纳攻击者最终如何完成资产转移或套利收益。",
-      ),
-      icon: <CircleDollarSign size={17} />,
-      evidence: buildAttackPhaseEvidence(events, ["profit", "transfer", "balance", "attacker", "benefit"]),
-    },
-    {
-      key: "verify",
-      title: "补丁验证",
-      subtitle: "重放检查修复",
-      description: findTextByKeywords(
-        report,
-        ["verify", "patch", "replay", "validation", "验证", "补丁", "抵挡"],
-        "检查补丁建议是否经过重放验证，以及攻击路径是否被阻断。",
-      ),
-      icon: <ShieldCheck size={17} />,
-      evidence: buildAttackPhaseEvidence(events, ["patch", "verify", "replay", "validation", "success", "failure"]),
-    },
-  ];
+  return findAttackBlocks(report).map((block, index) => {
+    const transactionEvidence = extractTransactionHashes(block.content).map((hash) => ({
+      id: `phase-${index}-tx-${hash}`,
+      title: "本步骤关联交易",
+      source: "transaction" as const,
+      content: hash,
+      full_content: hash,
+      confidence: "high" as const,
+    }));
+    const logEvidence = buildAttackPhaseEvidence(events, phaseKeywords(block));
+    const evidence = [...transactionEvidence, ...logEvidence]
+      .filter((item) => {
+        const identity = `${item.source}:${item.content}`;
+        if (usedEvidence.has(identity)) return false;
+        usedEvidence.add(identity);
+        return true;
+      })
+      .slice(0, 3);
+
+    return {
+      key: `report-phase-${index}-${block.heading}`,
+      title: cleanPhaseTitle(block.heading) || `关键步骤 ${index + 1}`,
+      description: narrativeFromBlock(block) || "最终报告记录了该步骤，但没有可展示的独立摘要。",
+      sourceHeading: block.heading,
+      evidence,
+    };
+  });
 }
 
-const AttackReplayTimeline: React.FC<AttackReplayTimelineProps> = ({ task, events, mode = "report" }) => {
-  const [selectedPhase, setSelectedPhase] = useState<AttackPhase | null>(null);
+const AttackReplayTimeline: React.FC<AttackReplayTimelineProps> = ({ task, events }) => {
   const phases = useMemo(() => buildAttackPhases(task, events), [events, task]);
+  const [selectedKey, setSelectedKey] = useState("");
+  const [evidencePhase, setEvidencePhase] = useState<AttackPhase | null>(null);
 
-  if (!task?.final_report && events.length === 0) {
+  useEffect(() => {
+    if (!phases.some((phase) => phase.key === selectedKey)) {
+      setSelectedKey(phases[0]?.key ?? "");
+    }
+  }, [phases, selectedKey]);
+
+  const selectedIndex = Math.max(0, phases.findIndex((phase) => phase.key === selectedKey));
+  const selectedPhase = phases[selectedIndex];
+
+  if (!task?.final_report || phases.length === 0) {
     return (
       <section className="attack-replay-panel">
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="分析形成证据后，将在此展示攻击复盘时间线。" />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="最终报告形成攻击路径后，将在这里生成案件复盘。" />
       </section>
     );
   }
 
   return (
-    <section className="attack-replay-panel">
-      <div className="panel-header">
+    <section className="attack-replay-panel attack-story-panel">
+      <div className="panel-header attack-story-header">
         <Space size={8}>
           <GitBranch size={16} />
-          <Typography.Text strong>攻击复盘时间线</Typography.Text>
+          <div>
+            <Typography.Text strong>{task.dapp_name} 攻击链</Typography.Text>
+            <Typography.Text type="secondary">
+              从本案最终报告提取 {phases.length} 个关键步骤，不套用固定阶段
+            </Typography.Text>
+          </div>
         </Space>
-        <Tag>{modeLabel("zh", mode)}</Tag>
+        <Tag color="blue">报告生成</Tag>
       </div>
 
-      <div className="attack-phase-list">
-        {phases.map((phase, index) => (
-          <article className="attack-phase-card" key={phase.key}>
-            <div className="attack-phase-index">{index + 1}</div>
-            <div className="attack-phase-icon">{phase.icon}</div>
-            <div className="attack-phase-content">
-              <div className="attack-phase-head">
+      <div className="attack-story-body">
+        <div className="attack-story-track" role="tablist" aria-label="案件攻击步骤">
+          {phases.map((phase, index) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={phase.key === selectedPhase?.key}
+              className={`attack-story-step${phase.key === selectedPhase?.key ? " active" : ""}`}
+              key={phase.key}
+              onClick={() => setSelectedKey(phase.key)}
+            >
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{phase.title}</strong>
+            </button>
+          ))}
+        </div>
+
+        {selectedPhase ? (
+          <article className="attack-story-focus">
+            <div className="attack-story-focus-index">{String(selectedIndex + 1).padStart(2, "0")}</div>
+            <div className="attack-story-focus-content">
+              <div className="attack-story-focus-head">
                 <div>
-                  <Typography.Text strong>{phase.title}</Typography.Text>
-                  <Typography.Text type="secondary">{phase.subtitle}</Typography.Text>
+                  <Typography.Text type="secondary">本案步骤</Typography.Text>
+                  <Typography.Title level={4}>{selectedPhase.title}</Typography.Title>
                 </div>
+                <Tag icon={<FileText size={13} />}>最终报告</Tag>
+              </div>
+              <Typography.Paragraph>{selectedPhase.description}</Typography.Paragraph>
+              <div className="attack-story-actions">
                 <Space size={6}>
-                  <Tag color={phase.evidence.length > 0 ? "cyan" : "default"}>{phase.evidence.length} 条证据</Tag>
+                  <Button
+                    size="small"
+                    icon={<ArrowLeft size={14} />}
+                    disabled={selectedIndex === 0}
+                    onClick={() => setSelectedKey(phases[selectedIndex - 1].key)}
+                  >
+                    上一步
+                  </Button>
+                  <Button
+                    size="small"
+                    disabled={selectedIndex === phases.length - 1}
+                    onClick={() => setSelectedKey(phases[selectedIndex + 1].key)}
+                  >
+                    下一步
+                    <ArrowRight size={14} />
+                  </Button>
+                </Space>
+                {selectedPhase.evidence.length > 0 ? (
                   <Button
                     size="small"
                     icon={<SearchCheck size={14} />}
-                    onClick={() => setSelectedPhase(phase)}
+                    onClick={() => setEvidencePhase(selectedPhase)}
                   >
-                    查看证据
+                    查看 {selectedPhase.evidence.length} 条关联证据
                   </Button>
-                </Space>
+                ) : null}
               </div>
-              <Typography.Paragraph className="attack-phase-description">
-                {phase.description}
-              </Typography.Paragraph>
             </div>
           </article>
-        ))}
+        ) : null}
       </div>
 
       <EvidenceDrawer
-        title={selectedPhase ? `${selectedPhase.title}证据` : "攻击阶段证据"}
-        open={Boolean(selectedPhase)}
-        evidence={selectedPhase?.evidence ?? []}
-        onClose={() => setSelectedPhase(null)}
+        title={evidencePhase ? `${evidencePhase.title} · 关联证据` : "关联证据"}
+        open={Boolean(evidencePhase)}
+        evidence={evidencePhase?.evidence ?? []}
+        onClose={() => setEvidencePhase(null)}
       />
     </section>
   );
