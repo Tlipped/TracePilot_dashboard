@@ -53,7 +53,7 @@ const LABELS = {
   zh: {
     reportMode: "报告",
     learnMode: "学习",
-    auditorMode: "审计",
+    auditorMode: "评审",
     rawMode: "原始",
     reportTab: "结构化报告",
     replayTab: "攻击复盘",

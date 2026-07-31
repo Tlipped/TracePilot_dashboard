@@ -63,7 +63,7 @@ function isTerminalTask(status?: TaskStatus) {
 function getDefaultMainTab(mode: ProductViewMode, running = false) {
   if (running) return "live";
   if (mode === "learn") return "learning";
-  if (mode === "auditor") return "macro";
+  if (mode === "auditor") return "trusted-review";
   if (mode === "raw") return "stream";
   return "report";
 }
@@ -317,12 +317,6 @@ const Dashboard: React.FC = () => {
   }, [caseReviewReloadToken, taskId, task?.status, task?.completed_at]);
 
   useEffect(() => {
-    if (caseReview && viewMode === "report" && !isTaskRunning && activeMainTab === "report") {
-      setActiveMainTab("trusted-review");
-    }
-  }, [activeMainTab, caseReview, isTaskRunning, viewMode]);
-
-  useEffect(() => {
     if (!taskId) return;
 
     const notices = generatedNoticeRef.current;
@@ -396,7 +390,7 @@ const Dashboard: React.FC = () => {
     setCaseReview(null);
     setErrorMsg("");
     generatedNoticeRef.current = { report: false, macro: false, review: false };
-    setActiveMainTab("recovery");
+    setActiveMainTab("live");
     setConnectionEpoch((value) => value + 1);
   }, []);
 
@@ -581,28 +575,33 @@ const Dashboard: React.FC = () => {
     };
     const modeOrder: Record<ProductViewMode, string[]> = {
       report: isTaskRunning
-        ? ["live", "recovery", "stream", "timeline", "trusted-review", "report", "attack-replay", "macro", "consistency", "learning"]
-        : ["recovery", "trusted-review", "report", "attack-replay", "macro", "consistency", "learning", "stream", "timeline"],
+        ? ["live", "stream", "timeline", "report", "attack-replay", "macro", "consistency", "learning"]
+        : ["report", "attack-replay", "macro", "consistency", "learning", "stream", "timeline"],
       learn: isTaskRunning
-        ? ["live", "recovery", "learning", "stream", "timeline", "attack-replay", "trusted-review", "report", "macro", "consistency"]
-        : ["learning", "recovery", "attack-replay", "trusted-review", "report", "macro", "consistency", "stream", "timeline"],
+        ? ["live", "learning", "stream", "timeline", "attack-replay", "report", "macro", "consistency"]
+        : ["learning", "attack-replay", "report", "macro", "consistency", "stream", "timeline"],
       auditor: isTaskRunning
-        ? ["live", "recovery", "trusted-review", "macro", "consistency", "stream", "timeline", "report", "attack-replay", "learning"]
-        : ["recovery", "trusted-review", "macro", "consistency", "report", "attack-replay", "timeline", "stream", "learning"],
+        ? ["live", "macro", "consistency", "stream", "timeline", "report", "attack-replay", "learning"]
+        : ["trusted-review", "macro", "consistency", "report", "attack-replay", "timeline", "stream", "learning"],
       raw: isTaskRunning
-        ? ["live", "recovery", "stream", "timeline", "trusted-review", "report", "macro", "consistency", "attack-replay", "learning"]
-        : ["stream", "timeline", "recovery", "trusted-review", "report", "macro", "consistency", "attack-replay", "learning"],
+        ? ["live", "stream", "timeline", "report", "macro", "consistency", "attack-replay", "learning"]
+        : ["stream", "timeline", "report", "macro", "consistency", "attack-replay", "learning"],
     };
 
-    const availableKeys = new Set(["live", "recovery", "stream", "timeline"]);
-    if (hasCaseReviewEntry) availableKeys.add("trusted-review");
-    if (hasFinalReport) availableKeys.add("report");
+    const availableKeys = new Set(["live", "stream", "timeline", "report"]);
+    if (task?.status === TaskStatus.FAILED) availableKeys.add("recovery");
+    if (viewMode === "auditor" && hasCaseReviewEntry) availableKeys.add("trusted-review");
     if (hasReplay) availableKeys.add("attack-replay");
     if (hasLearningGuide) availableKeys.add("learning");
     if (hasMacroAnalysis) availableKeys.add("macro");
     if (hasConsistencyReview) availableKeys.add("consistency");
 
-    return modeOrder[viewMode]
+    const orderedKeys = [...modeOrder[viewMode]];
+    if (availableKeys.has("recovery")) {
+      orderedKeys.splice(1, 0, "recovery");
+    }
+
+    return orderedKeys
       .filter((key) => availableKeys.has(key))
       .map((key) => tabMap[key]);
   }, [
@@ -629,10 +628,11 @@ const Dashboard: React.FC = () => {
   ]);
 
   useEffect(() => {
+    if (loadingTask || !task) return;
     if (!mainTabItems.some((item) => item.key === activeMainTab)) {
       setActiveMainTab(String(mainTabItems[0]?.key ?? "live"));
     }
-  }, [activeMainTab, mainTabItems]);
+  }, [activeMainTab, loadingTask, mainTabItems, task]);
 
   const inspectorTabItems = useMemo(
     () => [

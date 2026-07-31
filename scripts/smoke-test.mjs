@@ -132,6 +132,31 @@ function checkWorkbenchScrollContract() {
   );
 }
 
+function checkReviewInformationArchitecture() {
+  const dashboard = readText("src/pages/Dashboard.tsx");
+  const i18n = readText("src/utils/i18n.ts");
+
+  includesAll(
+    dashboard,
+    [
+      'if (mode === "auditor") return "trusted-review";',
+      'if (loadingTask || !task) return;',
+      'const availableKeys = new Set(["live", "stream", "timeline", "report"]);',
+      'if (task?.status === TaskStatus.FAILED) availableKeys.add("recovery");',
+      'if (viewMode === "auditor" && hasCaseReviewEntry) availableKeys.add("trusted-review");',
+    ],
+    "review information architecture",
+  );
+  assert(
+    !dashboard.includes('activeMainTab === "report"'),
+    "structured report must not auto-redirect to trusted review",
+  );
+  assert(
+    i18n.includes('auditorMode: "评审"'),
+    "Chinese auditor mode must be presented as review mode",
+  );
+}
+
 function checkChineseTextHealth() {
   const files = [
     "src/pages/LandingWarRoom.tsx",
@@ -159,6 +184,7 @@ const checks = [
   checkDemoImporterSafety,
   checkLandingWorkflowContracts,
   checkWorkbenchScrollContract,
+  checkReviewInformationArchitecture,
   checkChineseTextHealth,
 ];
 
