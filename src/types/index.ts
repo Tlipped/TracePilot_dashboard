@@ -126,6 +126,56 @@ export interface TaskResumeResponse {
   recovery: TaskRecoveryState;
 }
 
+export interface WatchdogPolicy {
+  activity_warning_seconds: number;
+  progress_warning_seconds: number;
+  stalled_seconds: number;
+  abort_no_activity_seconds: number;
+  hard_timeout_seconds: number;
+  check_interval_seconds: number;
+}
+
+export interface TaskProgressEvent {
+  type: "PROGRESS";
+  event_id: string;
+  task_id: string;
+  kind: "milestone" | "watchdog" | "terminal" | string;
+  stage: string;
+  step_key: string;
+  label: string;
+  health: string;
+  percent: number;
+  percent_basis: string;
+  eta_available: false;
+  source: string;
+  details: Record<string, unknown>;
+  timestamp?: string | null;
+}
+
+export interface TaskProgressState {
+  task_id: string;
+  task_status: TaskStatus;
+  live: boolean;
+  health: string;
+  percent: number;
+  percent_basis: string;
+  eta_available: false;
+  eta_reason: string;
+  stage: string;
+  step_key: string;
+  label: string;
+  started_at?: string | null;
+  last_activity_at?: string | null;
+  last_progress_at?: string | null;
+  elapsed_seconds: number;
+  activity_idle_seconds: number;
+  progress_idle_seconds: number;
+  active_agent?: string | null;
+  termination_reason?: string | null;
+  watchdog_policy: WatchdogPolicy;
+  events: TaskProgressEvent[];
+}
+
 export interface ConnectedEvent {
   type: "CONNECTED";
   task_id: string;
@@ -193,6 +243,7 @@ export type TaskEvent =
   | LogDroppedEvent
   | HeartbeatTimeoutEvent
   | (CheckpointEvent & { type: "CHECKPOINT" })
+  | TaskProgressEvent
   | LogMessage;
 
 export interface FullLogResponse {

@@ -16,6 +16,7 @@ import LogStream from "../components/LogStream";
 import LearningGuidePanel from "../components/LearningGuidePanel";
 import MacroAnalysisPanel from "../components/MacroAnalysisPanel";
 import StructuredReport from "../components/StructuredReport";
+import TaskProgressMonitor from "../components/TaskProgressMonitor";
 import TaskRecoveryPanel from "../components/TaskRecoveryPanel";
 import TrustedCaseReview, { TrustedCaseReviewState } from "../components/TrustedCaseReview";
 import { getAutomatedReview, getCaseReview, getMacroAnalysis, getTask, getTaskLogs } from "../services/api";
@@ -769,6 +770,8 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <TaskProgressMonitor taskId={taskId ?? ""} task={task} />
 
         {loadingTask && !task ? (
           <div className="center-loading">

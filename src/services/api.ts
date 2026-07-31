@@ -28,6 +28,7 @@ import {
   TaskCreateRequest,
   TaskRecoveryState,
   TaskResumeResponse,
+  TaskProgressState,
   TxDetectRequest,
   TxDetectResponse,
   TaskLogPageResponse,
@@ -114,6 +115,45 @@ export async function getTaskRecovery(taskId: string): Promise<TaskRecoveryState
     };
   }
   const response = await api.get<TaskRecoveryState>(`/api/tasks/${taskId}/recovery`);
+  return response.data;
+}
+
+export async function getTaskProgress(taskId: string): Promise<TaskProgressState> {
+  const demoTask = getDemoTask(taskId);
+  if (demoTask) {
+    const completed = demoTask.status === "completed";
+    return {
+      task_id: taskId,
+      task_status: demoTask.status,
+      live: false,
+      health: completed ? "completed" : demoTask.status,
+      percent: completed ? 100 : 0,
+      percent_basis: "offline_snapshot_state",
+      eta_available: false,
+      eta_reason: "离线演示快照是固定结果，不包含实时运行时间预测。",
+      stage: completed ? "snapshot_ready" : "offline_snapshot",
+      step_key: completed ? "snapshot_completed" : "snapshot_unavailable",
+      label: completed ? "离线演示快照已就绪" : "离线演示快照",
+      started_at: demoTask.created_at,
+      last_activity_at: demoTask.completed_at,
+      last_progress_at: demoTask.completed_at,
+      elapsed_seconds: demoTask.duration ?? 0,
+      activity_idle_seconds: 0,
+      progress_idle_seconds: 0,
+      active_agent: null,
+      termination_reason: null,
+      watchdog_policy: {
+        activity_warning_seconds: 300,
+        progress_warning_seconds: 600,
+        stalled_seconds: 1200,
+        abort_no_activity_seconds: 2700,
+        hard_timeout_seconds: 10800,
+        check_interval_seconds: 5,
+      },
+      events: [],
+    };
+  }
+  const response = await api.get<TaskProgressState>(`/api/tasks/${taskId}/progress`);
   return response.data;
 }
 
