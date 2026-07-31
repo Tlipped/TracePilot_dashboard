@@ -94,6 +94,11 @@ function getControlPreview(event: TaskEvent) {
   return "";
 }
 
+function isMeaningfulControlEvent(event: TaskEvent) {
+  if (event.type === "CONNECTED" || event.type === "PING" || event.type === "PONG") return false;
+  return getControlTitle(event) !== "系统事件" && getControlPreview(event).trim().length > 0;
+}
+
 function getTypeIcon(item: TimelineItem) {
   if (item.kind === "control") return item.warning ? <AlertTriangle size={15} /> : <Clock3 size={15} />;
   if (item.level === LogLevel.ERROR || item.level === LogLevel.WARNING) return <AlertTriangle size={15} />;
@@ -114,7 +119,7 @@ const AgentTimeline: React.FC<AgentTimelineProps> = ({ events, selectedAgent, on
   const items = useMemo<TimelineItem[]>(() => {
     return events
       .filter((event) => {
-        if (!isLogEvent(event)) return selectedAgent === "all";
+        if (!isLogEvent(event)) return selectedAgent === "all" && isMeaningfulControlEvent(event);
         if (selectedAgent !== "all" && event.agent !== selectedAgent) return false;
         return (
           event.level !== LogLevel.DEBUG ||
@@ -186,7 +191,7 @@ const AgentTimeline: React.FC<AgentTimelineProps> = ({ events, selectedAgent, on
                   </div>
                   <Typography.Text strong>{item.title}</Typography.Text>
                   <Typography.Paragraph ellipsis={{ rows: 2 }} className="timeline-preview">
-                    {item.preview || "暂无预览内容。"}
+                    {item.preview}
                   </Typography.Paragraph>
                 </div>
                 {item.kind === "log" ? <ChevronRight size={15} className="timeline-open" /> : null}

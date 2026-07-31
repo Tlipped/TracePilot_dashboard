@@ -157,6 +157,55 @@ function checkReviewInformationArchitecture() {
   );
 }
 
+function checkWorkbenchNoiseReduction() {
+  const dashboard = readText("src/pages/Dashboard.tsx");
+  const timeline = readText("src/components/AgentTimeline.tsx");
+  const markdown = readText("src/components/MarkdownRenderer.tsx");
+  const appCss = readText("src/App.css");
+
+  includesAll(
+    dashboard,
+    [
+      "INSPECTOR_COLLAPSED_STORAGE_KEY",
+      "inspectorCollapsed",
+      "inspector-collapse-trigger",
+      "inspector-rail",
+      'title="展开详情侧栏"',
+      'title="收起详情侧栏"',
+    ],
+    "collapsible inspector",
+  );
+  includesAll(
+    appCss,
+    [
+      ".workbench-grid.inspector-collapsed",
+      ".inspector-collapse-trigger",
+      ".inspector-rail",
+    ],
+    "collapsible inspector styles",
+  );
+  includesAll(
+    timeline,
+    [
+      "isMeaningfulControlEvent",
+      'event.type === "CONNECTED"',
+      'event.type === "PING"',
+      'event.type === "PONG"',
+    ],
+    "timeline noise filtering",
+  );
+  assert(!timeline.includes('item.preview || "暂无预览内容。"'), "timeline must not render empty system placeholders");
+  includesAll(
+    markdown,
+    [
+      "normalizeMarkdownControlMarkers",
+      "inCodeFence",
+      "REPLACE|END|PATCH|SEARCH|ORIGINAL|NEW|OLD",
+    ],
+    "markdown control marker normalization",
+  );
+}
+
 function checkChineseTextHealth() {
   const files = [
     "src/pages/LandingWarRoom.tsx",
@@ -185,6 +234,7 @@ const checks = [
   checkLandingWorkflowContracts,
   checkWorkbenchScrollContract,
   checkReviewInformationArchitecture,
+  checkWorkbenchNoiseReduction,
   checkChineseTextHealth,
 ];
 

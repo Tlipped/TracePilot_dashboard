@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, App as AntdApp, Button, Layout, Segmented, Space, Spin, Tabs, Tag, Typography } from "antd";
-import { Activity, ArrowLeft, Bot, FileText, FolderOpen, Home, ListTree, RefreshCcw, RotateCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
+import { Activity, ArrowLeft, Bot, FileText, FolderOpen, Home, ListTree, PanelRightClose, PanelRightOpen, RefreshCcw, RotateCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
 import AgentFileLogs from "../components/AgentFileLogs";
 import AgentConsistencyPanel from "../components/AgentConsistencyPanel";
@@ -70,6 +70,7 @@ function getDefaultMainTab(mode: ProductViewMode, running = false) {
 
 const PERSISTED_LOG_PAGE_SIZE = 1000;
 const MAX_PERSISTED_LOG_PAGES = 5;
+const INSPECTOR_COLLAPSED_STORAGE_KEY = "attackpilot-workbench-inspector-collapsed";
 
 async function fetchPersistedTaskEvents(taskId: string) {
   let cursor: number | null = null;
@@ -110,6 +111,21 @@ const Dashboard: React.FC = () => {
   const [caseReviewError, setCaseReviewError] = useState("");
   const [caseReviewReloadToken, setCaseReviewReloadToken] = useState(0);
   const [connectionEpoch, setConnectionEpoch] = useState(0);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(() => {
+    try {
+      return window.localStorage.getItem(INSPECTOR_COLLAPSED_STORAGE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(INSPECTOR_COLLAPSED_STORAGE_KEY, String(inspectorCollapsed));
+    } catch {
+      // Keep the workbench usable when browser storage is unavailable.
+    }
+  }, [inspectorCollapsed]);
 
   const refreshTask = useCallback(async () => {
     if (!taskId) return null;
@@ -778,7 +794,7 @@ const Dashboard: React.FC = () => {
             <Spin />
           </div>
         ) : (
-          <div className="workbench-grid">
+          <div className={`workbench-grid${inspectorCollapsed ? " inspector-collapsed" : ""}`}>
             <AgentNavigator
               stats={agentStats}
               selectedAgent={selectedAgent}
@@ -798,12 +814,36 @@ const Dashboard: React.FC = () => {
               />
             </div>
 
-            <aside className="inspector-panel">
-              <Tabs
-                defaultActiveKey="agents"
-                items={inspectorTabItems}
-              />
-            </aside>
+            {inspectorCollapsed ? (
+              <aside className="inspector-rail" aria-label="工作台详情侧栏">
+                <Button
+                  type="text"
+                  icon={<PanelRightOpen size={17} />}
+                  onClick={() => setInspectorCollapsed(false)}
+                  aria-expanded={false}
+                  aria-controls="task-inspector"
+                  title="展开详情侧栏"
+                />
+                <span>展开详情</span>
+              </aside>
+            ) : (
+              <div className="inspector-shell">
+                <Button
+                  className="inspector-collapse-trigger"
+                  icon={<PanelRightClose size={16} />}
+                  onClick={() => setInspectorCollapsed(true)}
+                  aria-expanded
+                  aria-controls="task-inspector"
+                  title="收起详情侧栏"
+                />
+                <aside id="task-inspector" className="inspector-panel">
+                  <Tabs
+                    defaultActiveKey="agents"
+                    items={inspectorTabItems}
+                  />
+                </aside>
+              </div>
+            )}
           </div>
         )}
       </Content>
