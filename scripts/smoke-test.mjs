@@ -255,6 +255,55 @@ function checkReportRecordingLayout() {
   assert(!evidence.includes("evidence-section-bars"), "evidence summary must not render per-section card grids");
 }
 
+function checkPresentationAndOfflineCases() {
+  const dashboard = readText("src/pages/Dashboard.tsx");
+  const presentation = readText("src/components/ReviewPresentation.tsx");
+  const landing = readText("src/pages/LandingWarRoom.tsx");
+  const snapshots = readJson("src/data/demoSnapshots.json");
+  const ids = new Set((snapshots.cases ?? []).map((item) => item.id));
+
+  includesAll(
+    dashboard,
+    [
+      "presentationMode",
+      "presentation-toggle",
+      "ReviewPresentation",
+      'viewMode === "auditor" && caseReview',
+      "退出演示",
+      "演示视图",
+    ],
+    "review presentation entry",
+  );
+  includesAll(
+    presentation,
+    [
+      "案件概览",
+      "攻击链",
+      "根因定位",
+      "修复验证",
+      "离线快照",
+      "review.attack_stages",
+    ],
+    "four-step review presentation",
+  );
+  includesAll(
+    landing,
+    [
+      "已打开只读离线案例，不会创建或运行新的 Agent 任务。",
+      "打开 SushiSwap 离线复盘",
+      "离线快照 ·",
+    ],
+    "offline case landing entry",
+  );
+
+  const openCachedDemoStart = landing.indexOf("const openCachedDemo");
+  const createCaseTasksStart = landing.indexOf("const handleCreateCaseTasks", openCachedDemoStart);
+  const openCachedDemoSource = landing.slice(openCachedDemoStart, createCaseTasksStart);
+  assert(!openCachedDemoSource.includes("createTask("), "cached demo entry must never create a new task");
+  assert(ids.has("demo-sushiswap"), "SushiSwap offline snapshot must be bundled");
+  assert(ids.has("demo-apecoin"), "ApeCoin offline snapshot must be bundled");
+}
+
 function checkChineseTextHealth() {
   const files = [
     "src/pages/LandingWarRoom.tsx",
@@ -285,6 +334,7 @@ const checks = [
   checkReviewInformationArchitecture,
   checkWorkbenchNoiseReduction,
   checkReportRecordingLayout,
+  checkPresentationAndOfflineCases,
   checkChineseTextHealth,
 ];
 

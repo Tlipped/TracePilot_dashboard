@@ -426,7 +426,14 @@ const LandingWarRoom: React.FC = () => {
   }, []);
 
   const openCachedDemo = useCallback(
-    async (dappName: string) => {
+    (dappName: string) => {
+      const demoTaskId = getDemoTaskIdForDapp(dappName);
+      if (demoTaskId) {
+        message.info("已打开只读离线案例，不会创建或运行新的 Agent 任务。");
+        navigate(`/tasks/${demoTaskId}`);
+        return;
+      }
+
       const targetName = normalizeCaseName(dappName);
       const task =
         taskByDapp.get(dappName) ??
@@ -435,24 +442,12 @@ const LandingWarRoom: React.FC = () => {
         tasks.find((item) => normalizeCaseName(item.dapp_name) === targetName && !item.archived) ??
         tasks.find((item) => normalizeCaseName(item.dapp_name) === targetName);
       if (task) {
+        message.info("已打开已有完成任务，不会重新运行分析。");
         navigate(`/tasks/${task.task_id}`);
         return;
       }
 
-      try {
-        const created = await createTask({ dapp_name: dappName });
-        message.success("已为示例案例创建复盘任务。");
-        navigate(`/tasks/${created.task_id}`);
-      } catch (error) {
-        const demoTaskId = getDemoTaskIdForDapp(dappName);
-        if (demoTaskId) {
-          message.info("后端暂不可用，已打开前端内置缓存案例。");
-          navigate(`/tasks/${demoTaskId}`);
-          return;
-        }
-        const detail = (error as { response?: { data?: { detail?: string } } }).response?.data?.detail;
-        message.error(detail || "暂时无法打开示例案例，请检查后端服务和案例数据。");
-      }
+      message.warning("当前案例尚未固化演示快照，请从“新建分析”入口显式创建任务。");
     },
     [message, navigate, taskByDapp, tasks],
   );
@@ -570,7 +565,7 @@ const LandingWarRoom: React.FC = () => {
           <Button type="text" onClick={() => scrollToSection("tx-review")}>开始分析</Button>
           <Button type="text" onClick={() => navigate("/tasks")}>任务库</Button>
           <Button type="text" onClick={() => navigate("/learning")}>漏洞学习</Button>
-          <Button type="primary" icon={<Play size={15} />} onClick={() => openCachedDemo("SushiSwap")}>查看示例案例</Button>
+          <Button type="primary" icon={<Play size={15} />} onClick={() => openCachedDemo("SushiSwap")}>打开离线复盘</Button>
         </Space>
       </Header>
 
@@ -589,7 +584,7 @@ const LandingWarRoom: React.FC = () => {
                 开始一次复盘
               </Button>
               <Button size="large" onClick={() => openCachedDemo("SushiSwap")}>
-                查看示例案例
+                打开 SushiSwap 离线复盘
               </Button>
             </div>
           </div>
@@ -681,11 +676,11 @@ const LandingWarRoom: React.FC = () => {
               <div className="quick-case-wide-grid">
                 <button className="quick-case-wide" onClick={() => openCachedDemo("SushiSwap")} type="button">
                   <strong>SushiSwap</strong>
-                  <small>{sushiCase ? getCaseLabel(sushiCase, taskByDapp.get("SushiSwap")) : "多交易准备 + 路由逻辑缺陷。"}</small>
+                  <small>离线快照 · {sushiCase ? getCaseLabel(sushiCase, taskByDapp.get("SushiSwap")) : "多交易准备 + 路由逻辑缺陷。"}</small>
                 </button>
                 <button className="quick-case-wide" onClick={() => openCachedDemo("ApeCoin (APE)")} type="button">
                   <strong>ApeCoin (APE)</strong>
-                  <small>{apeCase ? getCaseLabel(apeCase, taskByDapp.get("ApeCoin (APE)")) : "缓存复盘案例，可直接查看分析结果。"}</small>
+                  <small>离线快照 · {apeCase ? getCaseLabel(apeCase, taskByDapp.get("ApeCoin (APE)")) : "可直接查看分析结果，不会创建新任务。"}</small>
                 </button>
               </div>
               <Button className="case-replay-entry-btn" type="primary" ghost onClick={() => setCaseModalOpen(true)}>

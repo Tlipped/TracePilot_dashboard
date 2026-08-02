@@ -21,7 +21,7 @@ interface ReportBlock {
   content: string;
 }
 
-interface AttackPhase {
+export interface AttackPhase {
   key: string;
   title: string;
   description: string;
@@ -136,7 +136,9 @@ function findAttackBlocks(report: string) {
     .slice(0, 5);
 }
 
-function buildAttackPhases(task: Task | null, events: TaskEvent[]): AttackPhase[] {
+// Shared by the presentation view so legacy reports use the same dynamic phase extraction.
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildAttackPhases(task: Task | null, events: TaskEvent[]): AttackPhase[] {
   const report = task?.final_report ?? "";
   const usedEvidence = new Set<string>();
 

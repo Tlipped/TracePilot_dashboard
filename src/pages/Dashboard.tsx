@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, App as AntdApp, Button, Layout, Segmented, Space, Spin, Tabs, Tag, Typography } from "antd";
-import { Activity, ArrowLeft, Bot, FileText, FolderOpen, Home, ListTree, PanelRightClose, PanelRightOpen, RefreshCcw, RotateCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
+import { Activity, ArrowLeft, Bot, FileText, FolderOpen, Home, ListTree, MonitorUp, PanelRightClose, PanelRightOpen, RefreshCcw, RotateCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
 import AgentFileLogs from "../components/AgentFileLogs";
 import AgentConsistencyPanel from "../components/AgentConsistencyPanel";
@@ -15,6 +15,7 @@ import LogDetailDrawer from "../components/LogDetailDrawer";
 import LogStream from "../components/LogStream";
 import LearningGuidePanel from "../components/LearningGuidePanel";
 import MacroAnalysisPanel from "../components/MacroAnalysisPanel";
+import ReviewPresentation from "../components/ReviewPresentation";
 import StructuredReport from "../components/StructuredReport";
 import TaskProgressMonitor from "../components/TaskProgressMonitor";
 import TaskRecoveryPanel from "../components/TaskRecoveryPanel";
@@ -111,6 +112,7 @@ const Dashboard: React.FC = () => {
   const [caseReviewError, setCaseReviewError] = useState("");
   const [caseReviewReloadToken, setCaseReviewReloadToken] = useState(0);
   const [connectionEpoch, setConnectionEpoch] = useState(0);
+  const [presentationMode, setPresentationMode] = useState(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(() => {
     try {
       return window.localStorage.getItem(INSPECTOR_COLLAPSED_STORAGE_KEY) === "true";
@@ -126,6 +128,10 @@ const Dashboard: React.FC = () => {
       // Keep the workbench usable when browser storage is unavailable.
     }
   }, [inspectorCollapsed]);
+
+  useEffect(() => {
+    if (viewMode !== "auditor") setPresentationMode(false);
+  }, [viewMode]);
 
   const refreshTask = useCallback(async () => {
     if (!taskId) return null;
@@ -717,7 +723,7 @@ const Dashboard: React.FC = () => {
   );
 
   return (
-    <Layout className="app-shell">
+    <Layout className={`app-shell${presentationMode ? " presentation-shell" : ""}`}>
       <Header className="topbar">
         <Space size={12} className="review-topbar-main">
           <Button icon={<ArrowLeft size={16} />} onClick={() => navigate("/tasks")} title="返回任务控制台" />
@@ -732,7 +738,17 @@ const Dashboard: React.FC = () => {
             </Typography.Text>
           </div>
         </Space>
-        <Space size={10}>
+        <Space size={10} className="review-topbar-actions">
+          {viewMode === "auditor" && caseReview ? (
+            <Button
+              className="presentation-toggle"
+              type={presentationMode ? "default" : "primary"}
+              icon={<MonitorUp size={15} />}
+              onClick={() => setPresentationMode((value) => !value)}
+            >
+              {presentationMode ? "退出演示" : "演示视图"}
+            </Button>
+          ) : null}
           <div className="view-mode-switcher">
             <Typography.Text className="view-mode-label">{language === "zh" ? "视图模式" : "View"}</Typography.Text>
             <Segmented
@@ -763,8 +779,12 @@ const Dashboard: React.FC = () => {
         </Space>
       </Header>
 
-      <Content className="dashboard-layout">
-        {errorMsg ? <Alert type="error" showIcon message={errorMsg} closable onClose={() => setErrorMsg("")} /> : null}
+      <Content className={`dashboard-layout${presentationMode ? " presentation-layout" : ""}`}>
+        {presentationMode && task && caseReview ? (
+          <ReviewPresentation task={task} review={caseReview} events={events} />
+        ) : (
+          <>
+            {errorMsg ? <Alert type="error" showIcon message={errorMsg} closable onClose={() => setErrorMsg("")} /> : null}
 
         <div className="task-overview">
           <div>
@@ -845,23 +865,29 @@ const Dashboard: React.FC = () => {
               </div>
             )}
           </div>
+            )}
+          </>
         )}
       </Content>
 
-      <LogDetailDrawer
-        taskId={taskId ?? ""}
-        log={selectedLog}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-      />
-      <ForensicAssistantDrawer
-        open={assistantOpen}
-        onOpen={() => setAssistantOpen(true)}
-        onClose={() => setAssistantOpen(false)}
-        scope="task"
-        taskId={taskId}
-        title="任务取证助手"
-      />
+      {!presentationMode ? (
+        <>
+          <LogDetailDrawer
+            taskId={taskId ?? ""}
+            log={selectedLog}
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+          />
+          <ForensicAssistantDrawer
+            open={assistantOpen}
+            onOpen={() => setAssistantOpen(true)}
+            onClose={() => setAssistantOpen(false)}
+            scope="task"
+            taskId={taskId}
+            title="任务取证助手"
+          />
+        </>
+      ) : null}
     </Layout>
   );
 };
