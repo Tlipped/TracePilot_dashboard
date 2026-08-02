@@ -34,14 +34,36 @@ interface CuratedCaseCopy {
   report_zh: string;
   root_cause_zh: string;
   transaction_hash: string[];
+  presentation_stages?: Array<{ title: string; description: string }>;
 }
 
 const CURATED_CASES: Record<string, CuratedCaseCopy> = {
-  sushiswap: sushiSwapCase,
-  "apecoin (ape)": apeCoinCase,
-  apecoin: apeCoinCase,
-  ape: apeCoinCase,
+  sushiswap: {
+    ...sushiSwapCase,
+    presentation_stages: [
+      { title: "准备操纵环境", description: "攻击者通过辅助交易准备攻击合约，并建立流动性极低的 DIGG/WETH 交易池。" },
+      { title: "触发手续费兑换", description: "攻击交易调用 SushiMaker 的 convert 流程，开始处理协议积累的手续费资产。" },
+      { title: "处理协议流动性", description: "协议持有的流动性代币被处理，相关资产进入后续桥接与兑换流程。" },
+      { title: "利用默认桥接路径", description: "bridgeFor 在没有官方路由时默认选择 WETH，使 DIGG 被导入攻击者控制的低流动性池。" },
+      { title: "执行正常资产兑换", description: "同一 convert 流程继续处理 WBTC 等正常资产，使攻击路径混入协议预期行为。" },
+      { title: "合并并完成兑换", description: "多路手续费资产被合并并完成最终兑换，低流动性池中的价格失衡被进一步放大。" },
+      { title: "兑现操纵收益", description: "攻击者利用被扭曲的池内价格换回资产，将低流动性操纵转化为实际收益。" },
+    ],
+  },
+  "apecoin (ape)": {
+    ...apeCoinCase,
+    presentation_stages: [
+      { title: "准备攻击合约", description: "攻击者部署执行合约并准备一枚 NFT，为同一交易内的领取流程建立调用条件。" },
+      { title: "发起 NFT 闪电贷", description: "攻击者从 NFTXVaultUpgradeable 临时借入 BAYC/MAYC NFT，瞬时满足持有条件。" },
+      { title: "绕过领取资格检查", description: "回调中调用 claimTokens；合约只检查当前所有权，未校验快照或持有时长。" },
+      { title: "归还闪电贷 NFT", description: "完成 APE 领取后，攻击者在同一交易中归还 NFT，偿还闪电贷。" },
+      { title: "转移空投收益", description: "临时持有状态消失，但已领取的 APE 仍由攻击者控制，攻击收益最终落袋。" },
+    ],
+  },
 };
+
+CURATED_CASES.apecoin = CURATED_CASES["apecoin (ape)"];
+CURATED_CASES.ape = CURATED_CASES["apecoin (ape)"];
 
 type PresentationStep = "overview" | "attack" | "root" | "verification";
 
@@ -120,14 +142,17 @@ const ReviewPresentation: React.FC<ReviewPresentationProps> = ({ task, review, e
       }));
     }
 
-    return buildAttackPhases(task, events).map((stage) => ({
+    const extractedStages = buildAttackPhases(task, events);
+    const curatedStages = curatedCase?.presentation_stages;
+    const canUseCuratedCopy = curatedStages?.length === extractedStages.length;
+    return extractedStages.map((stage, index) => ({
       key: stage.key,
-      title: stage.title,
-      description: stage.description,
+      title: canUseCuratedCopy ? curatedStages[index].title : stage.title,
+      description: canUseCuratedCopy ? curatedStages[index].description : stage.description,
       transactionHash: stage.evidence.find((item) => item.source === "transaction")?.content,
       evidenceCount: stage.evidence.length,
     }));
-  }, [events, review.attack_stages, task]);
+  }, [curatedCase, events, review.attack_stages, task]);
   const selectedAttackStage = attackStages[activeAttackStage];
   const firstTransaction = useMemo(
     () => attackStages.find((stage) => stage.transactionHash)?.transactionHash
