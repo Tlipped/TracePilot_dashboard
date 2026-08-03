@@ -1202,6 +1202,65 @@ body[data-appearance="light"] .execution-raw-json pre {
   margin: 0 !important;
 }
 
+.workflow-event-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.workflow-handoff-route {
+  padding: 14px;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.055);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: var(--accent);
+}
+
+.workflow-handoff-route>div {
+  min-width: 0;
+}
+
+.workflow-handoff-route span,
+.workflow-handoff-route strong {
+  display: block;
+}
+
+.workflow-handoff-route span,
+.workflow-summary-grid span {
+  margin-bottom: 5px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.workflow-handoff-route strong {
+  color: var(--text-primary);
+}
+
+.workflow-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.workflow-summary-grid>div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.38);
+}
+
+.workflow-summary-grid p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .execution-node-state,
 .execution-detail-section {
   display: flex;

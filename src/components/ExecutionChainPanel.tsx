@@ -22,7 +22,9 @@ import {
   Clock3,
   Copy,
   Database,
+  Flag,
   Hash,
+  Layers3,
   Network,
   RefreshCcw,
   ShieldCheck,
@@ -81,9 +83,12 @@ function formatBytes(value?: number | null) {
 
 function phaseLabel(phase: string) {
   const labels: Record<string, string> = {
+    orchestration: "任务编排",
+    input_prepared: "案件接入",
     task_planning: "任务规划",
     macro_analysis: "宏观分析",
     micro_analysis: "Trace 调试",
+    trace_debugging: "Trace 调试",
     patch_generation: "补丁生成",
     patch_verification: "补丁验证",
     report_generation: "报告生成",
@@ -92,6 +97,9 @@ function phaseLabel(phase: string) {
 }
 
 function eventKindLabel(event: ExecutionEvent) {
+  if (event.event_type === "workflow.run") return "任务执行";
+  if (event.event_type === "workflow.stage") return "阶段产物";
+  if (event.event_type === "agent.handoff") return "Agent 交接";
   if (event.event_type === "llm.turn") return "模型决策";
   if (event.event_type === "tool.call") return "工具调用";
   return event.event_type;
@@ -101,6 +109,9 @@ function eventIcon(event: ExecutionEvent) {
   if (event.status === "failed" || event.status === "cancelled") return <XCircle size={16} />;
   if (event.status === "running") return <CircleDot size={16} />;
   if (event.event_type === "tool.call") return <Wrench size={16} />;
+  if (event.event_type === "agent.handoff") return <Network size={16} />;
+  if (event.event_type === "workflow.stage") return <Layers3 size={16} />;
+  if (event.event_type === "workflow.run") return <Flag size={16} />;
   if (event.event_type === "llm.turn") return <Bot size={16} />;
   return <CheckCircle2 size={16} />;
 }
@@ -114,11 +125,89 @@ function statusTag(status: string) {
 }
 
 function eventPreview(event: ExecutionEvent) {
+  const conclusion = displayMetadata(event, "conclusion");
+  const reason = displayMetadata(event, "reason");
+  const nextAction = displayMetadata(event, "next_action");
+  if (event.event_type === "agent.handoff") {
+    return [reason, nextAction ? `下一步：${nextAction}` : ""].filter(Boolean).join(" ");
+  }
+  if (event.event_type === "workflow.stage" && conclusion) return conclusion;
+  if (event.event_type === "workflow.run") {
+    if (event.status === "running") return "多智能体正在协作分析该案件。";
+    if (event.status === "completed") return "多智能体分析已完成，阶段产物和交接关系可继续下钻。";
+    return "任务没有正常完成，请查看失败阶段与错误详情。";
+  }
   const output = event.output_preview?.trim();
   const input = event.input_preview?.trim();
   if (output) return output;
   if (event.status === "running") return "正在等待执行结果…";
   return input || "本步骤未产生可预览内容。";
+}
+
+function displayMetadata(event: ExecutionEvent, key: string) {
+  const value = event.metadata?.[key];
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function eventTitle(event: ExecutionEvent) {
+  if (event.event_type === "agent.handoff") {
+    const fromAgent = displayMetadata(event, "from_agent") || event.agent;
+    const toAgent = displayMetadata(event, "to_agent") || "下一智能体";
+    return `${agentDisplayName(fromAgent)} → ${agentDisplayName(toAgent)}`;
+  }
+  if (event.event_type === "workflow.stage") {
+    return displayMetadata(event, "stage_label") || event.operation;
+  }
+  if (event.event_type === "workflow.run") return "案件分析工作流";
+  return event.operation;
+}
+
+function WorkflowEventView({ event }: { event: ExecutionEvent }) {
+  if (!event.event_type.startsWith("workflow.") && event.event_type !== "agent.handoff") return null;
+
+  const input = asRecord(event.input) ?? {};
+  const output = asRecord(event.output) ?? {};
+  const artifacts = asArray(event.event_type === "agent.handoff" ? input.artifacts : output.artifacts);
+  const fromAgent = displayMetadata(event, "from_agent") || event.agent;
+  const toAgent = displayMetadata(event, "to_agent");
+  const reason = displayValue(input.reason ?? event.metadata.reason);
+  const runConclusion = event.status === "running"
+    ? "多智能体工作流正在执行。"
+    : output.error || (output.final_report_ready === true ? "工作流已形成最终报告。" : "工作流已结束。");
+  const conclusion = displayValue(output.conclusion ?? event.metadata.conclusion ?? runConclusion);
+  const nextAction = displayValue(output.next_action ?? event.metadata.next_action);
+
+  return (
+    <div className="workflow-event-detail">
+      {event.event_type === "agent.handoff" ? (
+        <div className="workflow-handoff-route">
+          <div><span>交接方</span><strong>{agentDisplayName(fromAgent)}</strong></div>
+          <Network size={18} />
+          <div><span>接收方</span><strong>{agentDisplayName(toAgent)}</strong></div>
+        </div>
+      ) : null}
+      <div className="workflow-summary-grid">
+        {event.event_type === "agent.handoff" ? (
+          <div><span>为什么交接</span><p>{reason}</p></div>
+        ) : null}
+        <div><span>{event.event_type === "agent.handoff" ? "交付结论" : "阶段结论"}</span><p>{conclusion}</p></div>
+        {event.event_type === "agent.handoff" ? (
+          <div><span>下一步</span><p>{nextAction}</p></div>
+        ) : null}
+      </div>
+      {artifacts.length > 0 ? (
+        <div className="execution-detail-section">
+          <Typography.Text strong>交付产物</Typography.Text>
+          <div className="execution-event-chips">
+            {artifacts.map((artifact, index) => {
+              const item = asRecord(artifact) ?? {};
+              return <Tag key={index}>{displayValue(item.type)}{item.reference ? ` · ${displayValue(item.reference)}` : ""}</Tag>;
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function VariableList({ title, values }: { title: string; values: unknown[] }) {
@@ -261,7 +350,7 @@ const ExecutionChainPanel: React.FC<ExecutionChainPanelProps> = ({ taskId, taskS
   const [selectedEvent, setSelectedEvent] = useState<ExecutionEvent | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [displayScope, setDisplayScope] = useState<"chain" | "all">("chain");
+  const [displayScope, setDisplayScope] = useState<"workflow" | "chain" | "all">("workflow");
 
   const loadLatest = useCallback(async (silent = false) => {
     if (!taskId) return;
@@ -325,6 +414,9 @@ const ExecutionChainPanel: React.FC<ExecutionChainPanelProps> = ({ taskId, taskS
 
   const visibleEvents = useMemo(() => {
     if (displayScope === "all") return filteredEvents;
+    if (displayScope === "workflow") {
+      return filteredEvents.filter((event) => ["workflow.run", "workflow.stage", "agent.handoff"].includes(event.event_type));
+    }
     const toolParentIds = new Set(
       filteredEvents
         .filter((event) => event.event_type === "tool.call")
@@ -357,6 +449,8 @@ const ExecutionChainPanel: React.FC<ExecutionChainPanelProps> = ({ taskId, taskS
   }, [events]);
 
   const agentCount = new Set(filteredEvents.map((event) => event.agent)).size;
+  const stageCount = filteredEvents.filter((event) => event.event_type === "workflow.stage").length;
+  const handoffCount = filteredEvents.filter((event) => event.event_type === "agent.handoff").length;
   const toolCount = filteredEvents.filter((event) => event.event_type === "tool.call").length;
   const failedCount = filteredEvents.filter((event) => ["failed", "cancelled"].includes(event.status)).length;
   const detailOutput = asRecord(selectedEvent?.output);
@@ -372,19 +466,21 @@ const ExecutionChainPanel: React.FC<ExecutionChainPanelProps> = ({ taskId, taskS
               <Tag color="blue">结构化事件</Tag>
             </Space>
             <Typography.Paragraph type="secondary">
-              聚焦 Agent 决策、工具输入和真实返回；大模型原文仍保留在原始日志中。
+              先看多智能体如何分工和交接，再按需下钻工具调用；大模型原文仍保留在原始日志中。
             </Typography.Paragraph>
           </div>
           <Space size={8} wrap>
             <Segmented
               size="small"
               value={displayScope}
-              onChange={(value) => setDisplayScope(value as "chain" | "all")}
+              onChange={(value) => setDisplayScope(value as "workflow" | "chain" | "all")}
               options={[
-                { label: "调用链", value: "chain" },
+                { label: "主流程", value: "workflow" },
+                { label: "工具调用", value: "chain" },
                 { label: "全部步骤", value: "all" },
               ]}
             />
+            {displayScope === "workflow" ? <Tag>{stageCount} 个阶段 · {handoffCount} 次交接</Tag> : null}
             <Tag>{agentCount} 个智能体</Tag>
             <Tag>{toolCount} 次工具调用</Tag>
             {failedCount > 0 ? <Tag color="error">{failedCount} 个异常</Tag> : null}
@@ -402,7 +498,9 @@ const ExecutionChainPanel: React.FC<ExecutionChainPanelProps> = ({ taskId, taskS
           <div className="execution-chain-empty">
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={filteredEvents.length > 0 && displayScope === "chain"
+              description={filteredEvents.length > 0 && displayScope === "workflow"
+                ? "当前任务生成于顶层编排事件上线前；可切换到“工具调用”或“全部步骤”查看既有记录。"
+                : filteredEvents.length > 0 && displayScope === "chain"
                 ? "当前范围暂无工具调用；可以切换到“全部步骤”查看模型决策。"
                 : selectedAgent !== "all"
                 ? "该智能体暂无结构化执行事件。"
@@ -438,7 +536,7 @@ const ExecutionChainPanel: React.FC<ExecutionChainPanelProps> = ({ taskId, taskS
                     </span>
                     <span className="execution-chain-title">
                       <strong>{eventKindLabel(event)}</strong>
-                      <code>{event.operation}</code>
+                      <code>{eventTitle(event)}</code>
                     </span>
                     <Typography.Paragraph ellipsis={{ rows: 2 }}>{eventPreview(event)}</Typography.Paragraph>
                     <span className="execution-chain-foot">
@@ -482,7 +580,7 @@ const ExecutionChainPanel: React.FC<ExecutionChainPanelProps> = ({ taskId, taskS
             <div className="execution-detail-heading">
               <Space size={8} wrap>
                 {eventIcon(selectedEvent)}
-                <Typography.Title level={4}>{agentDisplayName(selectedEvent.agent)} → {selectedEvent.operation}</Typography.Title>
+                <Typography.Title level={4}>{eventTitle(selectedEvent)}</Typography.Title>
                 {statusTag(selectedEvent.status)}
               </Space>
               <Typography.Text type="secondary">{eventKindLabel(selectedEvent)} · {phaseLabel(selectedEvent.phase)}</Typography.Text>
@@ -518,12 +616,14 @@ const ExecutionChainPanel: React.FC<ExecutionChainPanelProps> = ({ taskId, taskS
 
             {detailLoading ? <Skeleton active paragraph={{ rows: 4 }} /> : null}
 
+            {!detailLoading ? <WorkflowEventView event={selectedEvent} /> : null}
+
             {!detailLoading && detailOutput ? <NodeStateView output={detailOutput} /> : null}
 
             {!detailLoading ? (
               <div className="execution-payload-grid">
-                <JsonPayload title="调用参数" value={selectedEvent.input} />
-                <JsonPayload title="工具返回" value={selectedEvent.output} />
+                <JsonPayload title={selectedEvent.event_type === "agent.handoff" ? "结构化交接输入" : "调用参数"} value={selectedEvent.input} />
+                <JsonPayload title={selectedEvent.event_type === "agent.handoff" ? "结构化交接产物" : "工具返回"} value={selectedEvent.output} />
               </div>
             ) : null}
 
