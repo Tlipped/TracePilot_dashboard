@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, App as AntdApp, Button, Layout, Segmented, Space, Spin, Tabs, Tag, Typography } from "antd";
-import { Activity, ArrowLeft, Bot, FileText, FolderOpen, Home, ListTree, MonitorUp, PanelRightClose, PanelRightOpen, RefreshCcw, RotateCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
+import { Activity, ArrowLeft, Bot, FileText, FolderOpen, Home, ListTree, MonitorUp, Network, PanelRightClose, PanelRightOpen, RefreshCcw, RotateCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
 import AgentNavigator, { AgentStats } from "../components/AgentNavigator";
 import AgentFileLogs from "../components/AgentFileLogs";
 import AgentConsistencyPanel from "../components/AgentConsistencyPanel";
@@ -10,6 +10,7 @@ import AgentTimeline from "../components/AgentTimeline";
 import AnalysisLivePanel from "../components/AnalysisLivePanel";
 import AttackReplayTimeline from "../components/AttackReplayTimeline";
 import DappContextButton from "../components/DappContextButton";
+import ExecutionChainPanel from "../components/ExecutionChainPanel";
 import ForensicAssistantDrawer from "../components/ForensicAssistantDrawer";
 import LogDetailDrawer from "../components/LogDetailDrawer";
 import LogStream from "../components/LogStream";
@@ -583,8 +584,26 @@ const Dashboard: React.FC = () => {
       children: <AgentTimeline events={events} selectedAgent={selectedAgent} onSelectLog={openLog} />,
     };
 
+    const executionChainTab: MainTabItem = {
+      key: "execution-chain",
+      label: (
+        <Space size={6}>
+          <Network size={14} />
+          执行链
+        </Space>
+      ),
+      children: (
+        <ExecutionChainPanel
+          taskId={taskId ?? ""}
+          taskStatus={task?.status}
+          selectedAgent={selectedAgent}
+        />
+      ),
+    };
+
     const tabMap: Record<string, MainTabItem> = {
       live: liveTab,
+      "execution-chain": executionChainTab,
       recovery: recoveryTab,
       "trusted-review": trustedReviewTab,
       report: reportTab,
@@ -597,20 +616,20 @@ const Dashboard: React.FC = () => {
     };
     const modeOrder: Record<ProductViewMode, string[]> = {
       report: isTaskRunning
-        ? ["live", "stream", "timeline", "report", "attack-replay", "macro", "consistency", "learning"]
-        : ["report", "attack-replay", "macro", "consistency", "learning", "stream", "timeline"],
+        ? ["live", "execution-chain", "stream", "timeline", "report", "attack-replay", "macro", "consistency", "learning"]
+        : ["report", "execution-chain", "attack-replay", "macro", "consistency", "learning", "stream", "timeline"],
       learn: isTaskRunning
-        ? ["live", "learning", "stream", "timeline", "attack-replay", "report", "macro", "consistency"]
-        : ["learning", "attack-replay", "report", "macro", "consistency", "stream", "timeline"],
+        ? ["live", "learning", "execution-chain", "stream", "timeline", "attack-replay", "report", "macro", "consistency"]
+        : ["learning", "execution-chain", "attack-replay", "report", "macro", "consistency", "stream", "timeline"],
       auditor: isTaskRunning
-        ? ["live", "macro", "consistency", "stream", "timeline", "report", "attack-replay", "learning"]
-        : ["trusted-review", "macro", "consistency", "report", "attack-replay", "timeline", "stream", "learning"],
+        ? ["live", "execution-chain", "macro", "consistency", "stream", "timeline", "report", "attack-replay", "learning"]
+        : ["trusted-review", "execution-chain", "macro", "consistency", "report", "attack-replay", "timeline", "stream", "learning"],
       raw: isTaskRunning
-        ? ["live", "stream", "timeline", "report", "macro", "consistency", "attack-replay", "learning"]
-        : ["stream", "timeline", "report", "macro", "consistency", "attack-replay", "learning"],
+        ? ["live", "stream", "execution-chain", "timeline", "report", "macro", "consistency", "attack-replay", "learning"]
+        : ["stream", "execution-chain", "timeline", "report", "macro", "consistency", "attack-replay", "learning"],
     };
 
-    const availableKeys = new Set(["live", "stream", "timeline", "report"]);
+    const availableKeys = new Set(["live", "execution-chain", "stream", "timeline", "report"]);
     if (task?.status === TaskStatus.FAILED) availableKeys.add("recovery");
     if (viewMode === "auditor" && hasCaseReviewEntry) availableKeys.add("trusted-review");
     if (hasReplay) availableKeys.add("attack-replay");

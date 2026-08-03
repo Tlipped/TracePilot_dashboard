@@ -258,6 +258,42 @@ export interface TaskLogPageResponse {
   total: number;
 }
 
+export type ExecutionEventStatus = "running" | "completed" | "failed" | "cancelled" | string;
+
+export interface ExecutionEvent {
+  schema_version: string;
+  event_id: string;
+  task_id: string;
+  parent_event_id?: string | null;
+  correlation_id?: string | null;
+  phase: string;
+  agent: string;
+  event_type: string;
+  operation: string;
+  status: ExecutionEventStatus;
+  input?: unknown;
+  output?: unknown;
+  input_preview: string;
+  output_preview: string;
+  output_sha256?: string | null;
+  output_size?: number | null;
+  evidence_refs: string[];
+  metadata: Record<string, unknown>;
+  started_at: string;
+  completed_at?: string | null;
+  duration_ms?: number | null;
+  persisted_id?: number | null;
+}
+
+export interface TaskExecutionEventPage {
+  task_id: string;
+  events: ExecutionEvent[];
+  next_before_id?: number | null;
+  has_more: boolean;
+  total: number;
+  include_payloads: boolean;
+}
+
 export interface AgentLogFileMeta {
   id: string;
   name: string;

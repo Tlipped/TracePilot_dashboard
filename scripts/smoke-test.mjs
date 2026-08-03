@@ -141,7 +141,7 @@ function checkReviewInformationArchitecture() {
     [
       'if (mode === "auditor") return "trusted-review";',
       'if (loadingTask || !task) return;',
-      'const availableKeys = new Set(["live", "stream", "timeline", "report"]);',
+      'const availableKeys = new Set(["live", "execution-chain", "stream", "timeline", "report"]);',
       'if (task?.status === TaskStatus.FAILED) availableKeys.add("recovery");',
       'if (viewMode === "auditor" && hasCaseReviewEntry) availableKeys.add("trusted-review");',
     ],
@@ -154,6 +154,42 @@ function checkReviewInformationArchitecture() {
   assert(
     i18n.includes('auditorMode: "评审"'),
     "Chinese auditor mode must be presented as review mode",
+  );
+}
+
+function checkStructuredExecutionChain() {
+  const dashboard = readText("src/pages/Dashboard.tsx");
+  const api = readText("src/services/api.ts");
+  const panel = readText("src/components/ExecutionChainPanel.tsx");
+
+  includesAll(
+    dashboard,
+    [
+      'key: "execution-chain"',
+      "<ExecutionChainPanel",
+      'availableKeys.add("recovery")',
+    ],
+    "structured execution chain navigation",
+  );
+  includesAll(
+    api,
+    [
+      "getTaskExecutionEvents",
+      "getTaskExecutionEvent",
+      "/execution-events",
+    ],
+    "structured execution event API",
+  );
+  includesAll(
+    panel,
+    [
+      'output.tool !== "get_node_detailed_state"',
+      "storage_operations",
+      "correlation_id",
+      "系统不会伪造调用关系",
+      "查看完整事件 JSON",
+    ],
+    "structured execution chain presentation",
   );
 }
 
@@ -332,6 +368,7 @@ const checks = [
   checkLandingWorkflowContracts,
   checkWorkbenchScrollContract,
   checkReviewInformationArchitecture,
+  checkStructuredExecutionChain,
   checkWorkbenchNoiseReduction,
   checkReportRecordingLayout,
   checkPresentationAndOfflineCases,

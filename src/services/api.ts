@@ -21,6 +21,7 @@ import {
   CaseReviewV1,
   DappCatalogResponse,
   FullLogResponse,
+  ExecutionEvent,
   MacroAnalysisResponse,
   RagSearchRequest,
   RagSearchResponse,
@@ -32,6 +33,7 @@ import {
   TxDetectRequest,
   TxDetectResponse,
   TaskLogPageResponse,
+  TaskExecutionEventPage,
   TxReviewRequest,
   TxReviewResponse,
   VulnerabilityKnowledgeResponse,
@@ -226,6 +228,19 @@ export async function getTaskLogs(
   const demoLogs = getDemoTaskLogs(taskId, params);
   if (demoLogs) return demoLogs;
   const response = await api.get<TaskLogPageResponse>(`/api/tasks/${taskId}/logs`, { params });
+  return response.data;
+}
+
+export async function getTaskExecutionEvents(
+  taskId: string,
+  params: { limit?: number; before_id?: number | null; include_payloads?: boolean } = {},
+): Promise<TaskExecutionEventPage> {
+  const response = await api.get<TaskExecutionEventPage>(`/api/tasks/${taskId}/execution-events`, { params });
+  return response.data;
+}
+
+export async function getTaskExecutionEvent(taskId: string, eventId: string): Promise<ExecutionEvent> {
+  const response = await api.get<ExecutionEvent>(`/api/tasks/${taskId}/execution-events/${eventId}`);
   return response.data;
 }
 
